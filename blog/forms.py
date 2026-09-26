@@ -97,13 +97,34 @@ class EmailSignupForm(forms.Form):
         )
     )
 
-    password1 = forms.CharField(
-        widget=forms.PasswordInput
+    username = forms.CharField(
+        max_length=150,
+        min_length=3,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Choose your username'
+            }
+        )
     )
 
-    password2 = forms.CharField(
-        widget=forms.PasswordInput
+    password1 = forms.CharField(
+    widget=forms.PasswordInput(
+        attrs={
+            'class': 'form-control',
+            'placeholder': 'Create a password'
+        }
     )
+)
+
+    password2 = forms.CharField(
+            widget=forms.PasswordInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Confirm your password'
+                }
+            )
+        )
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
@@ -116,6 +137,24 @@ class EmailSignupForm(forms.Form):
             )
 
         return email
+
+    def clean_username(self):
+        username = self.cleaned_data['username'].strip().lower()
+
+        if not username:
+            raise forms.ValidationError(
+                "Username is required."
+            )
+
+        if User.objects.filter(
+            username__iexact=username
+        ).exists():
+            raise forms.ValidationError(
+                f'Username "{username}" already exists. '
+                'Please choose another username.'
+            )
+
+        return username
 
     def clean(self):
         cleaned_data = super().clean()
@@ -143,23 +182,8 @@ class EmailSignupForm(forms.Form):
     def save(self):
 
         email = self.cleaned_data['email']
+        username = self.cleaned_data['username']
         password = self.cleaned_data['password1']
-
-        username_base = email.split('@')[0][:100]
-
-        username = username_base
-
-        counter = 1
-
-        while User.objects.filter(
-            username=username
-        ).exists():
-
-            username = (
-                f"{username_base}_{counter}"
-            )
-
-            counter += 1
 
         user = User.objects.create_user(
             username=username,
@@ -172,8 +196,6 @@ class EmailSignupForm(forms.Form):
         )
 
         return user
-
-
 # =========================================================
 # PROJECT FORM
 # =========================================================

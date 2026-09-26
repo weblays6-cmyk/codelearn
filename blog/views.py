@@ -48,7 +48,7 @@ from .forms import (
 
 
 # =========================================================
-# COURSE / BLOG LIST uyhnyuyu
+# COURSE / BLOG LIST
 # =========================================================
 
 def blog(request):
@@ -769,45 +769,54 @@ def reset_password(request):
 # EMAIL LOGIN
 # =========================================================
 
+# =========================================================
+# LOGIN
+# =========================================================
+
 def login_view(request):
 
     if request.method == "POST":
 
-        email = request.POST.get(
-            "email",
+        username = request.POST.get(
+            "username",
             ""
-        ).strip().lower()
+        ).strip()
 
         password = request.POST.get(
             "password",
             ""
         )
 
-        try:
+        if not username or not password:
 
-            user = User.objects.get(
-                email__iexact=email
-            )
-
-            authenticated_user = authenticate(
+            return render(
                 request,
-                username=user.username,
-                password=password
+                "blog/login.html",
+                {
+                    "error": "Please enter username and password."
+                }
             )
 
-            if authenticated_user is not None:
+        authenticated_user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
 
-                login(
-                    request,
-                    authenticated_user
-                )
+        if authenticated_user is not None:
 
-                try:
+            login(
+                request,
+                authenticated_user
+            )
 
-                    send_gmail(
-                        authenticated_user.email,
-                        "CodeLearn Hub - Login Successful",
-                        """Hi,
+            # Login successful email
+            try:
+
+                send_gmail(
+                    authenticated_user.email,
+                    "CodeLearn Hub - Login Successful",
+                    """Hi,
 
 You have successfully logged in to your CodeLearn Hub account.
 
@@ -816,43 +825,31 @@ If this was not you, please secure your account immediately.
 Regards,
 CodeLearn Hub Team
 """
-                    )
-
-                except Exception as error:
-
-                    print(
-                        "Login email failed:",
-                        error
-                    )
-
-                return redirect(
-                    "blog:dashboard"
                 )
 
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
+            except Exception as error:
+
+                print(
+                    "Login email failed:",
+                    error
+                )
+
+            return redirect(
+                "blog:dashboard"
             )
 
-        except User.DoesNotExist:
-
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
-            )
+        return render(
+            request,
+            "blog/login.html",
+            {
+                "error": "Invalid username or password."
+            }
+        )
 
     return render(
         request,
         "blog/login.html"
     )
-
-
 # =========================================================
 # DELETE COMMENT
 # =========================================================

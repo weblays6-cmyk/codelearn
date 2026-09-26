@@ -5,7 +5,7 @@ token.json
 .env.*
 
 # Uploaded files
-media/
+
 
 # Python
 __pycache__/

@@ -1,9 +1,9 @@
 {% load static %}
 {% load socialaccount %}
 
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,6 @@
     >
 
     <style>
-
         * {
             margin: 0;
             padding: 0;
@@ -27,11 +26,9 @@
             --bg: #050713;
             --card: rgba(255,255,255,.045);
             --border: rgba(255,255,255,.08);
-
             --text: #f8fafc;
             --muted: #94a3b8;
             --dim: #64748b;
-
             --purple: #8b5cf6;
             --blue: #3b82f6;
             --cyan: #22d3ee;
@@ -39,13 +36,10 @@
             --orange: #f59e0b;
         }
 
-        /* ================= LIGHT THEME ================= */
-
         body.light-theme {
             --bg: #f5f7fb;
             --card: rgba(255,255,255,.85);
             --border: rgba(15,23,42,.10);
-
             --text: #111827;
             --muted: #475569;
             --dim: #64748b;
@@ -57,7 +51,6 @@
 
         body {
             min-height: 100vh;
-
             color: var(--text);
 
             background:
@@ -109,12 +102,9 @@
 
             padding: 0 6%;
 
-            background:
-                rgba(5,7,19,.72);
+            background: rgba(5,7,19,.72);
 
-            border-bottom:
-                1px solid
-                rgba(255,255,255,.06);
+            border-bottom: 1px solid rgba(255,255,255,.06);
 
             backdrop-filter: blur(18px);
         }
@@ -183,14 +173,11 @@
 
             color: white;
 
-            border:
-                1px solid
-                rgba(139,92,246,.3);
+            border: 1px solid rgba(139,92,246,.3);
 
             border-radius: 9px;
 
-            background:
-                rgba(139,92,246,.1);
+            background: rgba(139,92,246,.1);
 
             font-size: 14px;
             font-weight: 800;
@@ -218,6 +205,23 @@
                 rgba(79,70,229,.2);
         }
 
+        .theme-toggle {
+            width: 38px;
+            height: 38px;
+
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 9px;
+
+            color: var(--muted);
+            background: rgba(255,255,255,.04);
+
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover {
+            color: white;
+        }
+
         /* ================= HERO ================= */
 
         .hero {
@@ -231,17 +235,13 @@
 
             display: grid;
 
-            grid-template-columns:
-                1.15fr
-                .85fr;
+            grid-template-columns: 1.15fr .85fr;
 
             align-items: center;
 
             gap: 50px;
 
-            padding:
-                80px 35px
-                65px;
+            padding: 80px 35px 65px;
         }
 
         .hero-content {
@@ -256,16 +256,13 @@
 
             padding: 7px 11px;
 
-            border:
-                1px solid
-                rgba(139,92,246,.2);
+            border: 1px solid rgba(139,92,246,.2);
 
             border-radius: 30px;
 
             color: #c4b5fd;
 
-            background:
-                rgba(139,92,246,.07);
+            background: rgba(139,92,246,.07);
 
             font-size: 12px;
             font-weight: 850;
@@ -279,8 +276,7 @@
 
             max-width: 700px;
 
-            font-size:
-                clamp(42px, 6vw, 72px);
+            font-size: clamp(42px, 6vw, 72px);
 
             line-height: .98;
 
@@ -319,15 +315,22 @@
             margin-top: 30px;
         }
 
-        .primary-btn {
+        .primary-btn,
+        .secondary-btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
 
             padding: 13px 18px;
 
             border-radius: 10px;
 
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .primary-btn {
             color: white;
 
             background:
@@ -337,34 +340,17 @@
                     #2563eb
                 );
 
-            font-size: 14px;
-            font-weight: 800;
-
             box-shadow:
                 0 12px 35px
                 rgba(79,70,229,.23);
         }
 
         .secondary-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-
-            padding: 13px 18px;
-
-            border:
-                1px solid
-                var(--border);
-
-            border-radius: 10px;
-
             color: var(--muted);
 
-            background:
-                rgba(255,255,255,.035);
+            border: 1px solid var(--border);
 
-            font-size: 14px;
-            font-weight: 800;
+            background: rgba(255,255,255,.035);
         }
 
         .secondary-btn:hover {
@@ -410,8 +396,7 @@
 
             border-radius: 50%;
 
-            background:
-                rgba(124,58,237,.16);
+            background: rgba(124,58,237,.16);
 
             filter: blur(70px);
         }
@@ -425,9 +410,7 @@
 
             padding: 27px;
 
-            border:
-                1px solid
-                rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.1);
 
             border-radius: 22px;
 
@@ -469,7 +452,6 @@
 
         .login-card h2 {
             margin-top: 17px;
-
             font-size: 23px;
         }
 
@@ -506,7 +488,7 @@
             position: relative;
         }
 
-        .input-wrap i {
+        .input-wrap > i {
             position: absolute;
 
             left: 12px;
@@ -517,6 +499,8 @@
             color: #64748b;
 
             font-size: 13px;
+
+            z-index: 2;
         }
 
         .input-wrap input {
@@ -524,12 +508,9 @@
 
             height: 42px;
 
-            padding:
-                0 12px 0 35px;
+            padding: 0 12px 0 35px;
 
-            border:
-                1px solid
-                rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.1);
 
             border-radius: 10px;
 
@@ -537,8 +518,7 @@
 
             color: white;
 
-            background:
-                rgba(3,5,15,.6);
+            background: rgba(3,5,15,.6);
 
             font-size: 14px;
 
@@ -546,12 +526,49 @@
         }
 
         .input-wrap input:focus {
-            border-color:
-                #7c5cff;
+            border-color: #7c5cff;
 
             box-shadow:
                 0 0 0 3px
                 rgba(124,92,255,.09);
+        }
+
+        /* ================= PASSWORD TOGGLE ================= */
+
+        .password-wrap input {
+            padding-right: 44px !important;
+        }
+
+        .password-toggle {
+            position: absolute;
+
+            right: 10px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: 30px;
+            height: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border: none;
+            border-radius: 7px;
+
+            color: #64748b;
+
+            background: transparent;
+
+            cursor: pointer;
+
+            z-index: 5;
+        }
+
+        .password-toggle:hover {
+            color: #a78bfa;
+            background: rgba(255,255,255,.05);
         }
 
         .login-submit {
@@ -578,6 +595,8 @@
             font-weight: 850;
 
             cursor: pointer;
+
+            transition: .2s;
         }
 
         .login-submit:hover {
@@ -604,8 +623,7 @@
 
             height: 1px;
 
-            background:
-                rgba(255,255,255,.07);
+            background: rgba(255,255,255,.07);
         }
 
         .signup-text {
@@ -614,23 +632,76 @@
             color: var(--dim);
 
             font-size: 12px;
+
+            margin-top: 18px;
         }
 
         .signup-text a {
             color: #a78bfa;
-
             font-weight: 800;
         }
 
-        /* ================= PRODUCT SECTION ================= */
+        .forgot-password {
+            text-align: right;
+
+            margin-top: 9px;
+            margin-bottom: 4px;
+        }
+
+        .forgot-password a {
+            color: #8b7cff;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            transition: .2s;
+        }
+
+        .forgot-password a:hover {
+            color: #a78bfa;
+            text-decoration: underline;
+        }
+
+        .google-login {
+            margin-top: 5px;
+        }
+
+        .google-btn {
+            width: 100%;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            border: 1px solid rgba(255,255,255,.1);
+
+            border-radius: 10px;
+
+            color: white;
+
+            background: rgba(255,255,255,.04);
+
+            font-size: 13px;
+            font-weight: 750;
+
+            transition: .2s;
+        }
+
+        .google-btn:hover {
+            background: rgba(255,255,255,.08);
+            border-color: rgba(139,92,246,.3);
+        }
+
+        /* ================= SECTIONS ================= */
 
         .section {
             max-width: 1250px;
 
             margin: auto;
 
-            padding:
-                75px 35px;
+            padding: 75px 35px;
         }
 
         .section-heading {
@@ -638,8 +709,7 @@
 
             max-width: 700px;
 
-            margin:
-                0 auto 42px;
+            margin: 0 auto 42px;
         }
 
         .section-label {
@@ -655,8 +725,7 @@
         .section-heading h2 {
             margin-top: 10px;
 
-            font-size:
-                clamp(28px, 4vw, 42px);
+            font-size: clamp(28px, 4vw, 42px);
 
             letter-spacing: -1.5px;
         }
@@ -671,13 +740,10 @@
             line-height: 1.7;
         }
 
-        /* ================= FEATURE GRID ================= */
-
         .features {
             display: grid;
 
-            grid-template-columns:
-                repeat(3, 1fr);
+            grid-template-columns: repeat(3, 1fr);
 
             gap: 15px;
         }
@@ -685,14 +751,11 @@
         .feature {
             padding: 23px;
 
-            border:
-                1px solid
-                var(--border);
+            border: 1px solid var(--border);
 
             border-radius: 18px;
 
-            background:
-                var(--card);
+            background: var(--card);
 
             transition: .25s;
         }
@@ -700,11 +763,9 @@
         .feature:hover {
             transform: translateY(-5px);
 
-            border-color:
-                rgba(139,92,246,.25);
+            border-color: rgba(139,92,246,.25);
 
-            background:
-                rgba(255,255,255,.06);
+            background: rgba(255,255,255,.06);
         }
 
         .feature-icon {
@@ -719,15 +780,13 @@
 
             color: #a78bfa;
 
-            background:
-                rgba(139,92,246,.11);
+            background: rgba(139,92,246,.11);
 
             font-size: 18px;
         }
 
         .feature h3 {
             margin-top: 16px;
-
             font-size: 13px;
         }
 
@@ -741,32 +800,24 @@
             line-height: 1.7;
         }
 
-        /* ================= JOURNEY ================= */
-
         .journey {
             display: grid;
 
-            grid-template-columns:
-                repeat(5, 1fr);
+            grid-template-columns: repeat(5, 1fr);
 
             gap: 10px;
         }
 
         .journey-step {
-            position: relative;
-
             padding: 20px 14px;
 
             text-align: center;
 
-            border:
-                1px solid
-                var(--border);
+            border: 1px solid var(--border);
 
             border-radius: 15px;
 
-            background:
-                rgba(255,255,255,.035);
+            background: rgba(255,255,255,.035);
         }
 
         .step-number {
@@ -796,7 +847,6 @@
 
         .journey-step h3 {
             margin-top: 12px;
-
             font-size: 14px;
         }
 
@@ -810,22 +860,16 @@
             line-height: 1.5;
         }
 
-        /* ================= CTA ================= */
-
         .cta {
             max-width: 1100px;
 
-            margin:
-                30px auto 70px;
+            margin: 30px auto 70px;
 
-            padding:
-                55px 30px;
+            padding: 55px 30px;
 
             text-align: center;
 
-            border:
-                1px solid
-                rgba(139,92,246,.18);
+            border: 1px solid rgba(139,92,246,.18);
 
             border-radius: 25px;
 
@@ -839,9 +883,7 @@
         }
 
         .cta h2 {
-            font-size:
-                clamp(28px, 4vw, 42px);
-
+            font-size: clamp(28px, 4vw, 42px);
             letter-spacing: -1.5px;
         }
 
@@ -857,15 +899,10 @@
             line-height: 1.7;
         }
 
-        /* ================= FOOTER ================= */
-
         footer {
-            padding:
-                30px 6%;
+            padding: 30px 6%;
 
-            border-top:
-                1px solid
-                rgba(255,255,255,.06);
+            border-top: 1px solid rgba(255,255,255,.06);
 
             color: var(--dim);
 
@@ -880,7 +917,6 @@
 
             .hero {
                 grid-template-columns: 1fr;
-
                 padding-top: 60px;
             }
 
@@ -889,13 +925,11 @@
             }
 
             .features {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .journey {
-                grid-template-columns:
-                    repeat(3, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -914,8 +948,7 @@
             }
 
             .hero {
-                padding:
-                    45px 20px;
+                padding: 45px 20px;
             }
 
             .hero h1 {
@@ -936,86 +969,31 @@
             }
 
             .journey {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .section {
-                padding:
-                    55px 20px;
+                padding: 55px 20px;
+            }
+
+            .hero-trust {
+                flex-wrap: wrap;
+            }
+
+            .login-card {
+                padding: 22px;
             }
         }
-
-        .forgot-password {
-            text-align: right;
-            margin-top: -4px;
-            margin-bottom: 18px;
-        }
-
-        .forgot-password a {
-            color: #8b7cff;
-            font-size: 12px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: 0.2s ease;
-        }
-
-        .forgot-password a:hover {
-            color: #a78bfa;
-            text-decoration: underline;
-        }
-
-        /* ================= AUTH FLOW ================= */
-
-        .google-login {
-            margin-top: 5px;
-        }
-
-        .google-btn {
-            width: 100%;
-            height: 42px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-
-            border: 1px solid rgba(255,255,255,.1);
-            border-radius: 10px;
-
-            color: white;
-            background: rgba(255,255,255,.04);
-
-            font-size: 13px;
-            font-weight: 750;
-
-            transition: .2s;
-        }
-
-        .google-btn:hover {
-            background: rgba(255,255,255,.08);
-            border-color: rgba(139,92,246,.3);
-        }
-
-        .google-btn i {
-            font-size: 13px;
-        }
-
     </style>
 </head>
 
-
 <body>
-
 
 <!-- ================= NAVBAR ================= -->
 
 <nav class="navbar">
 
-    <a
-        href="#top"
-        class="brand"
-    >
+    <a href="#top" class="brand">
 
         <div class="brand-icon">
             <i class="bi bi-code-slash"></i>
@@ -1028,20 +1006,13 @@
 
     </a>
 
-
     <div class="nav-right">
 
-        <a
-            href="#features"
-            class="nav-link"
-        >
+        <a href="#features" class="nav-link">
             Features
         </a>
 
-        <a
-            href="#journey"
-            class="nav-link"
-        >
+        <a href="#journey" class="nav-link">
             How It Works
         </a>
 
@@ -1054,10 +1025,7 @@
             <i class="bi bi-moon-fill" id="themeIcon"></i>
         </button>
 
-        <a
-            href="#login"
-            class="nav-login"
-        >
+        <a href="#login" class="nav-login">
             Login
         </a>
 
@@ -1075,45 +1043,30 @@
 
 <!-- ================= HERO ================= -->
 
-<section
-    class="hero"
-    id="top"
->
+<section class="hero" id="top">
 
     <div class="hero-content">
 
         <div class="eyebrow">
-
             <i class="bi bi-stars"></i>
-
             Developer Learning Platform
-
         </div>
 
-
         <h1>
-
             Learn Code.
-
             <br>
-
             <span class="gradient-text">
                 Build Your Future.
             </span>
-
         </h1>
 
-
         <p class="hero-description">
-
             CodeLearn Hub is a complete learning platform
             designed to take you from programming fundamentals
             to real-world development skills — through courses,
             coding practice, assignments, projects, AI guidance
             and career-focused learning.
-
         </p>
-
 
         <div class="hero-buttons">
 
@@ -1121,27 +1074,19 @@
                 href="{% url 'blog:signup' %}"
                 class="primary-btn"
             >
-
                 <i class="bi bi-rocket-takeoff"></i>
-
                 Start Learning Free
-
             </a>
-
 
             <a
                 href="#features"
                 class="secondary-btn"
             >
-
                 Explore CodeLearn Hub
-
                 <i class="bi bi-arrow-down"></i>
-
             </a>
 
         </div>
-
 
         <div class="hero-trust">
 
@@ -1181,9 +1126,11 @@
             </div>
 
 
-            {% if show_forgot %}
+            <!-- =================================================
+                 FORGOT PASSWORD / OTP
+            ================================================= -->
 
-                <!-- ================= FORGOT PASSWORD / OTP ================= -->
+            {% if show_forgot %}
 
                 {% if show_otp %}
 
@@ -1215,9 +1162,7 @@
 
                         <div class="field">
 
-                            <label>
-                                OTP
-                            </label>
+                            <label>OTP</label>
 
                             <div class="input-wrap">
 
@@ -1237,36 +1182,26 @@
 
                         </div>
 
-
                         <button
                             type="submit"
                             class="login-submit"
                         >
-
                             <i class="bi bi-check-circle"></i>
-
                             Verify OTP
-
                         </button>
 
                     </form>
-
 
                     <div
                         class="signup-text"
                         style="margin-top:20px;"
                     >
-
                         <a href="{% url 'blog:forgot_password' %}">
                             ← Change Email
                         </a>
-
                     </div>
 
-
                 {% else %}
-
-                    <!-- ================= FORGOT PASSWORD ================= -->
 
                     <h2>
                         Forgot <span>Password?</span>
@@ -1296,9 +1231,7 @@
 
                         <div class="field">
 
-                            <label>
-                                Email Address
-                            </label>
+                            <label>Email Address</label>
 
                             <div class="input-wrap">
 
@@ -1308,6 +1241,7 @@
                                     type="email"
                                     name="email"
                                     placeholder="Enter your email"
+                                    autocomplete="email"
                                     required
                                     autofocus
                                 >
@@ -1316,38 +1250,33 @@
 
                         </div>
 
-
                         <button
                             type="submit"
                             class="login-submit"
                         >
-
                             <i class="bi bi-send"></i>
-
                             Send OTP
-
                         </button>
 
                     </form>
-
 
                     <div
                         class="signup-text"
                         style="margin-top:20px;"
                     >
-
                         <a href="{% url 'blog:login' %}">
                             ← Back to Login
                         </a>
-
                     </div>
 
                 {% endif %}
 
 
-            {% elif show_reset %}
+            <!-- =================================================
+                 RESET PASSWORD
+            ================================================= -->
 
-                <!-- ================= RESET PASSWORD ================= -->
+            {% elif show_reset %}
 
                 <h2>
                     Reset <span>Password</span>
@@ -1396,7 +1325,6 @@
                         </p>
                     {% endif %}
 
-
                     <form
                         method="POST"
                         action="{% url 'blog:reset_password' %}"
@@ -1404,28 +1332,45 @@
 
                         {% csrf_token %}
 
+
+                        <!-- NEW PASSWORD -->
+
                         <div class="field">
 
                             <label>
                                 New Password
                             </label>
 
-                            <div class="input-wrap">
+                            <div class="input-wrap password-wrap">
 
                                 <i class="bi bi-lock"></i>
 
                                 <input
                                     type="password"
                                     name="password1"
+                                    id="resetPassword1"
                                     placeholder="Enter new password"
+                                    autocomplete="new-password"
                                     required
                                     autofocus
                                 >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    data-target="resetPassword1"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
 
                             </div>
 
                         </div>
 
+
+                        <!-- CONFIRM PASSWORD -->
 
                         <div class="field">
 
@@ -1433,16 +1378,28 @@
                                 Confirm Password
                             </label>
 
-                            <div class="input-wrap">
+                            <div class="input-wrap password-wrap">
 
                                 <i class="bi bi-lock-fill"></i>
 
                                 <input
                                     type="password"
                                     name="password2"
+                                    id="resetPassword2"
                                     placeholder="Confirm new password"
+                                    autocomplete="new-password"
                                     required
                                 >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    data-target="resetPassword2"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
 
                             </div>
 
@@ -1453,11 +1410,8 @@
                             type="submit"
                             class="login-submit"
                         >
-
                             <i class="bi bi-key"></i>
-
                             Change Password
-
                         </button>
 
                     </form>
@@ -1465,9 +1419,11 @@
                 {% endif %}
 
 
-            {% else %}
+            <!-- =================================================
+                 NORMAL LOGIN
+            ================================================= -->
 
-                <!-- ================= NORMAL LOGIN ================= -->
+            {% else %}
 
                 <h2>
                     Welcome to
@@ -1475,12 +1431,9 @@
                 </h2>
 
                 <p class="login-subtitle">
-
                     Continue your learning journey
                     and build skills that matter.
-
                 </p>
-
 
                 <form
                     method="POST"
@@ -1490,12 +1443,12 @@
                     {% csrf_token %}
 
 
-                    <!-- EMAIL -->
+                    <!-- USERNAME -->
 
                     <div class="field">
 
                         <label>
-                            Email Address
+                            Username
                         </label>
 
                         <div class="input-wrap">
@@ -1503,9 +1456,10 @@
                             <i class="bi bi-person"></i>
 
                             <input
-                                type="email"
-                                name="email"
-                                placeholder="Enter your email"
+                                type="text"
+                                name="username"
+                                placeholder="Enter your username"
+                                autocomplete="username"
                                 required
                                 autofocus
                             >
@@ -1523,16 +1477,28 @@
                             Password
                         </label>
 
-                        <div class="input-wrap">
+                        <div class="input-wrap password-wrap">
 
                             <i class="bi bi-lock"></i>
 
                             <input
                                 type="password"
                                 name="password"
+                                id="loginPassword"
                                 placeholder="Enter your password"
+                                autocomplete="current-password"
                                 required
                             >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                data-target="loginPassword"
+                                aria-label="Show password"
+                                title="Show password"
+                            >
+                                <i class="bi bi-eye"></i>
+                            </button>
 
                         </div>
 
@@ -1543,12 +1509,16 @@
 
                     <div class="forgot-password">
 
-                        <a href="{% url 'blog:forgot_password' %}">
+                        <a
+                            href="{% url 'blog:forgot_password' %}"
+                        >
                             Forgot Password?
                         </a>
 
                     </div>
 
+
+                    <!-- ERROR -->
 
                     {% if error %}
 
@@ -1564,15 +1534,14 @@
                     {% endif %}
 
 
+                    <!-- LOGIN -->
+
                     <button
                         type="submit"
                         class="login-submit"
                     >
-
                         <i class="bi bi-box-arrow-in-right"></i>
-
                         Login to CodeLearn Hub
-
                     </button>
 
                 </form>
@@ -1591,11 +1560,8 @@
                         href="{% provider_login_url 'google' %}"
                         class="google-btn"
                     >
-
                         <i class="bi bi-google"></i>
-
                         Continue with Google
-
                     </a>
 
                 </div>
@@ -1633,7 +1599,6 @@
             Everything in one place
         </div>
 
-
         <h2>
             More Than Just
             <span class="gradient-text">
@@ -1641,14 +1606,11 @@
             </span>
         </h2>
 
-
         <p>
-
             CodeLearn Hub combines learning,
             practice, projects, AI assistance and
             career preparation into one developer-focused
             learning experience.
-
         </p>
 
     </div>
@@ -1657,173 +1619,137 @@
     <div class="features">
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-book"></i>
             </div>
 
-            <h3>
-                Structured Courses
-            </h3>
+            <h3>Structured Courses</h3>
 
             <p>
                 Learn programming concepts through
                 organized courses and lessons designed
                 to build your knowledge step by step.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-lightning-charge"></i>
             </div>
 
-            <h3>
-                Practice Arena
-            </h3>
+            <h3>Practice Arena</h3>
 
             <p>
                 Solve coding problems, improve your
                 problem-solving skills and practice
                 Python, Django, SQL, JavaScript and more.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-clipboard-check"></i>
             </div>
 
-            <h3>
-                Assignments
-            </h3>
+            <h3>Assignments</h3>
 
             <p>
                 Apply what you learn through practical
                 assignments and track your completion,
                 submissions and scores.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-robot"></i>
             </div>
 
-            <h3>
-                AI Learning Assistant
-            </h3>
+            <h3>AI Learning Assistant</h3>
 
             <p>
                 Get programming explanations,
                 debugging guidance and step-by-step
                 learning support from the AI Tutor.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-folder2-open"></i>
             </div>
 
-            <h3>
-                Real-World Projects
-            </h3>
+            <h3>Real-World Projects</h3>
 
             <p>
                 Turn your knowledge into portfolio-ready
                 applications and gain experience by
                 building practical projects.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-graph-up-arrow"></i>
             </div>
 
-            <h3>
-                Progress Tracking
-            </h3>
+            <h3>Progress Tracking</h3>
 
             <p>
                 Track enrolled courses, lesson progress,
                 completed learning activities and your
                 overall development journey.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-people"></i>
             </div>
 
-            <h3>
-                Developer Community
-            </h3>
+            <h3>Developer Community</h3>
 
             <p>
                 Discuss programming, ask questions,
                 share your work and learn from other
                 developers and learners.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-person-workspace"></i>
             </div>
 
-            <h3>
-                Career Preparation
-            </h3>
+            <h3>Career Preparation</h3>
 
             <p>
                 Prepare for developer roles through
                 practical coding, projects, interview
                 preparation and skill development.
             </p>
-
         </div>
 
 
         <div class="feature">
-
             <div class="feature-icon">
                 <i class="bi bi-trophy"></i>
             </div>
 
-            <h3>
-                Build Your Developer Profile
-            </h3>
+            <h3>Build Your Developer Profile</h3>
 
             <p>
                 Keep your learning achievements,
                 projects and progress organized as
                 you grow toward becoming job ready.
             </p>
-
         </div>
 
     </div>
@@ -1831,7 +1757,7 @@
 </section>
 
 
-<!-- ================= LEARNING JOURNEY ================= -->
+<!-- ================= JOURNEY ================= -->
 
 <section
     class="section"
@@ -1844,7 +1770,6 @@
             Your Developer Journey
         </div>
 
-
         <h2>
             From Beginner
             <span class="gradient-text">
@@ -1852,13 +1777,10 @@
             </span>
         </h2>
 
-
         <p>
-
             CodeLearn Hub is designed around a simple
             learning journey: understand → practice →
             build → improve → prepare.
-
         </p>
 
     </div>
@@ -1872,9 +1794,7 @@
                 01
             </div>
 
-            <h3>
-                Learn
-            </h3>
+            <h3>Learn</h3>
 
             <p>
                 Master programming fundamentals
@@ -1890,9 +1810,7 @@
                 02
             </div>
 
-            <h3>
-                Practice
-            </h3>
+            <h3>Practice</h3>
 
             <p>
                 Solve problems and strengthen
@@ -1908,9 +1826,7 @@
                 03
             </div>
 
-            <h3>
-                Build
-            </h3>
+            <h3>Build</h3>
 
             <p>
                 Create real-world projects
@@ -1926,9 +1842,7 @@
                 04
             </div>
 
-            <h3>
-                Improve
-            </h3>
+            <h3>Improve</h3>
 
             <p>
                 Use feedback, progress tracking
@@ -1944,9 +1858,7 @@
                 05
             </div>
 
-            <h3>
-                Get Job Ready
-            </h3>
+            <h3>Get Job Ready</h3>
 
             <p>
                 Prepare your skills, projects
@@ -1968,7 +1880,6 @@
         START YOUR JOURNEY
     </div>
 
-
     <h2>
         Your Next Level
         <span class="gradient-text">
@@ -1976,26 +1887,19 @@
         </span>
     </h2>
 
-
     <p>
-
         Don't just watch tutorials.
         Learn concepts, write code, solve problems,
         build projects and become the developer
         you want to be.
-
     </p>
-
 
     <a
         href="{% url 'blog:signup' %}"
         class="primary-btn"
     >
-
         <i class="bi bi-rocket-takeoff"></i>
-
         Join CodeLearn Hub Free
-
     </a>
 
 </section>
@@ -2004,51 +1908,171 @@
 <!-- ================= FOOTER ================= -->
 
 <footer>
-
     © 2026 CodeLearn Hub
-
     • Learn. Practice. Build. Grow.
-
 </footer>
 
 
 <script>
 
-    function toggleTheme() {
+/* =====================================================
+   THEME
+===================================================== */
 
-        document.body.classList.toggle("light-theme");
+function toggleTheme() {
 
-        const icon = document.getElementById("themeIcon");
+    document.body.classList.toggle("light-theme");
 
-        if (document.body.classList.contains("light-theme")) {
+    const icon =
+        document.getElementById("themeIcon");
 
-            icon.className = "bi bi-sun-fill";
+    if (
+        document.body.classList.contains("light-theme")
+    ) {
 
-            localStorage.setItem("codelearn-theme", "light");
+        icon.className = "bi bi-sun-fill";
 
-        } else {
+        localStorage.setItem(
+            "codelearn-theme",
+            "light"
+        );
 
-            icon.className = "bi bi-moon-fill";
+    } else {
 
-            localStorage.setItem("codelearn-theme", "dark");
+        icon.className = "bi bi-moon-fill";
 
-        }
+        localStorage.setItem(
+            "codelearn-theme",
+            "dark"
+        );
     }
+}
 
 
-    // Restore saved theme
-    const savedTheme = localStorage.getItem("codelearn-theme");
+/* =====================================================
+   RESTORE THEME
+===================================================== */
 
-    if (savedTheme === "light") {
+const savedTheme =
+    localStorage.getItem("codelearn-theme");
 
-        document.body.classList.add("light-theme");
+if (savedTheme === "light") {
 
-        document.getElementById("themeIcon").className =
-            "bi bi-sun-fill";
-    }
+    document.body.classList.add("light-theme");
+
+    document.getElementById(
+        "themeIcon"
+    ).className = "bi bi-sun-fill";
+}
+
+
+/* =====================================================
+   PASSWORD SHOW / HIDE
+===================================================== */
+
+document
+    .querySelectorAll(".password-toggle")
+    .forEach(function(button) {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                const targetId =
+                    button.dataset.target;
+
+                const input =
+                    document.getElementById(targetId);
+
+                if (!input) return;
+
+                const icon =
+                    button.querySelector("i");
+
+                if (input.type === "password") {
+
+                    input.type = "text";
+
+                    icon.className =
+                        "bi bi-eye-slash";
+
+                    button.setAttribute(
+                        "aria-label",
+                        "Hide password"
+                    );
+
+                    button.setAttribute(
+                        "title",
+                        "Hide password"
+                    );
+
+                } else {
+
+                    input.type = "password";
+
+                    icon.className =
+                        "bi bi-eye";
+
+                    button.setAttribute(
+                        "aria-label",
+                        "Show password"
+                    );
+
+                    button.setAttribute(
+                        "title",
+                        "Show password"
+                    );
+                }
+            }
+        );
+    });
+
+
+/* =====================================================
+   HIDE PASSWORD WHEN FOCUS/CURSOR LEAVES
+===================================================== */
+
+document
+    .querySelectorAll(".password-wrap input")
+    .forEach(function(input) {
+
+        input.addEventListener(
+            "blur",
+            function() {
+
+                if (input.type === "text") {
+
+                    input.type = "password";
+
+                    const button =
+                        input.parentElement
+                            .querySelector(
+                                ".password-toggle"
+                            );
+
+                    if (!button) return;
+
+                    const icon =
+                        button.querySelector("i");
+
+                    icon.className =
+                        "bi bi-eye";
+
+                    button.setAttribute(
+                        "aria-label",
+                        "Show password"
+                    );
+
+                    button.setAttribute(
+                        "title",
+                        "Show password"
+                    );
+                }
+            }
+        );
+    });
 
 </script>
-
 
 </body>
 </html>
