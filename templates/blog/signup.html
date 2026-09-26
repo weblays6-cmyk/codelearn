@@ -350,6 +350,8 @@
             font-size: 14px;
 
             pointer-events: none;
+
+            z-index: 2;
         }
 
 
@@ -360,7 +362,7 @@
             height: 43px;
 
             padding:
-                0 13px 0 39px;
+                0 42px 0 39px;
 
             border:
                 1px solid #2b2e46;
@@ -392,6 +394,57 @@
             box-shadow:
                 0 0 0 3px
                 rgba(116,91,240,.12);
+        }
+
+
+        /* =====================================
+           PASSWORD TOGGLE
+        ====================================== */
+
+        .password-toggle {
+
+            position: absolute;
+
+            right: 12px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            border: none;
+
+            background: transparent;
+
+            color: #646b86;
+
+            font-size: 14px;
+
+            cursor: pointer;
+
+            padding: 4px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transition: .2s;
+
+            z-index: 3;
+        }
+
+
+        .password-toggle:hover {
+
+            color: #ffffff;
+        }
+
+
+        .password-toggle:focus {
+
+            outline: none;
         }
 
 
@@ -715,35 +768,75 @@
 
 
 
-            <!-- USERNAME -->
+            <!-- =====================================
+                 USERNAME
+            ====================================== -->
 
-            <!-- EMAIL -->
-        <div class="form-group">
+            <div class="form-group">
 
-            <label
-                class="form-label"
-                for="{{ form.email.id_for_label }}"
-            >
-                Email Address
-            </label>
+                <label
+                    class="form-label"
+                    for="{{ form.username.id_for_label }}"
+                >
+                    Username
+                </label>
 
-            <div class="input-wrapper">
 
-                <i class="bi bi-envelope input-icon"></i>
+                <div class="input-wrapper">
 
-                {{ form.email }}
+                    <i class="bi bi-at input-icon"></i>
+
+                    {{ form.username }}
+
+                </div>
+
+
+                {% if form.username.errors %}
+
+                    {{ form.username.errors }}
+
+                {% endif %}
 
             </div>
 
-            {% if form.email.errors %}
-                {{ form.email.errors }}
-            {% endif %}
-
-        </div>
 
 
+            <!-- =====================================
+                 EMAIL
+            ====================================== -->
 
-            <!-- PASSWORD -->
+            <div class="form-group">
+
+                <label
+                    class="form-label"
+                    for="{{ form.email.id_for_label }}"
+                >
+                    Email Address
+                </label>
+
+
+                <div class="input-wrapper">
+
+                    <i class="bi bi-envelope input-icon"></i>
+
+                    {{ form.email }}
+
+                </div>
+
+
+                {% if form.email.errors %}
+
+                    {{ form.email.errors }}
+
+                {% endif %}
+
+            </div>
+
+
+
+            <!-- =====================================
+                 PASSWORD
+            ====================================== -->
 
             <div class="form-group">
 
@@ -763,6 +856,18 @@
 
                     {{ form.password1 }}
 
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="{{ form.password1.id_for_label }}"
+                        aria-label="Show password"
+                        title="Show password"
+                    >
+
+                        <i class="bi bi-eye"></i>
+
+                    </button>
+
                 </div>
 
 
@@ -772,12 +877,13 @@
 
                 {% endif %}
 
-
             </div>
 
 
 
-            <!-- CONFIRM PASSWORD -->
+            <!-- =====================================
+                 CONFIRM PASSWORD
+            ====================================== -->
 
             <div class="form-group">
 
@@ -797,6 +903,18 @@
 
                     {{ form.password2 }}
 
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="{{ form.password2.id_for_label }}"
+                        aria-label="Show password"
+                        title="Show password"
+                    >
+
+                        <i class="bi bi-eye"></i>
+
+                    </button>
+
                 </div>
 
 
@@ -806,12 +924,13 @@
 
                 {% endif %}
 
-
             </div>
 
 
 
-            <!-- SUBMIT -->
+            <!-- =====================================
+                 SUBMIT
+            ====================================== -->
 
             <button
                 type="submit"
@@ -829,7 +948,9 @@
 
 
 
-        <!-- DIVIDER -->
+        <!-- =====================================
+             DIVIDER
+        ====================================== -->
 
         <div class="divider">
 
@@ -843,12 +964,16 @@
 
 
 
-        <!-- LOGIN -->
+        <!-- =====================================
+             LOGIN
+        ====================================== -->
 
         <div class="login-area">
 
             <p>
+
                 Already have an account?
+
             </p>
 
 
@@ -878,6 +1003,164 @@
 
 
 </div>
+
+
+
+<!-- =====================================
+     PASSWORD TOGGLE JAVASCRIPT
+====================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const passwordToggles =
+            document.querySelectorAll(
+                ".password-toggle"
+            );
+
+
+        passwordToggles.forEach(
+            function (toggle) {
+
+                const targetId =
+                    toggle.dataset.target;
+
+
+                const passwordInput =
+                    document.getElementById(
+                        targetId
+                    );
+
+
+                const icon =
+                    toggle.querySelector("i");
+
+
+                if (
+                    !passwordInput ||
+                    !icon
+                ) {
+                    return;
+                }
+
+
+                /* ==============================
+                   CLICK → SHOW / HIDE
+                ============================== */
+
+                toggle.addEventListener(
+                    "click",
+                    function () {
+
+                        if (
+                            passwordInput.type ===
+                            "password"
+                        ) {
+
+                            passwordInput.type =
+                                "text";
+
+
+                            icon.classList.remove(
+                                "bi-eye"
+                            );
+
+
+                            icon.classList.add(
+                                "bi-eye-slash"
+                            );
+
+
+                            toggle.setAttribute(
+                                "aria-label",
+                                "Hide password"
+                            );
+
+
+                            toggle.setAttribute(
+                                "title",
+                                "Hide password"
+                            );
+
+                        } else {
+
+                            passwordInput.type =
+                                "password";
+
+
+                            icon.classList.remove(
+                                "bi-eye-slash"
+                            );
+
+
+                            icon.classList.add(
+                                "bi-eye"
+                            );
+
+
+                            toggle.setAttribute(
+                                "aria-label",
+                                "Show password"
+                            );
+
+
+                            toggle.setAttribute(
+                                "title",
+                                "Show password"
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                /* ==============================
+                   FOCUS LEAVE → HIDE
+                ============================== */
+
+                passwordInput.addEventListener(
+                    "blur",
+                    function () {
+
+                        passwordInput.type =
+                            "password";
+
+
+                        icon.classList.remove(
+                            "bi-eye-slash"
+                        );
+
+
+                        icon.classList.add(
+                            "bi-eye"
+                        );
+
+
+                        toggle.setAttribute(
+                            "aria-label",
+                            "Show password"
+                        );
+
+
+                        toggle.setAttribute(
+                            "title",
+                            "Show password"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
+
+</script>
 
 
 </body>
