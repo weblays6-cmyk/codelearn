@@ -1,0 +1,225 @@
+{% load static %}
+
+<aside class="sidebar">
+
+    <!-- =====================================================
+         BRAND
+    ====================================================== -->
+
+    <a
+        href="{% url 'blog:dashboard' %}"
+        class="brand"
+    >
+
+        <div class="brand-icon">
+            <i class="bi bi-code-slash"></i>
+        </div>
+
+        <div class="brand-text">
+            {{ SITE_NAME }}
+        </div>
+
+    </a>
+
+
+    <!-- =====================================================
+         LEARNING
+    ====================================================== -->
+
+    <div class="nav-label">
+        LEARNING
+    </div>
+
+
+    <a
+        href="{% url 'blog:dashboard' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-grid"></i>
+        <span>Dashboard</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:blogpage' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-book"></i>
+        <span>Courses</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:my_learning' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-mortarboard"></i>
+        <span>My Learning</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:practice' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-lightning-charge"></i>
+        <span>Practice</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:assignments' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-clipboard-check"></i>
+        <span>Assignments</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:ai_tutor' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-robot"></i>
+        <span>AI Tutor</span>
+
+        <span class="new-badge">
+            NEW
+        </span>
+    </a>
+
+
+    <!-- =====================================================
+         YOUR SPACE
+    ====================================================== -->
+
+    <div
+        class="nav-label"
+        style="margin-top:20px;"
+    >
+        YOUR SPACE
+    </div>
+
+
+    <a
+        href="{% url 'blog:projects' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-folder2-open"></i>
+        <span>Projects</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:community' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-people"></i>
+        <span>Community</span>
+    </a>
+
+
+    <!-- =====================================================
+         MESSAGES
+         Total unread messages are shown globally.
+         Opening a conversation marks its incoming messages
+         as read, so this number automatically decreases.
+    ====================================================== -->
+
+    <a
+        href="{% url 'blog:messages' %}"
+        class="nav-link"
+    >
+
+        <i class="bi bi-chat-dots"></i>
+
+        <span>
+            Messages
+        </span>
+
+        {% if UNREAD_MESSAGE_COUNT > 0 %}
+
+            <span
+                class="message-unread-count"
+                aria-label="{{ UNREAD_MESSAGE_COUNT }} unread messages"
+                title="{{ UNREAD_MESSAGE_COUNT }} unread messages"
+                style="
+                    min-width:20px;
+                    height:20px;
+                    padding:0 6px;
+                    margin-left:auto;
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    box-sizing:border-box;
+                    border-radius:999px;
+                    background:#7c5cff;
+                    color:#ffffff;
+                    font-size:10px;
+                    font-weight:800;
+                    line-height:1;
+                    box-shadow:0 4px 10px rgba(124,92,255,.28);
+                "
+            >
+                {% if UNREAD_MESSAGE_COUNT > 99 %}
+                    99+
+                {% else %}
+                    {{ UNREAD_MESSAGE_COUNT }}
+                {% endif %}
+            </span>
+
+        {% endif %}
+
+    </a>
+
+
+    <!-- =====================================================
+         ACCOUNT
+    ====================================================== -->
+
+    <div
+        class="nav-label"
+        style="margin-top:20px;"
+    >
+        ACCOUNT
+    </div>
+
+
+    <a
+        href="{% url 'blog:profile' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-person-circle"></i>
+        <span>Profile</span>
+    </a>
+
+
+    <a
+        href="{% url 'blog:settings' %}"
+        class="nav-link"
+    >
+        <i class="bi bi-gear"></i>
+        <span>Settings</span>
+    </a>
+
+
+    <form
+        method="POST"
+        action="{% url 'blog:logout' %}"
+        style="margin:4px 0;"
+    >
+
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            class="nav-link logout-link"
+            style="width:100%; border:0; background:transparent; text-align:left; cursor:pointer;"
+        >
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </button>
+
+    </form>
+
+</aside>

@@ -1,0 +1,2054 @@
+{% load static %}
+{% load socialaccount %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CodeLearn Hub | Learn. Practice. Build.</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #050713;
+            --card: rgba(255,255,255,.045);
+            --border: rgba(255,255,255,.08);
+
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --dim: #64748b;
+
+            --purple: #8b5cf6;
+            --blue: #3b82f6;
+            --cyan: #22d3ee;
+            --green: #22c55e;
+            --orange: #f59e0b;
+        }
+
+        /* ================= LIGHT THEME ================= */
+
+        body.light-theme {
+            --bg: #f5f7fb;
+            --card: rgba(255,255,255,.85);
+            --border: rgba(15,23,42,.10);
+
+            --text: #111827;
+            --muted: #475569;
+            --dim: #64748b;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+
+            color: var(--text);
+
+            background:
+                radial-gradient(
+                    circle at 15% 10%,
+                    rgba(124,58,237,.18),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(37,99,235,.15),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 50% 90%,
+                    rgba(6,182,212,.08),
+                    transparent 30%
+                ),
+                var(--bg);
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ================= NAVBAR ================= */
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+
+            height: 72px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 6%;
+
+            background:
+                rgba(5,7,19,.72);
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.06);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            font-size: 18px;
+            font-weight: 850;
+        }
+
+        .brand-icon {
+            width: 39px;
+            height: 39px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #2563eb
+                );
+
+            box-shadow:
+                0 0 28px
+                rgba(124,58,237,.32);
+        }
+
+        .brand span {
+            color: #a78bfa;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 9px 13px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+            font-weight: 700;
+
+            border-radius: 8px;
+
+            transition: .2s;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,.05);
+        }
+
+        .nav-login {
+            padding: 9px 15px;
+
+            color: white;
+
+            border:
+                1px solid
+                rgba(139,92,246,.3);
+
+            border-radius: 9px;
+
+            background:
+                rgba(139,92,246,.1);
+
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .nav-join {
+            padding: 10px 16px;
+
+            color: white;
+
+            border-radius: 9px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 14px;
+            font-weight: 800;
+
+            box-shadow:
+                0 8px 25px
+                rgba(79,70,229,.2);
+        }
+
+        /* ================= HERO ================= */
+
+        .hero {
+            position: relative;
+
+            max-width: 1250px;
+
+            margin: auto;
+
+            min-height: 610px;
+
+            display: grid;
+
+            grid-template-columns:
+                1.15fr
+                .85fr;
+
+            align-items: center;
+
+            gap: 50px;
+
+            padding:
+                80px 35px
+                65px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 7px 11px;
+
+            border:
+                1px solid
+                rgba(139,92,246,.2);
+
+            border-radius: 30px;
+
+            color: #c4b5fd;
+
+            background:
+                rgba(139,92,246,.07);
+
+            font-size: 12px;
+            font-weight: 850;
+
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin-top: 20px;
+
+            max-width: 700px;
+
+            font-size:
+                clamp(42px, 6vw, 72px);
+
+            line-height: .98;
+
+            letter-spacing: -3.5px;
+        }
+
+        .gradient-text {
+            background:
+                linear-gradient(
+                    90deg,
+                    #a78bfa,
+                    #60a5fa,
+                    #22d3ee
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            max-width: 590px;
+
+            margin-top: 22px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 11px;
+
+            margin-top: 30px;
+        }
+
+        .primary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 13px 18px;
+
+            border-radius: 10px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 14px;
+            font-weight: 800;
+
+            box-shadow:
+                0 12px 35px
+                rgba(79,70,229,.23);
+        }
+
+        .secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 13px 18px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 10px;
+
+            color: var(--muted);
+
+            background:
+                rgba(255,255,255,.035);
+
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .secondary-btn:hover {
+            color: white;
+        }
+
+        .hero-trust {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+            margin-top: 28px;
+
+            color: var(--dim);
+
+            font-size: 12px;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trust-item i {
+            color: #4ade80;
+        }
+
+        /* ================= LOGIN CARD ================= */
+
+        .login-area {
+            position: relative;
+
+            display: flex;
+            justify-content: center;
+        }
+
+        .glow {
+            position: absolute;
+
+            width: 300px;
+            height: 300px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(124,58,237,.16);
+
+            filter: blur(70px);
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 2;
+
+            width: 100%;
+            max-width: 370px;
+
+            padding: 27px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.1);
+
+            border-radius: 22px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(25,27,52,.9),
+                    rgba(10,12,27,.92)
+                );
+
+            box-shadow:
+                0 30px 90px
+                rgba(0,0,0,.4);
+
+            backdrop-filter: blur(20px);
+        }
+
+        .login-icon {
+            width: 45px;
+            height: 45px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 13px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 18px;
+        }
+
+        .login-card h2 {
+            margin-top: 17px;
+
+            font-size: 23px;
+        }
+
+        .login-card h2 span {
+            color: #a78bfa;
+        }
+
+        .login-subtitle {
+            margin-top: 7px;
+
+            color: var(--dim);
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-top: 18px;
+        }
+
+        .field label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #cbd5e1;
+
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+
+            left: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: #64748b;
+
+            font-size: 13px;
+        }
+
+        .input-wrap input {
+            width: 100%;
+
+            height: 42px;
+
+            padding:
+                0 12px 0 35px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.1);
+
+            border-radius: 10px;
+
+            outline: none;
+
+            color: white;
+
+            background:
+                rgba(3,5,15,.6);
+
+            font-size: 14px;
+
+            transition: .2s;
+        }
+
+        .input-wrap input:focus {
+            border-color:
+                #7c5cff;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(124,92,255,.09);
+        }
+
+        .login-submit {
+            width: 100%;
+
+            height: 43px;
+
+            margin-top: 21px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7654ff,
+                    #4775ff
+                );
+
+            font-size: 13px;
+            font-weight: 850;
+
+            cursor: pointer;
+        }
+
+        .login-submit:hover {
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            margin: 20px 0;
+
+            color: #475569;
+
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+
+            flex: 1;
+
+            height: 1px;
+
+            background:
+                rgba(255,255,255,.07);
+        }
+
+        .signup-text {
+            text-align: center;
+
+            color: var(--dim);
+
+            font-size: 12px;
+        }
+
+        .signup-text a {
+            color: #a78bfa;
+
+            font-weight: 800;
+        }
+
+        /* ================= PRODUCT SECTION ================= */
+
+        .section {
+            max-width: 1250px;
+
+            margin: auto;
+
+            padding:
+                75px 35px;
+        }
+
+        .section-heading {
+            text-align: center;
+
+            max-width: 700px;
+
+            margin:
+                0 auto 42px;
+        }
+
+        .section-label {
+            color: #a78bfa;
+
+            font-size: 12px;
+            font-weight: 850;
+
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .section-heading h2 {
+            margin-top: 10px;
+
+            font-size:
+                clamp(28px, 4vw, 42px);
+
+            letter-spacing: -1.5px;
+        }
+
+        .section-heading p {
+            margin-top: 10px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+
+            line-height: 1.7;
+        }
+
+        /* ================= FEATURE GRID ================= */
+
+        .features {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+        }
+
+        .feature {
+            padding: 23px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 18px;
+
+            background:
+                var(--card);
+
+            transition: .25s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+
+            border-color:
+                rgba(139,92,246,.25);
+
+            background:
+                rgba(255,255,255,.06);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            color: #a78bfa;
+
+            background:
+                rgba(139,92,246,.11);
+
+            font-size: 18px;
+        }
+
+        .feature h3 {
+            margin-top: 16px;
+
+            font-size: 13px;
+        }
+
+        .feature p {
+            margin-top: 7px;
+
+            color: var(--dim);
+
+            font-size: 13px;
+
+            line-height: 1.7;
+        }
+
+        /* ================= JOURNEY ================= */
+
+        .journey {
+            display: grid;
+
+            grid-template-columns:
+                repeat(5, 1fr);
+
+            gap: 10px;
+        }
+
+        .journey-step {
+            position: relative;
+
+            padding: 20px 14px;
+
+            text-align: center;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,.035);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+
+            margin: auto;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .journey-step h3 {
+            margin-top: 12px;
+
+            font-size: 14px;
+        }
+
+        .journey-step p {
+            margin-top: 5px;
+
+            color: var(--dim);
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+        /* ================= CTA ================= */
+
+        .cta {
+            max-width: 1100px;
+
+            margin:
+                30px auto 70px;
+
+            padding:
+                55px 30px;
+
+            text-align: center;
+
+            border:
+                1px solid
+                rgba(139,92,246,.18);
+
+            border-radius: 25px;
+
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    rgba(124,58,237,.18),
+                    transparent 50%
+                ),
+                rgba(255,255,255,.035);
+        }
+
+        .cta h2 {
+            font-size:
+                clamp(28px, 4vw, 42px);
+
+            letter-spacing: -1.5px;
+        }
+
+        .cta p {
+            max-width: 600px;
+
+            margin: 12px auto 22px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+
+            line-height: 1.7;
+        }
+
+        /* ================= FOOTER ================= */
+
+        footer {
+            padding:
+                30px 6%;
+
+            border-top:
+                1px solid
+                rgba(255,255,255,.06);
+
+            color: var(--dim);
+
+            text-align: center;
+
+            font-size: 12px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 950px) {
+
+            .hero {
+                grid-template-columns: 1fr;
+
+                padding-top: 60px;
+            }
+
+            .login-area {
+                justify-content: flex-start;
+            }
+
+            .features {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .journey {
+                grid-template-columns:
+                    repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .nav-link {
+                display: none;
+            }
+
+            .nav-join {
+                display: none;
+            }
+
+            .hero {
+                padding:
+                    45px 20px;
+            }
+
+            .hero h1 {
+                font-size: 43px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .primary-btn,
+            .secondary-btn {
+                justify-content: center;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .journey {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .section {
+                padding:
+                    55px 20px;
+            }
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: -4px;
+            margin-bottom: 18px;
+        }
+
+        .forgot-password a {
+            color: #8b7cff;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #a78bfa;
+            text-decoration: underline;
+        }
+
+        /* ================= AUTH FLOW ================= */
+
+        .google-login {
+            margin-top: 5px;
+        }
+
+        .google-btn {
+            width: 100%;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 10px;
+
+            color: white;
+            background: rgba(255,255,255,.04);
+
+            font-size: 13px;
+            font-weight: 750;
+
+            transition: .2s;
+        }
+
+        .google-btn:hover {
+            background: rgba(255,255,255,.08);
+            border-color: rgba(139,92,246,.3);
+        }
+
+        .google-btn i {
+            font-size: 13px;
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<nav class="navbar">
+
+    <a
+        href="#top"
+        class="brand"
+    >
+
+        <div class="brand-icon">
+            <i class="bi bi-code-slash"></i>
+        </div>
+
+        <div>
+            CodeLearn
+            <span>Hub</span>
+        </div>
+
+    </a>
+
+
+    <div class="nav-right">
+
+        <a
+            href="#features"
+            class="nav-link"
+        >
+            Features
+        </a>
+
+        <a
+            href="#journey"
+            class="nav-link"
+        >
+            How It Works
+        </a>
+
+        <button
+            type="button"
+            class="theme-toggle"
+            id="themeToggle"
+            onclick="toggleTheme()"
+        >
+            <i class="bi bi-moon-fill" id="themeIcon"></i>
+        </button>
+
+        <a
+            href="#login"
+            class="nav-login"
+        >
+            Login
+        </a>
+
+        <a
+            href="{% url 'blog:signup' %}"
+            class="nav-join"
+        >
+            Join Free
+        </a>
+
+    </div>
+
+</nav>
+
+
+<!-- ================= HERO ================= -->
+
+<section
+    class="hero"
+    id="top"
+>
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+
+            <i class="bi bi-stars"></i>
+
+            Developer Learning Platform
+
+        </div>
+
+
+        <h1>
+
+            Learn Code.
+
+            <br>
+
+            <span class="gradient-text">
+                Build Your Future.
+            </span>
+
+        </h1>
+
+
+        <p class="hero-description">
+
+            CodeLearn Hub is a complete learning platform
+            designed to take you from programming fundamentals
+            to real-world development skills — through courses,
+            coding practice, assignments, projects, AI guidance
+            and career-focused learning.
+
+        </p>
+
+
+        <div class="hero-buttons">
+
+            <a
+                href="{% url 'blog:signup' %}"
+                class="primary-btn"
+            >
+
+                <i class="bi bi-rocket-takeoff"></i>
+
+                Start Learning Free
+
+            </a>
+
+
+            <a
+                href="#features"
+                class="secondary-btn"
+            >
+
+                Explore CodeLearn Hub
+
+                <i class="bi bi-arrow-down"></i>
+
+            </a>
+
+        </div>
+
+
+        <div class="hero-trust">
+
+            <div class="trust-item">
+                <i class="bi bi-check-circle-fill"></i>
+                Learn at your pace
+            </div>
+
+            <div class="trust-item">
+                <i class="bi bi-check-circle-fill"></i>
+                Practice by doing
+            </div>
+
+            <div class="trust-item">
+                <i class="bi bi-check-circle-fill"></i>
+                Build real projects
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= LOGIN ================= -->
+
+    <div
+        class="login-area"
+        id="login"
+    >
+
+        <div class="glow"></div>
+
+        <div class="login-card">
+
+            <div class="login-icon">
+                <i class="bi bi-person-lock"></i>
+            </div>
+
+
+            {% if show_forgot %}
+
+                <!-- ================= FORGOT PASSWORD / OTP ================= -->
+
+                {% if show_otp %}
+
+                    <h2>
+                        Verify <span>OTP</span>
+                    </h2>
+
+                    <p class="login-subtitle">
+                        Enter the 6-digit OTP sent to your email.
+                    </p>
+
+                    {% if error %}
+                        <p style="
+                            margin-top:12px;
+                            color:#fb7185;
+                            font-size:12px;
+                            line-height:1.6;
+                        ">
+                            {{ error }}
+                        </p>
+                    {% endif %}
+
+                    <form
+                        method="POST"
+                        action="{% url 'blog:verify_otp' %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <div class="field">
+
+                            <label>
+                                OTP
+                            </label>
+
+                            <div class="input-wrap">
+
+                                <i class="bi bi-shield-lock"></i>
+
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    placeholder="Enter 6-digit OTP"
+                                    maxlength="6"
+                                    inputmode="numeric"
+                                    required
+                                    autofocus
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="login-submit"
+                        >
+
+                            <i class="bi bi-check-circle"></i>
+
+                            Verify OTP
+
+                        </button>
+
+                    </form>
+
+
+                    <div
+                        class="signup-text"
+                        style="margin-top:20px;"
+                    >
+
+                        <a href="{% url 'blog:forgot_password' %}">
+                            ← Change Email
+                        </a>
+
+                    </div>
+
+
+                {% else %}
+
+                    <!-- ================= FORGOT PASSWORD ================= -->
+
+                    <h2>
+                        Forgot <span>Password?</span>
+                    </h2>
+
+                    <p class="login-subtitle">
+                        Enter your registered email to receive a password reset OTP.
+                    </p>
+
+                    {% if error %}
+                        <p style="
+                            margin-top:12px;
+                            color:#fb7185;
+                            font-size:12px;
+                            line-height:1.6;
+                        ">
+                            {{ error }}
+                        </p>
+                    {% endif %}
+
+                    <form
+                        method="POST"
+                        action="{% url 'blog:forgot_password' %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <div class="field">
+
+                            <label>
+                                Email Address
+                            </label>
+
+                            <div class="input-wrap">
+
+                                <i class="bi bi-envelope"></i>
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Enter your email"
+                                    required
+                                    autofocus
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="login-submit"
+                        >
+
+                            <i class="bi bi-send"></i>
+
+                            Send OTP
+
+                        </button>
+
+                    </form>
+
+
+                    <div
+                        class="signup-text"
+                        style="margin-top:20px;"
+                    >
+
+                        <a href="{% url 'blog:login' %}">
+                            ← Back to Login
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+
+            {% elif show_reset %}
+
+                <!-- ================= RESET PASSWORD ================= -->
+
+                <h2>
+                    Reset <span>Password</span>
+                </h2>
+
+                <p class="login-subtitle">
+                    Create a new password for your CodeLearn Hub account.
+                </p>
+
+                {% if password_changed %}
+
+                    <p style="
+                        margin-top:18px;
+                        color:#4ade80;
+                        font-size:13px;
+                        text-align:center;
+                        line-height:1.7;
+                    ">
+                        Password changed successfully!
+                    </p>
+
+                    <a
+                        href="{% url 'blog:login' %}"
+                        class="login-submit"
+                        style="
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            text-decoration:none;
+                            margin-top:20px;
+                        "
+                    >
+                        Login Now
+                    </a>
+
+                {% else %}
+
+                    {% if error %}
+                        <p style="
+                            margin-top:12px;
+                            color:#fb7185;
+                            font-size:12px;
+                            line-height:1.6;
+                        ">
+                            {{ error }}
+                        </p>
+                    {% endif %}
+
+
+                    <form
+                        method="POST"
+                        action="{% url 'blog:reset_password' %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <div class="field">
+
+                            <label>
+                                New Password
+                            </label>
+
+                            <div class="input-wrap">
+
+                                <i class="bi bi-lock"></i>
+
+                                <input
+                                    type="password"
+                                    name="password1"
+                                    placeholder="Enter new password"
+                                    required
+                                    autofocus
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Confirm Password
+                            </label>
+
+                            <div class="input-wrap">
+
+                                <i class="bi bi-lock-fill"></i>
+
+                                <input
+                                    type="password"
+                                    name="password2"
+                                    placeholder="Confirm new password"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="login-submit"
+                        >
+
+                            <i class="bi bi-key"></i>
+
+                            Change Password
+
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+
+            {% else %}
+
+                <!-- ================= NORMAL LOGIN ================= -->
+
+                <h2>
+                    Welcome to
+                    <span>CodeLearn</span>
+                </h2>
+
+                <p class="login-subtitle">
+
+                    Continue your learning journey
+                    and build skills that matter.
+
+                </p>
+
+
+                <form
+                    method="POST"
+                    action="{% url 'blog:login' %}"
+                >
+
+                    {% csrf_token %}
+
+
+                    <!-- EMAIL -->
+
+                    <div class="field">
+
+                        <label>
+                            Email Address
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <i class="bi bi-person"></i>
+
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                required
+                                autofocus
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="field">
+
+                        <label>
+                            Password
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <i class="bi bi-lock"></i>
+
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FORGOT PASSWORD -->
+
+                    <div class="forgot-password">
+
+                        <a href="{% url 'blog:forgot_password' %}">
+                            Forgot Password?
+                        </a>
+
+                    </div>
+
+
+                    {% if error %}
+
+                        <p style="
+                            margin-top:12px;
+                            color:#fb7185;
+                            font-size:12px;
+                            line-height:1.6;
+                        ">
+                            {{ error }}
+                        </p>
+
+                    {% endif %}
+
+
+                    <button
+                        type="submit"
+                        class="login-submit"
+                    >
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+
+                        Login to CodeLearn Hub
+
+                    </button>
+
+                </form>
+
+
+                <div class="divider">
+                    OR
+                </div>
+
+
+                <!-- GOOGLE LOGIN -->
+
+                <div class="google-login">
+
+                    <a
+                        href="{% provider_login_url 'google' %}"
+                        class="google-btn"
+                    >
+
+                        <i class="bi bi-google"></i>
+
+                        Continue with Google
+
+                    </a>
+
+                </div>
+
+
+                <div class="signup-text">
+
+                    Don't have an account?
+
+                    <a href="{% url 'blog:signup' %}">
+                        Create your free account
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= FEATURES ================= -->
+
+<section
+    class="section"
+    id="features"
+>
+
+    <div class="section-heading">
+
+        <div class="section-label">
+            Everything in one place
+        </div>
+
+
+        <h2>
+            More Than Just
+            <span class="gradient-text">
+                Online Courses.
+            </span>
+        </h2>
+
+
+        <p>
+
+            CodeLearn Hub combines learning,
+            practice, projects, AI assistance and
+            career preparation into one developer-focused
+            learning experience.
+
+        </p>
+
+    </div>
+
+
+    <div class="features">
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-book"></i>
+            </div>
+
+            <h3>
+                Structured Courses
+            </h3>
+
+            <p>
+                Learn programming concepts through
+                organized courses and lessons designed
+                to build your knowledge step by step.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-lightning-charge"></i>
+            </div>
+
+            <h3>
+                Practice Arena
+            </h3>
+
+            <p>
+                Solve coding problems, improve your
+                problem-solving skills and practice
+                Python, Django, SQL, JavaScript and more.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+
+            <h3>
+                Assignments
+            </h3>
+
+            <p>
+                Apply what you learn through practical
+                assignments and track your completion,
+                submissions and scores.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-robot"></i>
+            </div>
+
+            <h3>
+                AI Learning Assistant
+            </h3>
+
+            <p>
+                Get programming explanations,
+                debugging guidance and step-by-step
+                learning support from the AI Tutor.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-folder2-open"></i>
+            </div>
+
+            <h3>
+                Real-World Projects
+            </h3>
+
+            <p>
+                Turn your knowledge into portfolio-ready
+                applications and gain experience by
+                building practical projects.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+
+            <h3>
+                Progress Tracking
+            </h3>
+
+            <p>
+                Track enrolled courses, lesson progress,
+                completed learning activities and your
+                overall development journey.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-people"></i>
+            </div>
+
+            <h3>
+                Developer Community
+            </h3>
+
+            <p>
+                Discuss programming, ask questions,
+                share your work and learn from other
+                developers and learners.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+
+            <h3>
+                Career Preparation
+            </h3>
+
+            <p>
+                Prepare for developer roles through
+                practical coding, projects, interview
+                preparation and skill development.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                <i class="bi bi-trophy"></i>
+            </div>
+
+            <h3>
+                Build Your Developer Profile
+            </h3>
+
+            <p>
+                Keep your learning achievements,
+                projects and progress organized as
+                you grow toward becoming job ready.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= LEARNING JOURNEY ================= -->
+
+<section
+    class="section"
+    id="journey"
+>
+
+    <div class="section-heading">
+
+        <div class="section-label">
+            Your Developer Journey
+        </div>
+
+
+        <h2>
+            From Beginner
+            <span class="gradient-text">
+                to Job Ready.
+            </span>
+        </h2>
+
+
+        <p>
+
+            CodeLearn Hub is designed around a simple
+            learning journey: understand → practice →
+            build → improve → prepare.
+
+        </p>
+
+    </div>
+
+
+    <div class="journey">
+
+        <div class="journey-step">
+
+            <div class="step-number">
+                01
+            </div>
+
+            <h3>
+                Learn
+            </h3>
+
+            <p>
+                Master programming fundamentals
+                and development concepts.
+            </p>
+
+        </div>
+
+
+        <div class="journey-step">
+
+            <div class="step-number">
+                02
+            </div>
+
+            <h3>
+                Practice
+            </h3>
+
+            <p>
+                Solve problems and strengthen
+                your coding ability.
+            </p>
+
+        </div>
+
+
+        <div class="journey-step">
+
+            <div class="step-number">
+                03
+            </div>
+
+            <h3>
+                Build
+            </h3>
+
+            <p>
+                Create real-world projects
+                and portfolio applications.
+            </p>
+
+        </div>
+
+
+        <div class="journey-step">
+
+            <div class="step-number">
+                04
+            </div>
+
+            <h3>
+                Improve
+            </h3>
+
+            <p>
+                Use feedback, progress tracking
+                and AI guidance to improve.
+            </p>
+
+        </div>
+
+
+        <div class="journey-step">
+
+            <div class="step-number">
+                05
+            </div>
+
+            <h3>
+                Get Job Ready
+            </h3>
+
+            <p>
+                Prepare your skills, projects
+                and developer profile.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CTA ================= -->
+
+<section class="cta">
+
+    <div class="section-label">
+        START YOUR JOURNEY
+    </div>
+
+
+    <h2>
+        Your Next Level
+        <span class="gradient-text">
+            Starts Here.
+        </span>
+    </h2>
+
+
+    <p>
+
+        Don't just watch tutorials.
+        Learn concepts, write code, solve problems,
+        build projects and become the developer
+        you want to be.
+
+    </p>
+
+
+    <a
+        href="{% url 'blog:signup' %}"
+        class="primary-btn"
+    >
+
+        <i class="bi bi-rocket-takeoff"></i>
+
+        Join CodeLearn Hub Free
+
+    </a>
+
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer>
+
+    © 2026 CodeLearn Hub
+
+    • Learn. Practice. Build. Grow.
+
+</footer>
+
+
+<script>
+
+    function toggleTheme() {
+
+        document.body.classList.toggle("light-theme");
+
+        const icon = document.getElementById("themeIcon");
+
+        if (document.body.classList.contains("light-theme")) {
+
+            icon.className = "bi bi-sun-fill";
+
+            localStorage.setItem("codelearn-theme", "light");
+
+        } else {
+
+            icon.className = "bi bi-moon-fill";
+
+            localStorage.setItem("codelearn-theme", "dark");
+
+        }
+    }
+
+
+    // Restore saved theme
+    const savedTheme = localStorage.getItem("codelearn-theme");
+
+    if (savedTheme === "light") {
+
+        document.body.classList.add("light-theme");
+
+        document.getElementById("themeIcon").className =
+            "bi bi-sun-fill";
+    }
+
+</script>
+
+
+</body>
+</html>

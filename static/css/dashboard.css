@@ -1,0 +1,1096 @@
+/* =========================================================
+   CODELEARN HUB — DASHBOARD CSS
+   Replace the complete contents of dashboard.css with this file.
+   ========================================================= */
+
+:root {
+    --dash-bg: #080b14;
+    --dash-card: rgba(17, 24, 39, .78);
+    --dash-card-strong: rgba(17, 24, 39, .92);
+    --dash-border: rgba(255,255,255,.08);
+    --dash-border-hover: rgba(139,92,246,.35);
+    --dash-text: #f8fafc;
+    --dash-muted: #94a3b8;
+    --dash-dim: #64748b;
+    --dash-purple: #8b5cf6;
+    --dash-blue: #3b82f6;
+    --dash-cyan: #22d3ee;
+    --dash-green: #22c55e;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.dashboard-page {
+    width: 100%;
+    color: var(--dash-text);
+}
+
+.dashboard-page a {
+    text-decoration: none;
+}
+
+.dashboard-page button,
+.dashboard-page a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 270px;
+    padding: 40px 36px;
+    border: 1px solid rgba(139,92,246,.22);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(circle at 82% 18%, rgba(124,58,237,.30), transparent 34%),
+        radial-gradient(circle at 96% 82%, rgba(37,99,235,.18), transparent 28%),
+        linear-gradient(135deg, rgba(25,26,62,.98), rgba(8,12,28,.98));
+    box-shadow: 0 28px 90px rgba(0,0,0,.28);
+    animation: fadeUp .55s ease both;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    width: 430px;
+    height: 430px;
+    right: -150px;
+    top: -190px;
+    border: 1px solid rgba(139,92,246,.17);
+    border-radius: 50%;
+    box-shadow: 0 0 100px rgba(124,58,237,.17);
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    right: 24%;
+    top: 24%;
+    border-radius: 50%;
+    background: #a78bfa;
+    box-shadow:
+        100px 55px 0 #60a5fa,
+        -70px 95px 0 #22d3ee,
+        165px -25px 0 #c084fc;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border: 1px solid rgba(139,92,246,.25);
+    border-radius: 999px;
+    color: #c4b5fd;
+    background: rgba(139,92,246,.09);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    margin: 17px 0 12px;
+    max-width: 760px;
+    font-size: clamp(38px, 4.2vw, 58px);
+    line-height: 1.02;
+    letter-spacing: -2.5px;
+    font-weight: 850;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #a78bfa, #60a5fa, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hero p {
+    max-width: 700px;
+    margin: 0;
+    color: var(--dash-muted);
+    font-size: 13px;
+    line-height: 1.75;
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 24px;
+}
+
+.primary-btn,
+.secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 700;
+    transition: .25s ease;
+}
+
+.primary-btn {
+    padding: 12px 18px;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    box-shadow: 0 12px 32px rgba(124,58,237,.25);
+}
+
+.primary-btn:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 17px 38px rgba(124,58,237,.36);
+}
+
+.secondary-btn {
+    padding: 11px 17px;
+    border: 1px solid rgba(255,255,255,.11);
+    color: #e2e8f0;
+    background: rgba(255,255,255,.035);
+}
+
+.secondary-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,.075);
+    border-color: rgba(139,92,246,.28);
+    transform: translateY(-2px);
+}
+
+/* =========================================================
+   GOAL
+   ========================================================= */
+
+.goal-section {
+    margin-top: 17px;
+}
+
+.goal-card-main {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 20px 21px;
+    border: 1px solid rgba(139,92,246,.20);
+    border-radius: 19px;
+    background: linear-gradient(135deg, rgba(139,92,246,.09), rgba(37,99,235,.035));
+    backdrop-filter: blur(18px);
+    transition: .25s ease;
+}
+
+.goal-card-main:hover {
+    transform: translateY(-2px);
+    border-color: rgba(139,92,246,.38);
+    box-shadow: 0 15px 45px rgba(0,0,0,.16);
+}
+
+.goal-icon-main {
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(124,58,237,.23), rgba(37,99,235,.12));
+    font-size: 24px;
+}
+
+.goal-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #a78bfa;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.goal-content h2 {
+    margin: 0 0 4px;
+    color: var(--dash-text);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.goal-content p {
+    margin: 0;
+    color: var(--dash-dim);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.change-goal-btn {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 9px;
+    color: #c4b5fd;
+    background: rgba(255,255,255,.035);
+    font-size: 9px;
+    font-weight: 700;
+    transition: .25s ease;
+}
+
+.change-goal-btn:hover {
+    color: #fff;
+    border-color: rgba(139,92,246,.40);
+    background: rgba(139,92,246,.10);
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 17px;
+}
+
+.stat-card {
+    min-width: 0;
+    padding: 19px;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--radius-md);
+    background: var(--dash-card);
+    backdrop-filter: blur(15px);
+    transition: .25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--dash-border-hover);
+    background: rgba(24,31,50,.88);
+    box-shadow: 0 18px 45px rgba(0,0,0,.20);
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(139,92,246,.12);
+    color: #a78bfa;
+    font-size: 17px;
+}
+
+.stat-change {
+    color: #22c55e;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.stat-value {
+    color: var(--dash-text);
+    font-size: 26px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.stat-label {
+    margin-top: 6px;
+    color: var(--dash-dim);
+    font-size: 10px;
+}
+
+/* =========================================================
+   COMMON SECTIONS
+   ========================================================= */
+
+.section {
+    margin-top: 30px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 14px;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--dash-text);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.section-header span {
+    display: block;
+    margin-top: 4px;
+    color: var(--dash-dim);
+    font-size: 10px;
+}
+
+.view-all {
+    flex-shrink: 0;
+    color: #a78bfa;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.view-all:hover {
+    color: #c4b5fd;
+}
+
+/* =========================================================
+   COURSE GRID
+   ========================================================= */
+
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.course-card {
+    min-width: 0;
+    padding: 17px;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--radius-md);
+    background: var(--dash-card);
+    transition: .3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(139,92,246,.30);
+    box-shadow: 0 20px 50px rgba(0,0,0,.23);
+}
+
+.course-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    background: rgba(139,92,246,.12);
+    color: #c4b5fd;
+    font-size: 22px;
+}
+
+.course-card h4 {
+    margin: 0 0 5px;
+    color: var(--dash-text);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.course-card p {
+    min-height: 28px;
+    margin: 0;
+    color: var(--dash-dim);
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+.progress-wrap {
+    margin-top: 14px;
+}
+
+.progress-bg {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 30px;
+    background: rgba(255,255,255,.08);
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8b5cf6, #38bdf8);
+}
+
+.progress-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    color: var(--dash-dim);
+    font-size: 8px;
+}
+
+/* =========================================================
+   MISSION + AI
+   ========================================================= */
+
+.two-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
+    gap: 16px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--radius-md);
+    background: var(--dash-card);
+    backdrop-filter: blur(15px);
+}
+
+.mission {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px;
+    margin-bottom: 9px;
+    border: 1px solid rgba(255,255,255,.045);
+    border-radius: 13px;
+    background: rgba(255,255,255,.025);
+    transition: .25s ease;
+}
+
+.mission:last-child {
+    margin-bottom: 0;
+}
+
+.mission:hover {
+    background: rgba(255,255,255,.055);
+    border-color: rgba(139,92,246,.15);
+    transform: translateX(3px);
+}
+
+.mission-icon {
+    width: 41px;
+    height: 41px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    font-size: 17px;
+}
+
+.mission-icon.purple {
+    background: rgba(139,92,246,.14);
+    color: #a78bfa;
+}
+
+.mission-icon.blue {
+    background: rgba(59,130,246,.14);
+    color: #60a5fa;
+}
+
+.mission-icon.green {
+    background: rgba(34,197,94,.13);
+    color: #4ade80;
+}
+
+.mission-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mission-info h5 {
+    margin: 0 0 3px;
+    color: var(--dash-text);
+    font-size: 11px;
+}
+
+.mission-info p {
+    margin: 0;
+    color: var(--dash-dim);
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.mission-btn {
+    flex-shrink: 0;
+    padding: 6px 9px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 8px;
+    color: #cbd5e1;
+    background: rgba(255,255,255,.03);
+    font-size: 8px;
+    transition: .2s ease;
+}
+
+.mission-btn:hover {
+    color: #fff;
+    border-color: rgba(139,92,246,.30);
+    background: rgba(139,92,246,.10);
+}
+
+/* =========================================================
+   AI PANEL
+   ========================================================= */
+
+.ai-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 85% 5%, rgba(124,58,237,.18), transparent 45%),
+        var(--dash-card);
+}
+
+.ai-glow {
+    position: absolute;
+    right: -65px;
+    top: -65px;
+    width: 145px;
+    height: 145px;
+    border-radius: 50%;
+    background: rgba(124,58,237,.13);
+    filter: blur(25px);
+    pointer-events: none;
+}
+
+.ai-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.ai-avatar {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    color: #fff;
+    font-size: 20px;
+}
+
+.ai-header h4 {
+    margin: 0;
+    color: var(--dash-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.ai-header p {
+    margin: 3px 0 0;
+    color: var(--dash-dim);
+    font-size: 8px;
+}
+
+.ai-message {
+    position: relative;
+    z-index: 1;
+    margin: 19px 0 15px;
+    padding: 13px;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px;
+    background: rgba(255,255,255,.04);
+    color: #cbd5e1;
+    font-size: 9px;
+    line-height: 1.7;
+}
+
+.ai-action {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.ai-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(124,58,237,.25);
+}
+
+/* =========================================================
+   RECOMMENDED
+   ========================================================= */
+
+.recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.recommend {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--dash-border);
+    border-radius: 15px;
+    background: rgba(255,255,255,.035);
+    transition: .25s ease;
+}
+
+.recommend:hover {
+    transform: translateY(-4px);
+    border-color: rgba(139,92,246,.30);
+    box-shadow: 0 15px 35px rgba(0,0,0,.16);
+}
+
+.recommend-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    border-radius: 11px;
+    background: rgba(59,130,246,.10);
+    color: #60a5fa;
+    font-size: 17px;
+}
+
+.recommend h5 {
+    margin: 0 0 5px;
+    color: var(--dash-text);
+    font-size: 12px;
+}
+
+.recommend p {
+    margin: 0;
+    color: var(--dash-dim);
+    font-size: 8px;
+    line-height: 1.6;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 43px;
+    padding: 18px 0 25px;
+    border-top: 1px solid var(--dash-border);
+    color: #475569;
+    font-size: 8px;
+}
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+body.light-theme {
+    --dash-bg: #f5f7fb;
+    --dash-card: rgba(255,255,255,.88);
+    --dash-card-strong: #fff;
+    --dash-border: rgba(15,23,42,.10);
+    --dash-border-hover: rgba(109,40,217,.28);
+    --dash-text: #111827;
+    --dash-muted: #475569;
+    --dash-dim: #64748b;
+}
+
+body.light-theme .dashboard-page {
+    color: var(--dash-text);
+}
+
+body.light-theme .hero {
+    border-color: rgba(109,40,217,.16);
+    background:
+        radial-gradient(circle at 82% 18%, rgba(124,58,237,.12), transparent 34%),
+        radial-gradient(circle at 96% 82%, rgba(37,99,235,.10), transparent 28%),
+        linear-gradient(135deg, #ffffff, #eef2ff);
+    box-shadow: 0 20px 55px rgba(15,23,42,.09);
+}
+
+body.light-theme .hero p,
+body.light-theme .goal-content p,
+body.light-theme .course-card p,
+body.light-theme .mission-info p,
+body.light-theme .ai-header p,
+body.light-theme .recommend p {
+    color: #64748b;
+}
+
+body.light-theme .secondary-btn,
+body.light-theme .change-goal-btn,
+body.light-theme .mission-btn {
+    border-color: rgba(15,23,42,.10);
+    background: rgba(255,255,255,.72);
+    color: #334155;
+}
+
+body.light-theme .stat-card,
+body.light-theme .course-card,
+body.light-theme .panel,
+body.light-theme .recommend {
+    background: rgba(255,255,255,.82);
+    box-shadow: 0 10px 30px rgba(15,23,42,.05);
+}
+
+body.light-theme .stat-card:hover,
+body.light-theme .course-card:hover,
+body.light-theme .recommend:hover {
+    background: #fff;
+}
+
+body.light-theme .mission {
+    border-color: rgba(15,23,42,.06);
+    background: rgba(248,250,252,.90);
+}
+
+body.light-theme .mission:hover {
+    background: #fff;
+}
+
+body.light-theme .ai-panel {
+    background:
+        radial-gradient(circle at 85% 5%, rgba(124,58,237,.10), transparent 45%),
+        rgba(255,255,255,.88);
+}
+
+body.light-theme .ai-message {
+    border-color: rgba(15,23,42,.07);
+    background: rgba(248,250,252,.9);
+    color: #475569;
+}
+
+body.light-theme .progress-bg {
+    background: rgba(15,23,42,.08);
+}
+
+body.light-theme .footer {
+    color: #94a3b8;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1150px) {
+    .stats,
+    .course-grid,
+    .recommend-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .two-column {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        padding: 34px 30px;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+    .hero {
+        min-height: auto;
+        padding: 28px 22px;
+        border-radius: 18px;
+    }
+
+    .hero h1 {
+        font-size: clamp(34px, 10vw, 46px);
+        letter-spacing: -1.7px;
+    }
+
+    .hero p {
+        font-size: 12px;
+    }
+
+    .hero-buttons {
+        width: 100%;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 100%;
+    }
+
+    .goal-card-main {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 17px;
+    }
+
+    .goal-content {
+        min-width: calc(100% - 72px);
+    }
+
+    .change-goal-btn {
+        margin-left: 72px;
+    }
+
+    .stats,
+    .course-grid,
+    .recommend-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        align-items: flex-start;
+    }
+
+    .footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 420px) {
+    .hero {
+        padding: 24px 18px;
+    }
+
+    .goal-card-main {
+        gap: 12px;
+    }
+
+    .goal-icon-main {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+
+    .goal-content {
+        min-width: calc(100% - 60px);
+    }
+
+    .change-goal-btn {
+        margin-left: 60px;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+
+    .mission {
+        align-items: flex-start;
+    }
+
+    .mission-btn {
+        margin-top: 2px;
+    }
+}
+
+/* =========================================================
+   CODELEARN HUB — FINAL DASHBOARD READABILITY
+   IMPORTANT: dashboard.html does NOT wrap content in a
+   .dashboard-page element. These selectors therefore target
+   the actual dashboard classes directly.
+========================================================= */
+
+/* Hero */
+.hero h1 {
+    font-size: clamp(42px, 4.2vw, 58px) !important;
+    line-height: 1.08 !important;
+}
+
+.hero p {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+}
+
+.hero .eyebrow {
+    font-size: 12px !important;
+}
+
+.hero .primary-btn,
+.hero .secondary-btn {
+    font-size: 14px !important;
+}
+
+/* Current Goal */
+.goal-label {
+    font-size: 11px !important;
+}
+
+.goal-content h2 {
+    font-size: 20px !important;
+    line-height: 1.35 !important;
+}
+
+.goal-content p {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+}
+
+.change-goal-btn {
+    font-size: 13px !important;
+}
+
+/* Statistics */
+.stat-value {
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+}
+
+.stat-label {
+    font-size: 13px !important;
+}
+
+.stat-change {
+    font-size: 12px !important;
+}
+
+/* Section headings */
+.section-header h3 {
+    font-size: 20px !important;
+    line-height: 1.35 !important;
+}
+
+.section-header span {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.view-all {
+    font-size: 13px !important;
+}
+
+/* Course cards */
+.course-card h4 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+}
+
+.course-card p {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+}
+
+.progress-info {
+    font-size: 12px !important;
+}
+
+.progress-info span {
+    font-size: 12px !important;
+}
+
+/* Today's Mission */
+.mission-info h5 {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+}
+
+.mission-info p {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+
+.mission-btn {
+    font-size: 12px !important;
+    padding: 8px 11px !important;
+}
+
+/* AI Assistant */
+.ai-header h4 {
+    font-size: 17px !important;
+    line-height: 1.35 !important;
+}
+
+.ai-header p {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.ai-message {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+}
+
+.ai-action {
+    font-size: 14px !important;
+}
+
+/* Recommended cards */
+.recommend h5 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+}
+
+.recommend p {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+
+/* Dashboard internal footer */
+.footer {
+    font-size: 13px !important;
+}
+
+/* General dashboard text */
+.main-content > .hero,
+.main-content > .goal-section,
+.main-content > .stats,
+.main-content > .section {
+    font-size: 15px;
+}
+
+/* =====================================================
+   HIDE PAGE SCROLLBAR - KEEP SCROLLING
+===================================================== */
+
+html,
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}

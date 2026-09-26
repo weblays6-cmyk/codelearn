@@ -1,0 +1,263 @@
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+from .models import (
+    Post,
+    Comment,
+    UserProfile,
+    Project,
+)
+
+
+class PostForm(forms.ModelForm):
+
+    class Meta:
+        model = Post
+
+        fields = [
+            'title',
+            'category',
+            'description',
+            'difficulty',
+            'what_you_learn',
+            'content',
+            'image'
+        ]
+
+        widgets = {
+
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter course title'
+            }),
+
+            'category': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Briefly describe this course...'
+            }),
+
+            'difficulty': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+
+            'what_you_learn': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'What will students learn?'
+            }),
+
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 10,
+                'placeholder': 'Enter the full course content...'
+            }),
+
+            'image': forms.ClearableFileInput(attrs={
+                'class': 'form-control'
+            }),
+        }
+
+
+class CommentForm(forms.ModelForm):
+
+    class Meta:
+        model = Comment
+
+        fields = ['content']
+
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Write your comment...'
+            })
+        }
+
+
+# =========================================================
+# EMAIL SIGNUP FORM
+# =========================================================
+
+class EmailSignupForm(forms.Form):
+
+    email = forms.EmailField(
+        max_length=254,
+        widget=forms.EmailInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your email'
+            }
+        )
+    )
+
+    password1 = forms.CharField(
+        widget=forms.PasswordInput
+    )
+
+    password2 = forms.CharField(
+        widget=forms.PasswordInput
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+
+        if User.objects.filter(
+            email__iexact=email
+        ).exists():
+            raise forms.ValidationError(
+                "An account with this email already exists."
+            )
+
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+
+        if password1 and password2:
+
+            if password1 != password2:
+                raise forms.ValidationError(
+                    "Passwords do not match."
+                )
+
+            try:
+                validate_password(password1)
+            except ValidationError as error:
+                self.add_error(
+                    'password1',
+                    error
+                )
+
+        return cleaned_data
+
+    def save(self):
+
+        email = self.cleaned_data['email']
+        password = self.cleaned_data['password1']
+
+        username_base = email.split('@')[0][:100]
+
+        username = username_base
+
+        counter = 1
+
+        while User.objects.filter(
+            username=username
+        ).exists():
+
+            username = (
+                f"{username_base}_{counter}"
+            )
+
+            counter += 1
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        UserProfile.objects.get_or_create(
+            user=user
+        )
+
+        return user
+
+
+# =========================================================
+# PROJECT FORM
+# =========================================================
+
+class ProjectForm(forms.ModelForm):
+
+    class Meta:
+        model = Project
+
+        fields = [
+            'title',
+            'short_description',
+            'description',
+            'category',
+            'tech_stack',
+            'status',
+            'problem',
+            'features',
+            'github_url',
+            'live_demo_url',
+            'looking_for_collaborators',
+            'collaborator_types',
+        ]
+
+        widgets = {
+
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter project title'
+            }),
+
+            'short_description': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Short description of your project'
+            }),
+
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 8,
+                'placeholder': 'Describe your project in detail...'
+            }),
+
+            'category': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Web Development, AI, Mobile'
+            }),
+
+            'tech_stack': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Python, Django, React, PostgreSQL'
+            }),
+
+            'status': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+
+            'problem': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'What problem does your project solve?'
+            }),
+
+            'features': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+                'placeholder': 'List the main features...'
+            }),
+
+            'github_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://github.com/username/project'
+            }),
+
+            'live_demo_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://your-project.com'
+            }),
+
+            'looking_for_collaborators': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+
+            'collaborator_types': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Frontend, Backend, UI/UX'
+            }),
+        }

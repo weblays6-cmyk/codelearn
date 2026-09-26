@@ -1,0 +1,900 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ post.title }} | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- BREADCRUMB -->
+
+    <div class="breadcrumb">
+
+        <a href="{% url 'blog:dashboard' %}">
+            Dashboard
+        </a>
+
+        <i class="bi bi-chevron-right"></i>
+
+        <a href="{% url 'blog:blogpage' %}">
+            Courses
+        </a>
+
+        <i class="bi bi-chevron-right"></i>
+
+        <span>
+            {{ post.category }}
+        </span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         COURSE HERO
+    ===================================================== -->
+
+    <section class="course-hero ">
+
+
+        {% if post.image %}
+
+            <img
+                src="{{ post.image.url }}"
+                alt="{{ post.title }}"
+                class="course-image"
+            >
+
+            <div class="course-image-overlay"></div>
+
+        {% endif %}
+
+
+        <div class="course-hero-content">
+            <div class="badges">
+                <span class="badge badge-category">
+                    {{ post.category }}
+                </span>
+                <span class="badge badge-difficulty">
+                    {{ post.difficulty }}
+                </span>
+            </div>
+            <h1 class="course-title">
+                {{ post.title }}
+            </h1>
+            <div class="course-meta">
+                <span>
+
+                    <i class="bi bi-person"></i>
+
+                    {{ post.author.username }}
+
+                </span>
+
+
+                <span>
+
+                    <i class="bi bi-calendar3"></i>
+
+                    {{ post.created_at|date:"d M Y" }}
+
+                </span>
+
+
+                <span>
+
+                    <i class="bi bi-play-circle"></i>
+
+                    {{ lessons|length }} lessons
+
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ENROLLMENT ACTION
+    ===================================================== -->
+
+    <div class="action-bar">
+
+
+        <div class="enrollment-state">
+
+
+            {% if user.is_authenticated %}
+
+                {% if enrollment %}
+
+                    <span style="color:#86efac;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        You are enrolled in this course.
+                    </span>
+
+                {% else %}
+
+                    <span>
+                        Start learning and track your progress.
+                    </span>
+
+                {% endif %}
+
+            {% else %}
+
+                <span>
+                    Login to start this course.
+                </span>
+
+            {% endif %}
+
+
+        </div>
+
+
+
+        <div>
+
+
+            {% if user.is_authenticated %}
+
+
+                {% if enrollment %}
+
+                    <a
+                        href="#lessons"
+                        class="success-btn"
+                    >
+
+                        <i class="bi bi-play-fill"></i>
+
+                        Continue Learning
+
+                    </a>
+
+
+                {% else %}
+
+                    <form
+                        method="POST"
+                        style="margin:0;"
+                    >
+
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="action"
+                            value="enroll"
+                        >
+
+                        <button
+                            type="submit"
+                            class="primary-btn"
+                        >
+
+                            <i class="bi bi-plus-circle"></i>
+
+                            Enroll Now
+
+                        </button>
+
+                    </form>
+
+
+                {% endif %}
+
+
+            {% else %}
+
+
+                <a
+                    href="{% url 'blog:login' %}"
+                    class="primary-btn"
+                >
+
+                    <i class="bi bi-box-arrow-in-right"></i>
+
+                    Login to Enroll
+
+                </a>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         CONTENT
+    ===================================================== -->
+
+    <div class="content-grid">
+
+
+        <!-- LEFT -->
+
+        <div>
+
+
+            <!-- ABOUT -->
+
+            <section class="panel">
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        About This Course
+                    </h2>
+
+                    <span>
+                        Course overview
+                    </span>
+
+                </div>
+
+
+                {% if post.description %}
+
+                <div class="description">
+
+                    {{ post.description }}
+
+                </div>
+
+                {% else %}
+
+                <div class="description">
+
+                    Start learning
+                    {{ post.title }}
+                    and build your knowledge step by step.
+
+                </div>
+
+                {% endif %}
+
+
+
+                <!-- WHAT YOU LEARN -->
+
+                {% if post.what_you_learn %}
+
+                <div class="learn-box">
+
+
+                    <h3>
+                        <i class="bi bi-stars"></i>
+                        What You'll Learn
+                    </h3>
+
+
+                    <div class="learn-content">
+
+                        {{ post.what_you_learn }}
+
+                    </div>
+
+
+                </div>
+
+                {% endif %}
+
+
+            </section>
+
+
+
+            <!-- LESSONS -->
+
+            <section
+                class="panel"
+                id="lessons"
+                style="margin-top:18px;"
+            >
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        Course Lessons
+                    </h2>
+
+                    <span>
+                        {{ lessons|length }} lessons
+                    </span>
+
+                </div>
+
+
+
+                {% if lessons %}
+
+
+                <div class="lesson-list">
+
+
+                    {% for lesson in lessons %}
+
+
+                    <a
+                        href="{% url 'blog:lesson_detail' lesson.pk %}"
+                        class="lesson-item"
+                    >
+
+
+                        <div class="lesson-number">
+
+                            {{ lesson.order }}
+
+                        </div>
+
+
+                        <div class="lesson-info">
+
+
+                            <h4>
+                                {{ lesson.title }}
+                            </h4>
+
+
+                            <p>
+                                Click to open lesson
+                            </p>
+
+
+                        </div>
+
+
+                        <span class="lesson-start">
+
+                            Start
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </span>
+
+
+                    </a>
+
+
+                    {% endfor %}
+
+
+                </div>
+
+
+                {% else %}
+
+
+                <div
+                    style="
+                        padding:20px;
+                        text-align:center;
+                        color:#64748b;
+                        font-size:11px;
+                    "
+                >
+
+                    No lessons have been added yet.
+
+                </div>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+            <!-- COURSE CONTENT -->
+
+            <section
+                class="panel"
+                style="margin-top:18px;"
+            >
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        Course Overview
+                    </h2>
+
+                    <span>
+                        Full content
+                    </span>
+
+                </div>
+
+
+                <div class="description"
+                     style="white-space:pre-line;">
+
+                    {{ post.content }}
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- DISCUSSION -->
+
+            <section
+                class="panel discussion"
+            >
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        Student Discussion
+                    </h2>
+
+                    <span>
+                        Learn together
+                    </span>
+
+                </div>
+
+
+
+                {% if user.is_authenticated %}
+
+
+                <form
+                    method="POST"
+                    class="comment-form"
+                >
+
+                    {% csrf_token %}
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="comment"
+                    >
+
+
+                    {{ form.content }}
+
+
+                    <button
+                        type="submit"
+                        class="comment-submit"
+                    >
+
+                        <i class="bi bi-send"></i>
+
+                        Add Comment
+
+                    </button>
+
+                </form>
+
+
+                {% else %}
+
+
+                <div class="login-note">
+
+                    <i class="bi bi-info-circle"></i>
+
+                    Please
+                    <a
+                        href="{% url 'blog:login' %}"
+                        style="color:#c4b5fd;font-weight:700;"
+                    >
+                        login
+                    </a>
+                    to join the discussion.
+
+                </div>
+
+
+                {% endif %}
+
+
+
+                {% for comment in comments %}
+
+
+                <div class="comment-card">
+
+
+                    <div class="comment-header">
+
+
+                        <div class="comment-author">
+
+
+                            <div class="comment-avatar">
+
+                                {{ comment.author.username|first|upper }}
+
+                            </div>
+
+
+                            <strong>
+                                {{ comment.author.username }}
+                            </strong>
+
+
+                        </div>
+
+
+                        <span class="comment-date">
+
+                            {{ comment.created_at|date:"d M Y, H:i" }}
+
+                        </span>
+
+
+                    </div>
+
+
+                    <div class="comment-text">
+
+                        {{ comment.content }}
+
+                    </div>
+
+
+
+                    {% if user == comment.author %}
+
+
+                    <div class="comment-actions">
+
+
+                        <a
+                            href="{% url 'blog:update_comment' comment.pk %}"
+                            class="edit-btn"
+                        >
+
+                            Edit
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'blog:delete_comment' comment.pk %}"
+                            class="delete-btn"
+                        >
+
+                            Delete
+
+                        </a>
+
+
+                    </div>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+                {% empty %}
+
+
+                <div
+                    style="
+                        color:#64748b;
+                        font-size:10px;
+                        padding:10px 0;
+                    "
+                >
+
+                    No discussion yet.
+                    Be the first to comment.
+
+                </div>
+
+
+                {% endfor %}
+
+
+            </section>
+
+
+        </div>
+
+
+
+        <!-- RIGHT SIDEBAR -->
+
+        <aside>
+
+
+            <!-- COURSE INFORMATION -->
+
+            <section class="panel">
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        Course Information
+                    </h2>
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-bar-chart"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Difficulty
+                        </strong>
+
+                        <span>
+                            {{ post.difficulty }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-collection-play"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Lessons
+                        </strong>
+
+                        <span>
+                            {{ lessons|length }} lessons available
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-person-badge"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Instructor
+                        </strong>
+
+                        <span>
+                            {{ post.author.username }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-calendar-check"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Published
+                        </strong>
+
+                        <span>
+                            {{ post.created_at|date:"d M Y" }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- LEARNING PATH -->
+
+            <section
+                class="panel"
+                style="margin-top:18px;"
+            >
+
+
+                <div class="panel-title">
+
+                    <h2>
+                        Your Learning Path
+                    </h2>
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-book"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Learn
+                        </strong>
+
+                        <span>
+                            Understand the concepts
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-code-slash"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Practice
+                        </strong>
+
+                        <span>
+                            Apply what you learn
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-rocket-takeoff"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Build
+                        </strong>
+
+                        <span>
+                            Create real projects
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-item">
+
+
+                    <div class="info-icon">
+
+                        <i class="bi bi-trophy"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Become Job Ready
+                        </strong>
+
+                        <span>
+                            Prepare for your career
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+        </aside>
+
+
+    </div>
+
+
+
+    <!-- BACK -->
+
+    <a
+        href="{% url 'blog:blogpage' %}"
+        class="back-link"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Back to Courses
+
+    </a>
+
+
+
+
+
+
+
+{% endblock %}

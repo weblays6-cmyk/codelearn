@@ -1,0 +1,926 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    Assignments | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/assignments.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="assignments-page">
+
+<section class="page-header">
+
+
+            <div>
+
+                <div class="eyebrow">
+
+                    <i class="bi bi-clipboard-check"></i>
+
+                    Learning Tasks
+
+                </div>
+
+
+                <h1>
+                    My <span>Assignments</span>
+                </h1>
+
+
+                <p>
+                    Complete your assignments,
+                    track deadlines, and improve your skills.
+                </p>
+
+            </div>
+
+
+            <div class="deadline-box">
+
+                <small>
+                    <i class="bi bi-alarm"></i>
+                    Next Deadline
+                </small>
+
+                <strong>
+                    Python Functions — Tomorrow
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= STATS ================= -->
+
+        <section class="stats">
+
+
+            <div class="stat">
+
+                <div class="stat-icon purple">
+                    <i class="bi bi-files"></i>
+                </div>
+
+                <div class="stat-number">
+                    12
+                </div>
+
+                <div class="stat-label">
+                    Total Assignments
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon orange">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+
+                <div class="stat-number">
+                    5
+                </div>
+
+                <div class="stat-label">
+                    Pending
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon blue">
+                    <i class="bi bi-send-check"></i>
+                </div>
+
+                <div class="stat-number">
+                    2
+                </div>
+
+                <div class="stat-label">
+                    Submitted
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon green">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+
+                <div class="stat-number">
+                    5
+                </div>
+
+                <div class="stat-label">
+                    Completed
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= TOOLBAR ================= -->
+
+        <div class="toolbar">
+
+
+            <button
+                class="filter-btn active"
+                data-filter="all"
+            >
+                All
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="pending"
+            >
+                Pending
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="submitted"
+            >
+                Submitted
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="evaluated"
+            >
+                Evaluated
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="overdue"
+            >
+                Overdue
+            </button>
+
+
+            <div class="toolbar-search">
+
+                <i class="bi bi-search"></i>
+
+                <input
+                    id="assignmentSearch"
+                    type="text"
+                    placeholder="Find assignment..."
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= CONTENT ================= -->
+
+        <section class="content">
+
+
+            <!-- ================= ASSIGNMENT LIST ================= -->
+
+            <div class="assignments">
+
+
+                <!-- ASSIGNMENT 1 -->
+
+                <article
+                    class="assignment"
+                    data-status="pending"
+                    data-name="python functions"
+                >
+
+                    <div class="assignment-top">
+
+
+                        <div class="assignment-left">
+
+                            <div class="assignment-icon">
+                                <i class="bi bi-file-code"></i>
+                            </div>
+
+
+                            <div>
+
+                                <h3>
+                                    Python Functions
+                                </h3>
+
+                                <p class="assignment-desc">
+                                    Create reusable functions using
+                                    parameters, return values and conditions.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <span class="status pending">
+                            PENDING
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-meta">
+
+                        <span>
+                            <i class="bi bi-calendar-event"></i>
+                            Due Tomorrow
+                        </span>
+
+                        <span>
+                            <i class="bi bi-star"></i>
+                            20 Marks
+                        </span>
+
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            ~45 min
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-bottom">
+
+                        <span class="course-tag">
+                            Python
+                        </span>
+
+                        <a
+                            href="#"
+                            class="assignment-btn"
+                        >
+                            Start Assignment
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ASSIGNMENT 2 -->
+
+                <article
+                    class="assignment"
+                    data-status="pending"
+                    data-name="django models"
+                >
+
+                    <div class="assignment-top">
+
+
+                        <div class="assignment-left">
+
+                            <div class="assignment-icon">
+                                <i class="bi bi-database"></i>
+                            </div>
+
+
+                            <div>
+
+                                <h3>
+                                    Django Models & Database
+                                </h3>
+
+                                <p class="assignment-desc">
+                                    Build Django models and connect
+                                    relationships with a database.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <span class="status pending">
+                            PENDING
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-meta">
+
+                        <span>
+                            <i class="bi bi-calendar-event"></i>
+                            Due in 3 Days
+                        </span>
+
+                        <span>
+                            <i class="bi bi-star"></i>
+                            30 Marks
+                        </span>
+
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            ~60 min
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-bottom">
+
+                        <span class="course-tag">
+                            Django
+                        </span>
+
+                        <a
+                            href="#"
+                            class="assignment-btn"
+                        >
+                            Start Assignment
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ASSIGNMENT 3 -->
+
+                <article
+                    class="assignment"
+                    data-status="submitted"
+                    data-name="sql queries"
+                >
+
+                    <div class="assignment-top">
+
+
+                        <div class="assignment-left">
+
+                            <div class="assignment-icon">
+                                <i class="bi bi-table"></i>
+                            </div>
+
+
+                            <div>
+
+                                <h3>
+                                    SQL Query Challenge
+                                </h3>
+
+                                <p class="assignment-desc">
+                                    Write SQL queries using joins,
+                                    grouping, filtering and aggregation.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <span class="status submitted">
+                            SUBMITTED
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-meta">
+
+                        <span>
+                            <i class="bi bi-calendar-event"></i>
+                            Submitted Today
+                        </span>
+
+                        <span>
+                            <i class="bi bi-star"></i>
+                            25 Marks
+                        </span>
+
+                        <span>
+                            <i class="bi bi-hourglass"></i>
+                            Evaluation Pending
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-bottom">
+
+                        <span class="course-tag">
+                            SQL
+                        </span>
+
+                        <a
+                            href="#"
+                            class="assignment-btn"
+                        >
+                            View Submission
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ASSIGNMENT 4 -->
+
+                <article
+                    class="assignment"
+                    data-status="evaluated"
+                    data-name="javascript dom"
+                >
+
+                    <div class="assignment-top">
+
+
+                        <div class="assignment-left">
+
+                            <div class="assignment-icon">
+                                <i class="bi bi-braces"></i>
+                            </div>
+
+
+                            <div>
+
+                                <h3>
+                                    JavaScript DOM Project
+                                </h3>
+
+                                <p class="assignment-desc">
+                                    Build an interactive web page
+                                    using JavaScript DOM manipulation.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <span class="status evaluated">
+                            EVALUATED
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-meta">
+
+                        <span>
+                            <i class="bi bi-check-circle"></i>
+                            Completed
+                        </span>
+
+                        <span>
+                            <i class="bi bi-star"></i>
+                            27 / 30
+                        </span>
+
+                        <span>
+                            <i class="bi bi-chat-left-text"></i>
+                            Feedback Available
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-bottom">
+
+                        <span class="course-tag">
+                            JavaScript
+                        </span>
+
+                        <a
+                            href="#"
+                            class="assignment-btn"
+                        >
+                            View Feedback
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ASSIGNMENT 5 -->
+
+                <article
+                    class="assignment"
+                    data-status="overdue"
+                    data-name="python oop"
+                >
+
+                    <div class="assignment-top">
+
+
+                        <div class="assignment-left">
+
+                            <div class="assignment-icon">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+
+
+                            <div>
+
+                                <h3>
+                                    Python OOP Practice
+                                </h3>
+
+                                <p class="assignment-desc">
+                                    Implement classes, objects,
+                                    inheritance and encapsulation.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <span class="status overdue">
+                            OVERDUE
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-meta">
+
+                        <span>
+                            <i class="bi bi-exclamation-circle"></i>
+                            Deadline Passed
+                        </span>
+
+                        <span>
+                            <i class="bi bi-star"></i>
+                            20 Marks
+                        </span>
+
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            ~45 min
+                        </span>
+
+                    </div>
+
+
+                    <div class="assignment-bottom">
+
+                        <span class="course-tag">
+                            Python
+                        </span>
+
+                        <a
+                            href="#"
+                            class="assignment-btn"
+                        >
+                            Complete Now
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+            </div>
+
+
+            <!-- ================= RIGHT COLUMN ================= -->
+
+            <aside class="right">
+
+
+                <!-- COMPLETION -->
+
+                <div class="panel">
+
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Completion Rate
+                        </h2>
+
+                        <span>
+                            THIS MONTH
+                        </span>
+
+                    </div>
+
+
+                    <div class="completion">
+
+
+                        <div class="progress-circle">
+
+                            <div class="circle-text">
+
+                                <strong>
+                                    69%
+                                </strong>
+
+                                <span>
+                                    Completed
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="completion-info">
+
+                            <p>
+                                You're doing well!
+                                Complete 2 more assignments
+                                to reach 80%.
+                            </p>
+
+
+                            <div class="mini-progress">
+                                <div></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- UPCOMING -->
+
+                <div class="panel">
+
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Upcoming Deadlines
+                        </h2>
+
+                        <span>
+                            VIEW ALL
+                        </span>
+
+                    </div>
+
+
+                    <div class="deadline-item">
+
+                        <div class="deadline-icon orange">
+                            <i class="bi bi-clock"></i>
+                        </div>
+
+                        <div class="deadline-info">
+
+                            <strong>
+                                Python Functions
+                            </strong>
+
+                            <span>
+                                Tomorrow
+                            </span>
+
+                        </div>
+
+                        <span
+                            class="days"
+                            style="color:#fbbf24;"
+                        >
+                            1d
+                        </span>
+
+                    </div>
+
+
+                    <div class="deadline-item">
+
+                        <div class="deadline-icon blue">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+
+                        <div class="deadline-info">
+
+                            <strong>
+                                Django Models
+                            </strong>
+
+                            <span>
+                                In 3 days
+                            </span>
+
+                        </div>
+
+                        <span
+                            class="days"
+                            style="color:#60a5fa;"
+                        >
+                            3d
+                        </span>
+
+                    </div>
+
+
+                    <div class="deadline-item">
+
+                        <div class="deadline-icon purple">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+
+                        <div class="deadline-info">
+
+                            <strong>
+                                React Components
+                            </strong>
+
+                            <span>
+                                In 6 days
+                            </span>
+
+                        </div>
+
+                        <span
+                            class="days"
+                            style="color:#a78bfa;"
+                        >
+                            6d
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SCORE -->
+
+                <div class="panel">
+
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Assignment Score
+                        </h2>
+
+                        <span>
+                            AVERAGE
+                        </span>
+
+                    </div>
+
+
+                    <div class="score">
+
+                        <strong>
+                            84%
+                        </strong>
+
+                        <br>
+
+                        <span>
+                            Average score across evaluated assignments
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TIP -->
+
+                <div class="panel">
+
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Smart Tip 💡
+                        </h2>
+
+                    </div>
+
+
+                    <p style="
+                        margin-top:12px;
+                        color:#94a3b8;
+                        font-size:9px;
+                        line-height:1.7;
+                    ">
+                        Finish your pending assignments before
+                        starting new ones. Consistent completion
+                        will improve your learning progress.
+                    </p>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* =========================
+       FILTERS
+    ========================= */
+
+    const filterButtons =
+        document.querySelectorAll(".filter-btn");
+
+    const assignments =
+        document.querySelectorAll(".assignment");
+
+    filterButtons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            filterButtons.forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            const filter =
+                button.dataset.filter;
+
+            assignments.forEach(item => {
+
+                const status =
+                    item.dataset.status;
+
+                if (
+                    filter === "all" ||
+                    status === filter
+                ) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+
+            });
+
+        });
+
+    });
+
+
+    /* =========================
+       SEARCH
+    ========================= */
+
+    const search =
+        document.getElementById(
+            "assignmentSearch"
+        );
+
+    search.addEventListener(
+        "input",
+        function () {
+
+            const value =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            assignments.forEach(item => {
+
+                const name =
+                    item.dataset.name;
+
+                if (
+                    name.includes(value)
+                ) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+
+            });
+
+        }
+    );
+</script>
+{% endblock %}

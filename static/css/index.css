@@ -1,0 +1,106 @@
+body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header{
+    background-color: #0babeb;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-links a{
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: 18px;
+}
+
+/* Logout Button */
+.logout-button {
+    width: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.logout-button:hover {
+    color: white;
+    background: rgba(239, 68, 68, 0.10);
+    transform: translateX(3px);
+}
+
+main{
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 10px;
+    padding: 10px;
+}
+
+.card{
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card img{
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+}
+
+.card:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.btn{
+    background-color: #0babeb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    text-align:center;
+}
+
+.btn:hover{
+    background-color: #0a9db9;
+}
+
+footer{
+    text-align: center;
+    background-color: #0babeb;
+    color: white;
+    padding: 10px;
+}
+
+form{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* =====================================================
+   HIDE PAGE SCROLLBAR - KEEP SCROLLING
+===================================================== */
+
+html,
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}

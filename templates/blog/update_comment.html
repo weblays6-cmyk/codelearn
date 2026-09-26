@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Update Comment | CodeLearn Hub</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(99, 102, 241, 0.14), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.10), transparent 30%),
+                #080b14;
+            color: #f8fafc;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .update-card {
+            width: 100%;
+            max-width: 650px;
+            background: rgba(17, 24, 39, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 38px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+        }
+
+        .icon-box {
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            font-size: 25px;
+            margin-bottom: 22px;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .form-area p {
+            margin-bottom: 20px;
+        }
+
+        .form-area label {
+            display: block;
+            color: #cbd5e1;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-area input,
+        .form-area textarea,
+        .form-area select {
+            width: 100%;
+            padding: 13px 15px;
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #273449;
+            border-radius: 12px;
+            outline: none;
+            transition: 0.2s ease;
+        }
+
+        .form-area textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-area input:focus,
+        .form-area textarea:focus,
+        .form-area select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .helptext {
+            display: block;
+            margin-top: 6px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0;
+            color: #f87171;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-update,
+        .btn-cancel {
+            flex: 1;
+            border-radius: 12px;
+            padding: 13px 18px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .btn-update {
+            border: none;
+            color: white;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .btn-update:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25);
+            color: white;
+        }
+
+        .btn-cancel {
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            background: #111827;
+        }
+
+        .btn-cancel:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        .brand {
+            text-align: center;
+            margin-top: 22px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .update-card {
+                padding: 25px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page-wrapper">
+
+    <div class="update-card">
+
+        <div class="icon-box">
+            <i class="bi bi-pencil-square"></i>
+        </div>
+
+        <h1>Update Comment</h1>
+
+        <p class="subtitle">
+            Edit your comment and save the changes.
+        </p>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="form-area">
+                {{ form.as_p }}
+            </div>
+
+            <div class="actions">
+
+                <a href="{% url 'blog:post_detail' form.instance.post.pk %}"
+                   class="btn-cancel">
+                    <i class="bi bi-arrow-left"></i>
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn-update">
+                    <i class="bi bi-check-lg"></i>
+                    Update Comment
+                </button>
+
+            </div>
+
+        </form>
+
+        <div class="brand">
+            CodeLearn Hub • Learn. Build. Grow.
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

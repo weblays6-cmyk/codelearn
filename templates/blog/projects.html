@@ -1,0 +1,480 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+Projects | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/projects.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="projects-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <section class="projects-header">
+
+        <div class="projects-header-content">
+
+            <div class="eyebrow">
+                <i class="bi bi-rocket-takeoff"></i>
+                Developer Projects
+            </div>
+
+            <h1>
+                Discover.
+                <span>Build. Share.</span>
+            </h1>
+
+            <p>
+                Explore projects built by developers,
+                share your own work and find collaborators.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'blog:create_project' %}"
+            class="create-project-btn"
+        >
+            <i class="bi bi-plus-lg"></i>
+            Share Your Project
+        </a>
+
+    </section>
+
+
+    <!-- =====================================================
+         TABS
+    ====================================================== -->
+
+    <div class="project-tabs">
+
+        <a
+            href="{% url 'blog:projects' %}?tab=discover"
+            class="project-tab {% if tab == 'discover' %}active{% endif %}"
+        >
+            <i class="bi bi-compass"></i>
+            Discover
+        </a>
+
+
+        <a
+            href="{% url 'blog:projects' %}?tab=my"
+            class="project-tab {% if tab == 'my' %}active{% endif %}"
+        >
+            <i class="bi bi-folder"></i>
+            My Projects
+        </a>
+
+
+        <a
+            href="{% url 'blog:projects' %}?tab=saved"
+            class="project-tab {% if tab == 'saved' %}active{% endif %}"
+        >
+            <i class="bi bi-bookmark"></i>
+            Saved
+        </a>
+
+
+        <a
+            href="{% url 'blog:projects' %}?tab=ideas"
+            class="project-tab {% if tab == 'ideas' %}active{% endif %}"
+        >
+            <i class="bi bi-lightbulb"></i>
+            Project Ideas
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         SEARCH / FILTER
+    ====================================================== -->
+
+    <form
+        method="GET"
+        class="project-toolbar"
+    >
+
+        <input
+            type="hidden"
+            name="tab"
+            value="{{ tab }}"
+        >
+
+
+        <div class="project-search">
+
+            <i class="bi bi-search"></i>
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search projects..."
+            >
+
+        </div>
+
+
+        <div class="project-filter">
+
+            <select name="status">
+
+                <option value="">
+                    All Status
+                </option>
+
+                <option
+                    value="idea"
+                    {% if status == "idea" %}selected{% endif %}
+                >
+                    Idea
+                </option>
+
+                <option
+                    value="development"
+                    {% if status == "development" %}selected{% endif %}
+                >
+                    In Development
+                </option>
+
+                <option
+                    value="completed"
+                    {% if status == "completed" %}selected{% endif %}
+                >
+                    Completed
+                </option>
+
+                <option
+                    value="live"
+                    {% if status == "live" %}selected{% endif %}
+                >
+                    Live
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="filter-btn"
+        >
+            <i class="bi bi-funnel"></i>
+            Filter
+        </button>
+
+    </form>
+
+
+    <!-- =====================================================
+         PROJECT COUNT
+    ====================================================== -->
+
+    <div class="project-results-header">
+
+        <div>
+
+            <h2>
+                {% if tab == "my" %}
+                    My Projects
+                {% elif tab == "saved" %}
+                    Saved Projects
+                {% elif tab == "ideas" %}
+                    Project Ideas
+                {% else %}
+                    Discover Projects
+                {% endif %}
+            </h2>
+
+            <p>
+                {{ projects|length }}
+                project{{ projects|length|pluralize }}
+                found
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PROJECT GRID
+    ====================================================== -->
+
+    {% if projects %}
+
+        <section class="project-grid">
+
+            {% for project in projects %}
+
+                <article class="project-card">
+
+
+                    <!-- PROJECT IMAGE -->
+
+                    <a
+                        href="{% url 'blog:project_detail' project.pk %}"
+                        class="project-image"
+                    >
+
+                        {% with first_image=project.images.first %}
+
+                            {% if first_image %}
+
+                                <img
+                                    src="{{ first_image.image.url }}"
+                                    alt="{{ project.title }}"
+                                >
+
+                            {% else %}
+
+                                <div class="project-placeholder">
+
+                                    <i class="bi bi-code-square"></i>
+
+                                </div>
+
+                            {% endif %}
+
+                        {% endwith %}
+
+
+                        <span class="project-status status-{{ project.status }}">
+
+                            {% if project.status == "idea" %}
+                                IDEA
+                            {% elif project.status == "development" %}
+                                IN DEVELOPMENT
+                            {% elif project.status == "completed" %}
+                                COMPLETED
+                            {% elif project.status == "live" %}
+                                LIVE
+                            {% endif %}
+
+                        </span>
+
+                    </a>
+
+
+                    <!-- PROJECT BODY -->
+
+                    <div class="project-body">
+
+
+                        <div class="project-category">
+
+                            <i class="bi bi-grid"></i>
+
+                            {{ project.category }}
+
+                        </div>
+
+
+                        <h3>
+
+                            <a
+                                href="{% url 'blog:project_detail' project.pk %}"
+                            >
+                                {{ project.title }}
+                            </a>
+
+                        </h3>
+
+
+                        <p class="project-description">
+
+                            {{ project.short_description }}
+
+                        </p>
+
+
+                        <!-- TECH STACK -->
+
+                        {% if project.tech_stack %}
+
+                            <div class="project-tech">
+
+                                {% for tech in project.tech_stack.split|slice:":5" %}
+
+                                    <span>
+                                        {{ tech }}
+                                    </span>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- OWNER -->
+
+                        <div class="project-owner">
+
+                            <div class="owner-avatar">
+
+                                {{ project.owner.username|first|upper }}
+
+                            </div>
+
+
+                            <div class="owner-info">
+
+                                <strong>
+                                    {{ project.owner.username }}
+                                </strong>
+
+                                <span>
+                                    Project creator
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PROJECT STATS -->
+
+                        <div class="project-card-footer">
+
+
+                            <div class="project-stats">
+
+                                <span>
+
+                                    <i class="bi bi-heart"></i>
+
+                                    {{ project.likes.count }}
+
+                                </span>
+
+
+                                <span>
+
+                                    <i class="bi bi-chat"></i>
+
+                                    {{ project.comments.count }}
+
+                                </span>
+
+
+                                <span>
+
+                                    <i class="bi bi-bookmark"></i>
+
+                                    {{ project.saves.count }}
+
+                                </span>
+
+                            </div>
+
+
+                            <a
+                                href="{% url 'blog:project_detail' project.pk %}"
+                                class="view-project-btn"
+                            >
+                                View
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </section>
+
+
+    {% else %}
+
+
+        <!-- =================================================
+             EMPTY STATE
+        ================================================== -->
+
+        <section class="empty-projects">
+
+            <div class="empty-icon">
+
+                <i class="bi bi-rocket-takeoff"></i>
+
+            </div>
+
+
+            <h2>
+                Be the first developer to share a project!
+            </h2>
+
+
+            <p>
+                Share your project, showcase your skills,
+                and connect with developers.
+            </p>
+
+
+            <a
+                href="{% url 'blog:create_project' %}"
+                class="empty-create-btn"
+            >
+                <i class="bi bi-plus-lg"></i>
+                Share Your Project
+            </a>
+
+        </section>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         PROJECT IDEAS CTA
+    ====================================================== -->
+
+    <section class="project-ideas-banner">
+
+        <div class="ideas-icon">
+
+            <i class="bi bi-lightbulb"></i>
+
+        </div>
+
+
+        <div class="ideas-content">
+
+            <h3>
+                Have a project idea?
+            </h3>
+
+            <p>
+                Share unfinished ideas and find developers
+                who want to collaborate with you.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'blog:create_project' %}"
+            class="ideas-btn"
+        >
+            Share Idea
+            <i class="bi bi-arrow-right"></i>
+        </a>
+
+    </section>
+
+</div>
+
+{% endblock %}

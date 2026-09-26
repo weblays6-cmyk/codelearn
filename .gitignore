@@ -1,0 +1,22 @@
+# Secrets
+credentials.json
+token.json
+.env
+.env.*
+
+# Uploaded files
+media/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/

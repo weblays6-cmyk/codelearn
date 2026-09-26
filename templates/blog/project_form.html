@@ -1,0 +1,545 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+Share Project | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/project_form.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="project-form-page">
+
+    <div class="project-form-header">
+
+        <div>
+            <div class="project-form-eyebrow">
+                <i class="bi bi-rocket-takeoff"></i>
+                BUILD & SHARE
+            </div>
+
+            <h1>Share Your Project</h1>
+
+            <p>
+                Showcase your project, share your ideas,
+                and connect with other developers.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'blog:projects' %}"
+            class="project-back-btn"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Back to Projects
+        </a>
+
+    </div>
+
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="project-form"
+    >
+
+        {% csrf_token %}
+
+
+        {% if form.non_field_errors %}
+        <div class="project-form-error">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+
+        <!-- =========================================
+             PROJECT INFORMATION
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+
+                <div>
+                    <h2>Project Information</h2>
+
+                    <p>
+                        Tell developers about your project.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.title.id_for_label }}">
+                    Project Title
+                    <span>*</span>
+                </label>
+
+                {{ form.title }}
+
+                {% if form.title.errors %}
+                <div class="project-field-error">
+                    {{ form.title.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.short_description.id_for_label }}">
+                    Short Description
+                    <span>*</span>
+                </label>
+
+                {{ form.short_description }}
+
+                <small>
+                    Give visitors a quick overview of your project.
+                </small>
+
+                {% if form.short_description.errors %}
+                <div class="project-field-error">
+                    {{ form.short_description.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.description.id_for_label }}">
+                    Detailed Description
+                    <span>*</span>
+                </label>
+
+                {{ form.description }}
+
+                <small>
+                    Explain your project in detail.
+                </small>
+
+                {% if form.description.errors %}
+                <div class="project-field-error">
+                    {{ form.description.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             TECHNOLOGY
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-code-slash"></i>
+                </div>
+
+                <div>
+                    <h2>Technology</h2>
+
+                    <p>
+                        Add the category and technologies used.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-form-grid">
+
+                <div class="project-form-field">
+
+                    <label for="{{ form.category.id_for_label }}">
+                        Category
+                        <span>*</span>
+                    </label>
+
+                    {{ form.category }}
+
+                    {% if form.category.errors %}
+                    <div class="project-field-error">
+                        {{ form.category.errors }}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+
+                <div class="project-form-field">
+
+                    <label for="{{ form.status.id_for_label }}">
+                        Project Status
+                        <span>*</span>
+                    </label>
+
+                    {{ form.status }}
+
+                    {% if form.status.errors %}
+                    <div class="project-field-error">
+                        {{ form.status.errors }}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.tech_stack.id_for_label }}">
+                    Tech Stack
+                </label>
+
+                {{ form.tech_stack }}
+
+                <small>
+                    Example: Python, Django, React, PostgreSQL
+                </small>
+
+                {% if form.tech_stack.errors %}
+                <div class="project-field-error">
+                    {{ form.tech_stack.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             PROJECT DETAILS
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-lightbulb"></i>
+                </div>
+
+                <div>
+                    <h2>Project Details</h2>
+
+                    <p>
+                        Explain the problem and solution.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.problem.id_for_label }}">
+                    Problem Solved
+                </label>
+
+                {{ form.problem }}
+
+                {% if form.problem.errors %}
+                <div class="project-field-error">
+                    {{ form.problem.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.features.id_for_label }}">
+                    Main Features
+                </label>
+
+                {{ form.features }}
+
+                <small>
+                    Mention the important features of your project.
+                </small>
+
+                {% if form.features.errors %}
+                <div class="project-field-error">
+                    {{ form.features.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             PROJECT LINKS
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-link-45deg"></i>
+                </div>
+
+                <div>
+                    <h2>Project Links</h2>
+
+                    <p>
+                        Connect your repository and live project.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.github_url.id_for_label }}">
+                    GitHub URL
+                </label>
+
+                {{ form.github_url }}
+
+                {% if form.github_url.errors %}
+                <div class="project-field-error">
+                    {{ form.github_url.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.live_demo_url.id_for_label }}">
+                    Live Demo URL
+                </label>
+
+                {{ form.live_demo_url }}
+
+                {% if form.live_demo_url.errors %}
+                <div class="project-field-error">
+                    {{ form.live_demo_url.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             PROJECT IMAGES
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-images"></i>
+                </div>
+
+                <div>
+                    <h2>Project Images</h2>
+
+                    <p>
+                        Upload screenshots of your project.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-image-upload">
+
+                <i class="bi bi-cloud-arrow-up"></i>
+
+                <h3>
+                    Upload Project Images
+                </h3>
+
+                <p>
+                    You can select multiple images.
+                </p>
+
+                <input
+                    type="file"
+                    name="images"
+                    id="project-images"
+                    accept="image/*"
+                    multiple
+                >
+
+                <label
+                    for="project-images"
+                    class="project-upload-btn"
+                >
+                    <i class="bi bi-image"></i>
+                    Choose Images
+                </label>
+
+
+                <div
+                    id="project-image-preview"
+                    class="project-image-preview"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             COLLABORATION
+        ========================================== -->
+
+        <section class="project-form-section">
+
+            <div class="project-section-heading">
+
+                <div class="project-section-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div>
+                    <h2>Collaboration</h2>
+
+                    <p>
+                        Let other developers know if you need help.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-collaboration-toggle">
+
+                {{ form.looking_for_collaborators }}
+
+                <div>
+
+                    <label
+                        for="{{ form.looking_for_collaborators.id_for_label }}"
+                    >
+                        Looking for collaborators?
+                    </label>
+
+                    <small>
+                        Allow developers to join your project.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="project-form-field">
+
+                <label for="{{ form.collaborator_types.id_for_label }}">
+                    Collaborator Types
+                </label>
+
+                {{ form.collaborator_types }}
+
+                <small>
+                    Example: Frontend, Backend, UI/UX, DevOps
+                </small>
+
+                {% if form.collaborator_types.errors %}
+                <div class="project-field-error">
+                    {{ form.collaborator_types.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             AI FEATURE
+        ========================================== -->
+
+        <div class="project-ai-info">
+
+            <div class="project-ai-icon">
+                <i class="bi bi-stars"></i>
+            </div>
+
+            <div>
+
+                <h3>
+                    Improve Your Description with AI
+                </h3>
+
+                <p>
+                    After publishing, you can improve grammar,
+                    spelling and readability with AI.
+                    Your original description will always be preserved.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================
+             ACTIONS
+        ========================================== -->
+
+        <div class="project-form-actions">
+
+            <a
+                href="{% url 'blog:projects' %}"
+                class="project-cancel-btn"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="project-submit-btn"
+            >
+                <i class="bi bi-rocket-takeoff"></i>
+                Publish Project
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script src="{% static 'js/project_form.js' %}"></script>
+
+{% endblock %}

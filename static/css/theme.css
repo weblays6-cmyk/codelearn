@@ -1,0 +1,162 @@
+/* =========================
+   CODELEARN HUB THEME
+========================= */
+
+:root {
+    /* Dark Theme - Default */
+
+    --bg: #080b14;
+    --bg-secondary: #0f1422;
+
+    --card: rgba(17, 24, 39, 0.88);
+    --card-solid: #111827;
+
+    --text: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --muted: #94a3b8;
+    --dim: #64748b;
+
+    --border: rgba(255, 255, 255, 0.08);
+
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --purple: #8b5cf6;
+
+    --shadow: rgba(0, 0, 0, 0.25);
+}
+
+
+/* =========================
+   LIGHT THEME
+========================= */
+
+body.light-theme {
+
+    --bg: #f5f7fb;
+    --bg-secondary: #eef2f7;
+
+    --card: rgba(255, 255, 255, 0.90);
+    --card-solid: #ffffff;
+
+    --text: #111827;
+    --text-secondary: #334155;
+    --muted: #64748b;
+    --dim: #94a3b8;
+
+    --border: rgba(15, 23, 42, 0.10);
+
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --purple: #7c3aed;
+
+    --shadow: rgba(15, 23, 42, 0.10);
+}
+
+/* =========================
+   LIGHT THEME UI
+========================= */
+
+body.light-theme {
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(99, 102, 241, 0.10),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at bottom right,
+            rgba(139, 92, 246, 0.08),
+            transparent 30%
+        ),
+        var(--bg);
+
+    color: var(--text);
+}
+
+
+/* Sidebar */
+
+body.light-theme .sidebar {
+    background: rgba(255, 255, 255, 0.92);
+    border-right-color: var(--border);
+}
+
+body.light-theme .brand {
+    color: var(--text);
+}
+
+body.light-theme .nav-title {
+    color: var(--dim);
+}
+
+body.light-theme .nav-link-custom {
+    color: var(--muted);
+}
+
+body.light-theme .nav-link-custom:hover,
+body.light-theme .nav-link-custom.active {
+    color: var(--text);
+    background: rgba(99, 102, 241, 0.10);
+}
+
+
+/* Main content */
+
+body.light-theme .page-subtitle {
+    color: var(--muted);
+}
+
+
+/* User badge */
+
+body.light-theme .user-badge {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+
+/* Cards */
+
+body.light-theme .premium-card {
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: 0 18px 50px var(--shadow);
+}
+
+
+/* Links */
+
+body.light-theme a {
+    color: inherit;
+}
+
+
+/* Footer */
+
+body.light-theme .site-footer {
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--muted);
+}
+
+/* LIGHT THEME NAVBAR */
+
+body.light-theme .top-navbar {
+    background: #ffffff;
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body.light-theme .navbar-brand {
+    color: #111827;
+}
+
+body.light-theme .navbar-user {
+    color: #475569;
+}
+
+body.light-theme .theme-toggle {
+    background: #f8fafc;
+    border-color: #dbe1ea;
+    color: #334155;
+}

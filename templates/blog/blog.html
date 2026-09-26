@@ -1,0 +1,844 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+Courses | CodeLearn Hub
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .courses-page {
+        width: 100%;
+    }
+
+    /* HERO */
+    .courses-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 38px 40px;
+        margin-bottom: 28px;
+        border: 1px solid rgba(139, 92, 246, .25);
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(99,102,241,.20), transparent 30%),
+            linear-gradient(135deg, #171536, #0e1126);
+    }
+
+    .courses-hero::before {
+        content: "";
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        right: -120px;
+        top: -180px;
+        border-radius: 50%;
+        background: rgba(104,72,255,.12);
+        border: 1px solid rgba(139,92,246,.15);
+    }
+
+    .courses-hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 760px;
+    }
+
+    .courses-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 14px;
+        padding: 7px 12px;
+        border: 1px solid rgba(139,92,246,.35);
+        border-radius: 20px;
+        color: #a98cff;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+
+    .courses-hero h1 {
+        margin: 0 0 12px;
+        color: #fff;
+        font-size: 38px;
+        font-weight: 850;
+        line-height: 1.1;
+    }
+
+    .courses-hero h1 span {
+        background: linear-gradient(
+            90deg,
+            #ffffff,
+            #8b78ff,
+            #20d9e8
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .courses-hero p {
+        max-width: 680px;
+        margin: 0;
+        color: #858ba4;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    /* FILTER */
+    .courses-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .course-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .course-filter {
+        border: 1px solid #292c43;
+        background: #101221;
+        color: #858ba4;
+        padding: 9px 14px;
+        border-radius: 9px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .course-filter:hover {
+        color: white;
+        border-color: #6353aa;
+    }
+
+    .course-filter.active {
+        color: white;
+        border-color: transparent;
+        background: linear-gradient(
+            135deg,
+            #684dff,
+            #476fff
+        );
+    }
+
+    .course-count {
+        color: #686f88;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    /* GRID */
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    /* CARD */
+    .course-card {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(
+            145deg,
+            #111321,
+            #0c0e1b
+        );
+        border: 1px solid #292c43;
+        border-radius: 18px;
+        transition: .25s ease;
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px);
+        border-color: #5d50a5;
+        box-shadow: 0 18px 45px rgba(0,0,0,.35);
+    }
+
+    .course-image {
+        position: relative;
+        height: 175px;
+        overflow: hidden;
+        background: linear-gradient(
+            135deg,
+            #1b1941,
+            #11152c
+        );
+    }
+
+    .course-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: .3s;
+    }
+
+    .course-card:hover .course-image img {
+        transform: scale(1.05);
+    }
+
+    .image-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(5,6,15,.75),
+            transparent 60%
+        );
+    }
+
+    .category-badge,
+    .difficulty-badge {
+        position: absolute;
+        top: 12px;
+        padding: 6px 9px;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 7px;
+        background: rgba(8,9,20,.85);
+        backdrop-filter: blur(8px);
+        font-size: 9px;
+        font-weight: 700;
+    }
+
+    .category-badge {
+        left: 12px;
+        color: #9f8bff;
+    }
+
+    .difficulty-badge {
+        right: 12px;
+        color: #7fdbb0;
+    }
+
+    .no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background:
+            radial-gradient(
+                circle at 30% 30%,
+                #2b2163,
+                transparent 45%
+            ),
+            linear-gradient(
+                135deg,
+                #171934,
+                #0d1020
+            );
+        color: #a78bfa;
+        font-size: 48px;
+    }
+
+    /* CONTENT */
+    .course-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 19px;
+    }
+
+    .course-title {
+        margin-bottom: 9px;
+        color: #f7f8ff;
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .course-description {
+        min-height: 42px;
+        margin-bottom: 16px;
+        color: #737a94;
+        font-size: 11px;
+        line-height: 1.65;
+    }
+
+    .course-meta {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+        color: #656c84;
+        font-size: 10px;
+    }
+
+    .course-meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .course-meta i {
+        color: #8170d8;
+    }
+
+    .course-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 14px;
+        border-top: 1px solid #22253a;
+    }
+
+    .instructor {
+        color: #777e97;
+        font-size: 10px;
+    }
+
+    .instructor strong {
+        color: #a6acc0;
+    }
+
+    .view-course {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 13px;
+        border-radius: 9px;
+        background: linear-gradient(
+            135deg,
+            #7654ff,
+            #4b74ff
+        );
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+    .view-course:hover {
+        color: white;
+        transform: translateY(-1px);
+        opacity: .9;
+    }
+
+    /* EMPTY */
+    .courses-empty {
+        padding: 65px 20px;
+        border: 1px dashed #30334b;
+        border-radius: 18px;
+        background: #0e101e;
+        text-align: center;
+    }
+
+    .courses-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 75px;
+        height: 75px;
+        margin: 0 auto 18px;
+        border-radius: 22px;
+        background: #1b1835;
+        color: #8b6fff;
+        font-size: 31px;
+    }
+
+    .courses-empty h3 {
+        margin-bottom: 8px;
+        color: #fff;
+        font-size: 19px;
+    }
+
+    .courses-empty p {
+        margin-bottom: 20px;
+        color: #707790;
+        font-size: 12px;
+    }
+
+    /* PAGINATION */
+    .courses-pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 35px;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 7px;
+    }
+
+    .page-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 35px;
+        height: 35px;
+        border: 1px solid #292c43;
+        border-radius: 9px;
+        background: #101221;
+        color: #858ba4;
+        font-size: 11px;
+        text-decoration: none;
+    }
+
+    .page-btn:hover,
+    .page-btn.active {
+        color: white;
+        border-color: transparent;
+        background: linear-gradient(
+            135deg,
+            #7654ff,
+            #4b74ff
+        );
+    }
+
+    /* LIGHT THEME */
+    body.light-theme .courses-hero {
+        background:
+            radial-gradient(
+                circle at 90% 10%,
+                rgba(99,102,241,.12),
+                transparent 30%
+            ),
+            linear-gradient(135deg,#ffffff,#eef1ff);
+        border-color: rgba(99,102,241,.22);
+    }
+
+    body.light-theme .courses-hero h1 {
+        color: #111827;
+    }
+
+    body.light-theme .courses-hero p {
+        color: #64748b;
+    }
+
+    body.light-theme .course-filter {
+        background: #fff;
+        border-color: #dfe3ef;
+        color: #64748b;
+    }
+
+    body.light-theme .course-filter.active {
+        color: white;
+    }
+
+    body.light-theme .course-card {
+        background: #fff;
+        border-color: #e3e7f0;
+        box-shadow: 0 8px 25px rgba(15,23,42,.06);
+    }
+
+    body.light-theme .course-title {
+        color: #111827;
+    }
+
+    body.light-theme .course-description {
+        color: #64748b;
+    }
+
+    body.light-theme .course-footer {
+        border-color: #e5e7eb;
+    }
+
+    body.light-theme .courses-empty {
+        background: #fff;
+        border-color: #d9deeb;
+    }
+
+    body.light-theme .courses-empty h3 {
+        color: #111827;
+    }
+
+    body.light-theme .page-btn {
+        background: #fff;
+        border-color: #dfe3ef;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:1100px) {
+        .courses-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media(max-width:700px) {
+        .courses-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .courses-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .courses-hero {
+            padding: 28px 22px;
+        }
+
+        .courses-hero h1 {
+            font-size: 28px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="courses-page">
+
+    <!-- HERO -->
+    <section class="courses-hero">
+
+        <div class="courses-hero-content">
+
+            <div class="courses-eyebrow">
+                <i class="bi bi-stars"></i>
+                Explore & Learn
+            </div>
+
+            <h1>
+                Learn Skills.
+                <span>Build Your Future.</span>
+            </h1>
+
+            <p>
+                Explore programming, web development,
+                AI and technology courses designed to help
+                you learn practical skills and build
+                real-world projects.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- FILTER BAR -->
+    <div class="courses-toolbar">
+
+        <div class="course-filters">
+
+            <button
+                type="button"
+                class="course-filter active"
+                data-filter="all"
+            >
+                All Courses
+            </button>
+
+            <button
+                type="button"
+                class="course-filter"
+                data-filter="Python"
+            >
+                Python
+            </button>
+
+            <button
+                type="button"
+                class="course-filter"
+                data-filter="Django"
+            >
+                Django
+            </button>
+
+            <button
+                type="button"
+                class="course-filter"
+                data-filter="JavaScript"
+            >
+                JavaScript
+            </button>
+
+            <button
+                type="button"
+                class="course-filter"
+                data-filter="AI"
+            >
+                AI
+            </button>
+
+            <button
+                type="button"
+                class="course-filter"
+                data-filter="c++"
+            >
+                C++
+            </button>
+
+        </div>
+
+
+        <div class="course-count">
+            {% if posts.paginator %}
+                {{ posts.paginator.count }}
+            {% else %}
+                {{ posts|length }}
+            {% endif %}
+            courses available
+        </div>
+
+    </div>
+
+
+    <!-- COURSES -->
+    {% if posts %}
+
+        <div class="courses-grid">
+
+            {% for post in posts %}
+
+                <article
+                    class="course-card"
+                    data-category="{{ post.category }}"
+                >
+
+                    <!-- IMAGE -->
+                    <div class="course-image">
+
+                        {% if post.image %}
+
+                            <img
+                                src="{{ post.image.url }}"
+                                alt="{{ post.title }}"
+                            >
+
+                        {% else %}
+
+                            <div class="no-image">
+                                <i class="bi bi-code-square"></i>
+                            </div>
+
+                        {% endif %}
+
+                        <div class="image-overlay"></div>
+
+                        <div class="category-badge">
+                            {{ post.category }}
+                        </div>
+
+                        <div class="difficulty-badge">
+                            {{ post.difficulty }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- BODY -->
+                    <div class="course-body">
+
+                        <div class="course-title">
+                            {{ post.title }}
+                        </div>
+
+
+                        <div class="course-description">
+
+                            {% if post.description %}
+
+                                {{ post.description|truncatewords:20 }}
+
+                            {% elif post.content %}
+
+                                {{ post.content|striptags|truncatewords:20 }}
+
+                            {% else %}
+
+                                Learn practical skills
+                                and build real-world
+                                projects with this course.
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="course-meta">
+
+                            <span>
+                                <i class="bi bi-bar-chart"></i>
+                                {{ post.difficulty }}
+                            </span>
+
+                            <span>
+                                <i class="bi bi-calendar3"></i>
+                                {{ post.created_at|date:"d M Y" }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="course-footer">
+
+                            <div class="instructor">
+                                By
+                                <strong>
+                                    {{ post.author.username }}
+                                </strong>
+                            </div>
+
+                            <a
+                                href="{% url 'blog:post_detail' post.pk %}"
+                                class="view-course"
+                            >
+                                View Course
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- PAGINATION -->
+        {% if posts.paginator.num_pages > 1 %}
+
+            <div class="courses-pagination">
+
+                <div class="pagination-links">
+
+                    {% if posts.has_previous %}
+
+                        <a
+                            href="?page={{ posts.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                            class="page-btn"
+                        >
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+
+                    {% endif %}
+
+
+                    {% for num in posts.paginator.page_range %}
+
+                        {% if posts.number == num %}
+
+                            <a
+                                href="?page={{ num }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                                class="page-btn active"
+                            >
+                                {{ num }}
+                            </a>
+
+                        {% else %}
+
+                            <a
+                                href="?page={{ num }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                                class="page-btn"
+                            >
+                                {{ num }}
+                            </a>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+
+                    {% if posts.has_next %}
+
+                        <a
+                            href="?page={{ posts.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                            class="page-btn"
+                        >
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+    {% else %}
+
+        <!-- EMPTY -->
+        <div class="courses-empty">
+
+            <div class="courses-empty-icon">
+                <i class="bi bi-search"></i>
+            </div>
+
+            <h3>
+                No courses found
+            </h3>
+
+            <p>
+
+                {% if search %}
+
+                    No courses matched "{{ search }}".
+
+                {% else %}
+
+                    There are no courses available right now.
+
+                {% endif %}
+
+            </p>
+
+            <a
+                href="{% url 'blog:blogpage' %}"
+                class="view-course"
+            >
+                <i class="bi bi-arrow-clockwise"></i>
+                View All Courses
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- FILTER JAVASCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const buttons = document.querySelectorAll(".course-filter");
+    const cards = document.querySelectorAll(".course-card");
+
+    buttons.forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const filter = this.dataset.filter;
+
+            buttons.forEach(function (btn) {
+                btn.classList.remove("active");
+            });
+
+            this.classList.add("active");
+
+
+            cards.forEach(function (card) {
+
+                const category = card.dataset.category;
+
+                if (
+                    filter === "all" ||
+                    category.toLowerCase() === filter.toLowerCase()
+                ) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+
+            });
+
+        });
+
+    });
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,363 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    Community | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/community.css' %}">
+{% endblock %}
+
+{% block content %}
+
+ <!-- TOPBAR  -->
+ <!-- ================= HEADER =================  -->
+<section class="page-header">
+<div>
+<div class="eyebrow">
+<i class="bi bi-people"></i>
+                    Developer Community
+                </div>
+<h1>
+                    Learn. <span>Share. Grow.</span>
+</h1>
+<p>
+                    Ask questions, share projects,
+                    discuss coding and learn together.
+                </p>
+</div>
+<a class="create-post" href="#">
+<i class="bi bi-plus-lg"></i>
+                Create Post
+            </a>
+</section>
+ <!-- ================= COMMUNITY =================  -->
+<section class="community-layout">
+<!-- ================= FEED ================= -->
+<div>
+<!-- POST BOX -->
+<div class="post-box">
+<div class="post-box-top">
+<div class="mini-avatar">
+                            {{ username|first|upper }}
+                        </div>
+<div class="post-input">
+                            Share something with the community...
+                        </div>
+</div>
+<div class="post-actions">
+<a class="post-button" href="#">
+                            Start Discussion
+                        </a>
+</div>
+</div>
+<!-- POST 1 -->
+<article class="community-post">
+<div class="post-header">
+<div class="mini-avatar">
+                            A
+                        </div>
+<div class="post-user">
+<strong>
+                                Alex Developer
+                            </strong>
+<span>
+                                Python Learner • 2 hours ago
+                            </span>
+</div>
+<i class="bi bi-three-dots more"></i>
+</div>
+<h3 class="post-title">
+                        What is the best way to learn Django?
+                    </h3>
+<p class="post-content">
+                        I'm comfortable with Python basics
+                        and now starting Django. Should I focus
+                        on projects first or complete the entire
+                        Django documentation?
+                    </p>
+<span class="post-tag">
+                        #Django
+                    </span>
+<div class="post-footer">
+<span class="post-action">
+<i class="bi bi-heart"></i>
+                            24 Likes
+                        </span>
+<span class="post-action">
+<i class="bi bi-chat"></i>
+                            12 Comments
+                        </span>
+<span class="post-action">
+<i class="bi bi-share"></i>
+                            Share
+                        </span>
+</div>
+</article>
+<!-- POST 2 -->
+<article class="community-post">
+<div class="post-header">
+<div class="mini-avatar" style="
+                                background:
+                                linear-gradient(
+                                    135deg,
+                                    #0ea5e9,
+                                    #2563eb
+                                );
+                            ">
+                            S
+                        </div>
+<div class="post-user">
+<strong>
+                                Sarah Codes
+                            </strong>
+<span>
+                                Full Stack Learner • 5 hours ago
+                            </span>
+</div>
+<i class="bi bi-three-dots more"></i>
+</div>
+<h3 class="post-title">
+                        Just completed my first Django project 🚀
+                    </h3>
+<p class="post-content">
+                        Finally completed a task management
+                        application with authentication,
+                        CRUD operations and MySQL.
+                        Feeling great about the progress!
+                    </p>
+<span class="post-tag">
+                        #Projects
+                    </span>
+<div class="post-footer">
+<span class="post-action">
+<i class="bi bi-heart"></i>
+                            41 Likes
+                        </span>
+<span class="post-action">
+<i class="bi bi-chat"></i>
+                            8 Comments
+                        </span>
+<span class="post-action">
+<i class="bi bi-share"></i>
+                            Share
+                        </span>
+</div>
+</article>
+<!-- POST 3 -->
+<article class="community-post">
+<div class="post-header">
+<div class="mini-avatar" style="
+                                background:
+                                linear-gradient(
+                                    135deg,
+                                    #22c55e,
+                                    #0f766e
+                                );
+                            ">
+                            R
+                        </div>
+<div class="post-user">
+<strong>
+                                Rahul Tech
+                            </strong>
+<span>
+                                JavaScript Developer • Yesterday
+                            </span>
+</div>
+<i class="bi bi-three-dots more"></i>
+</div>
+<h3 class="post-title">
+                        Python vs JavaScript for backend development?
+                    </h3>
+<p class="post-content">
+                        I'm planning to become a full-stack developer.
+                        Which backend technology would you recommend
+                        for someone starting their career?
+                    </p>
+<span class="post-tag">
+                        #Career
+                    </span>
+<div class="post-footer">
+<span class="post-action">
+<i class="bi bi-heart"></i>
+                            35 Likes
+                        </span>
+<span class="post-action">
+<i class="bi bi-chat"></i>
+                            19 Comments
+                        </span>
+<span class="post-action">
+<i class="bi bi-share"></i>
+                            Share
+                        </span>
+</div>
+</article>
+</div>
+<!-- ================= RIGHT SIDEBAR ================= -->
+<aside class="right">
+<!-- COMMUNITY STATS -->
+<div class="panel">
+<div class="panel-header">
+<h2>
+                            Community
+                        </h2>
+<span>
+                            LIVE
+                        </span>
+</div>
+<div class="community-stat">
+<div class="community-stat-icon">
+<i class="bi bi-people"></i>
+</div>
+<div>
+<strong>
+                                2,480
+                            </strong>
+<span>
+                                Members
+                            </span>
+</div>
+</div>
+<div class="community-stat">
+<div class="community-stat-icon">
+<i class="bi bi-chat-square-text"></i>
+</div>
+<div>
+<strong>
+                                486
+                            </strong>
+<span>
+                                Discussions
+                            </span>
+</div>
+</div>
+<div class="community-stat">
+<div class="community-stat-icon">
+<i class="bi bi-person-check"></i>
+</div>
+<div>
+<strong>
+                                124
+                            </strong>
+<span>
+                                Active Today
+                            </span>
+</div>
+</div>
+</div>
+<!-- TOP CONTRIBUTORS -->
+<div class="panel">
+<div class="panel-header">
+<h2>
+                            Top Contributors
+                        </h2>
+<span>
+                            THIS WEEK
+                        </span>
+</div>
+<div class="member">
+<div class="member-avatar">
+                            A
+                        </div>
+<div class="member-info">
+<strong>
+                                Alex Developer
+                            </strong>
+<span>
+                                182 points
+                            </span>
+</div>
+<div class="rank">
+                            #1
+                        </div>
+</div>
+<div class="member">
+<div class="member-avatar">
+                            S
+                        </div>
+<div class="member-info">
+<strong>
+                                Sarah Codes
+                            </strong>
+<span>
+                                156 points
+                            </span>
+</div>
+<div class="rank">
+                            #2
+                        </div>
+</div>
+<div class="member">
+<div class="member-avatar">
+                            R
+                        </div>
+<div class="member-info">
+<strong>
+                                Rahul Tech
+                            </strong>
+<span>
+                                139 points
+                            </span>
+</div>
+<div class="rank">
+                            #3
+                        </div>
+</div>
+</div>
+<!-- POPULAR TOPICS -->
+<div class="panel">
+<div class="panel-header">
+<h2>
+                            Popular Topics
+                        </h2>
+<span>
+                            EXPLORE
+                        </span>
+</div>
+<div class="topic">
+<span>
+                            #Python
+                        </span>
+<span>
+                            248 posts
+                        </span>
+</div>
+<div class="topic">
+<span>
+                            #Django
+                        </span>
+<span>
+                            186 posts
+                        </span>
+</div>
+<div class="topic">
+<span>
+                            #JavaScript
+                        </span>
+<span>
+                            164 posts
+                        </span>
+</div>
+<div class="topic">
+<span>
+                            #Career
+                        </span>
+<span>
+                            121 posts
+                        </span>
+</div>
+<div class="topic">
+<span>
+                            #Projects
+                        </span>
+<span>
+                            98 posts
+                        </span>
+</div>
+</div>
+</aside>
+</section>
+
+{% endblock %}

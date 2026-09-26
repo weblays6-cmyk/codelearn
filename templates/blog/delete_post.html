@@ -1,0 +1,633 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Delete Course | CodeLearn Hub</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: #070816;
+
+            color: #f5f7ff;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        /* ================================
+           BACKGROUND
+        ================================= */
+
+        body::before {
+
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(111, 76, 255, .08);
+
+            filter: blur(35px);
+
+            top: -220px;
+            right: -150px;
+
+            pointer-events: none;
+        }
+
+
+        body::after {
+
+            content: "";
+
+            position: fixed;
+
+            width: 350px;
+            height: 350px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(45, 117, 255, .06);
+
+            filter: blur(35px);
+
+            bottom: -180px;
+            left: -100px;
+
+            pointer-events: none;
+        }
+
+
+        /* ================================
+           PAGE
+        ================================= */
+
+        .page {
+
+            width: 100%;
+
+            max-width: 650px;
+
+            padding: 25px;
+
+            position: relative;
+
+            z-index: 2;
+        }
+
+
+        /* ================================
+           LOGO
+        ================================= */
+
+        .logo {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            margin-bottom: 22px;
+        }
+
+
+        .logo-icon {
+
+            width: 42px;
+            height: 42px;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #805cff,
+                    #4d8dff
+                );
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 20px;
+
+            box-shadow:
+                0 10px 30px
+                rgba(89, 76, 255, .25);
+        }
+
+
+        .logo-text {
+
+            font-size: 19px;
+
+            font-weight: 850;
+
+            line-height: 1.05;
+        }
+
+
+        .logo-text span {
+
+            display: block;
+
+            color: #a991ff;
+        }
+
+
+        /* ================================
+           CARD
+        ================================= */
+
+        .delete-card {
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #131525,
+                    #0c0e1b
+                );
+
+            border: 1px solid #2b2e45;
+
+            border-radius: 22px;
+
+            padding: 34px;
+
+            text-align: center;
+
+            box-shadow:
+                0 25px 70px
+                rgba(0,0,0,.38);
+        }
+
+
+        /* ================================
+           ICON
+        ================================= */
+
+        .warning-icon {
+
+            width: 72px;
+            height: 72px;
+
+            margin: 0 auto 20px;
+
+            border-radius: 21px;
+
+            background:
+                rgba(255, 83, 105, .10);
+
+            border:
+                1px solid
+                rgba(255, 83, 105, .24);
+
+            color: #ff7185;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 30px;
+        }
+
+
+        /* ================================
+           TITLE
+        ================================= */
+
+        h1 {
+
+            font-size: 26px;
+
+            font-weight: 850;
+
+            margin: 0 0 10px;
+        }
+
+
+        .subtitle {
+
+            color: #737a94;
+
+            font-size: 11px;
+
+            line-height: 1.7;
+
+            margin: 0 0 23px;
+        }
+
+
+        /* ================================
+           COURSE PREVIEW
+        ================================= */
+
+        .course-preview {
+
+            text-align: left;
+
+            background: #0b0e1b;
+
+            border: 1px solid #292c42;
+
+            border-radius: 15px;
+
+            padding: 18px;
+
+            margin-bottom: 22px;
+        }
+
+
+        .preview-label {
+
+            color: #666d86;
+
+            font-size: 9px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            font-weight: 700;
+
+            margin-bottom: 9px;
+        }
+
+
+        .course-title {
+
+            color: #eef0f8;
+
+            font-size: 15px;
+
+            font-weight: 750;
+
+            line-height: 1.45;
+
+            word-break: break-word;
+        }
+
+
+        /* ================================
+           WARNING BOX
+        ================================= */
+
+        .warning-box {
+
+            background:
+                rgba(255, 83, 105, .055);
+
+            border:
+                1px solid
+                rgba(255, 83, 105, .16);
+
+            border-radius: 12px;
+
+            padding: 12px 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 8px;
+
+            color: #aeb2c2;
+
+            font-size: 10px;
+
+            margin-bottom: 23px;
+        }
+
+
+        .warning-box i {
+
+            color: #ff7185;
+
+            font-size: 14px;
+        }
+
+
+        /* ================================
+           ACTIONS
+        ================================= */
+
+        .actions {
+
+            display: flex;
+
+            justify-content: center;
+
+            gap: 12px;
+        }
+
+
+        .btn {
+
+            min-width: 150px;
+
+            padding: 11px 18px;
+
+            border-radius: 10px;
+
+            font-size: 10px;
+
+            font-weight: 750;
+
+            text-decoration: none;
+
+            transition: .2s;
+
+            cursor: pointer;
+        }
+
+
+        /* CANCEL */
+
+        .cancel-btn {
+
+            color: #c0c4d3;
+
+            background: #151827;
+
+            border: 1px solid #303348;
+        }
+
+
+        .cancel-btn:hover {
+
+            color: white;
+
+            background: #1b1e31;
+
+            border-color: #555a73;
+        }
+
+
+        /* DELETE */
+
+        .delete-btn {
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ef4765,
+                    #d93656
+                );
+
+            border: none;
+
+            box-shadow:
+                0 8px 25px
+                rgba(239,71,101,.15);
+        }
+
+
+        .delete-btn:hover {
+
+            opacity: .9;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* ================================
+           FOOTER
+        ================================= */
+
+        .footer {
+
+            text-align: center;
+
+            color: #484e65;
+
+            font-size: 9px;
+
+            margin-top: 18px;
+        }
+
+
+        /* ================================
+           MOBILE
+        ================================= */
+
+        @media(max-width: 550px) {
+
+            .page {
+
+                padding: 18px;
+            }
+
+            .delete-card {
+
+                padding: 25px 20px;
+            }
+
+            .actions {
+
+                flex-direction: column;
+            }
+
+            .btn {
+
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+
+    <!-- LOGO -->
+
+    <div class="logo">
+
+        <div class="logo-icon">
+
+            <i class="bi bi-code-slash"></i>
+
+        </div>
+
+        <div class="logo-text">
+
+            CodeLearn
+
+            <span>Hub</span>
+
+        </div>
+
+    </div>
+
+
+    <!-- DELETE CARD -->
+
+    <div class="delete-card">
+
+
+        <div class="warning-icon">
+
+            <i class="bi bi-trash3"></i>
+
+        </div>
+
+
+        <h1>
+            Delete Course?
+        </h1>
+
+
+        <p class="subtitle">
+
+            Are you sure you want to permanently
+            delete this course?
+
+            <br>
+
+            All related course content may also be affected.
+
+        </p>
+
+
+        <!-- COURSE PREVIEW -->
+
+        <div class="course-preview">
+
+
+            <div class="preview-label">
+
+                <i class="bi bi-book"></i>
+
+                Course
+
+            </div>
+
+
+            <div class="course-title">
+
+                "{{ post.title }}"
+
+            </div>
+
+
+        </div>
+
+
+        <!-- WARNING -->
+
+        <div class="warning-box">
+
+            <i class="bi bi-exclamation-triangle"></i>
+
+            This action cannot be undone.
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="actions">
+
+
+            <a
+                href="{% url 'blog:blogpage' %}"
+                class="btn cancel-btn"
+            >
+
+                <i class="bi bi-arrow-left"></i>
+
+                Cancel
+
+            </a>
+
+
+            <form
+                method="POST"
+                style="margin:0;"
+            >
+
+                {% csrf_token %}
+
+
+                <button
+                    type="submit"
+                    class="btn delete-btn"
+                >
+
+                    <i class="bi bi-trash3"></i>
+
+                    Yes, Delete
+
+                </button>
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+    <div class="footer">
+
+        CodeLearn Hub · Learn. Practice. Build.
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>

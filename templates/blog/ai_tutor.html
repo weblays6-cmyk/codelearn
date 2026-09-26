@@ -1,0 +1,1019 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    AI Tutor | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ai_tutor.css' %}">
+{% endblock %}
+
+
+{% block content %}
+
+<div class="ai-tutor-page">
+
+    <!-- =========================
+         HERO
+    ========================= -->
+
+    <section class="hero">
+
+        <div class="hero-badge">
+            ✦ AI POWERED LEARNING
+        </div>
+
+        <h1>
+            Learn smarter.<br>
+            Build faster.
+        </h1>
+
+        <p>
+            Your personal AI coding mentor for Python,
+            Django, databases, HTML, CSS, JavaScript
+            and real-world development.
+        </p>
+
+    </section>
+
+
+    <!-- =========================
+         QUICK PROMPTS
+    ========================= -->
+
+    <div class="quick-prompts">
+
+        <button
+            type="button"
+            class="quick-btn"
+            onclick="setPrompt('Explain Python functions with a simple example')"
+        >
+            🐍 Explain Python
+        </button>
+
+        <button
+            type="button"
+            class="quick-btn"
+            onclick="setPrompt('Explain Django MVT architecture step by step')"
+        >
+            🌐 Django MVT
+        </button>
+
+        <button
+            type="button"
+            class="quick-btn"
+            onclick="setPrompt('Explain SQL JOINs with examples')"
+        >
+            🗄 SQL JOINs
+        </button>
+
+        <button
+            type="button"
+            class="quick-btn"
+            onclick="setPrompt('Give me a Python coding practice question')"
+        >
+            💻 Coding Practice
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         CHAT CARD
+    ========================= -->
+
+    <section class="chat-card">
+
+        <!-- CHAT HEADER -->
+
+        <div class="chat-header">
+
+            <div class="ai-header-icon">
+                ✦
+            </div>
+
+            <div class="chat-title">
+
+                <strong>
+                    {{ SITE_NAME }} AI
+                </strong>
+
+                <span>
+                    Ready to help you learn
+                </span>
+
+            </div>
+
+            <div class="status">
+
+                <div class="status-dot"></div>
+
+                Online
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+     CHAT TOOLBAR
+========================= -->
+
+<div class="chat-toolbar">
+
+    <!-- NEW CHAT -->
+    <button
+        type="button"
+        class="new-chat-btn"
+        id="newChatButton"
+    >
+        <i class="bi bi-plus-lg"></i>
+        New Chat
+    </button>
+
+
+    <!-- HISTORY -->
+    <button
+        type="button"
+        class="history-btn"
+        id="historyButton"
+    >
+        <i class="bi bi-clock-history"></i>
+        History
+    </button>
+
+
+    <!-- CLEAR HISTORY -->
+    <button
+        type="button"
+        class="clear-history-btn"
+        id="clearHistoryButton"
+    >
+        <i class="bi bi-trash3"></i>
+        Clear History
+    </button>
+
+</div>
+
+        <!-- =========================
+             MESSAGES
+        ========================= -->
+
+        <div
+            class="messages"
+            id="messages"
+        >
+
+            <!-- DEFAULT MESSAGE -->
+
+            <div
+                class="message ai-message"
+                id="defaultMessage"
+            >
+
+                <span class="message-label">
+                    ✦ AI Tutor
+                </span>
+
+                👋 Hey! I'm your {{ SITE_NAME }} AI Tutor.
+
+                <br><br>
+
+                Ask me anything about programming.
+                I can explain concepts, debug your code,
+                give examples and help you practice.
+
+            </div>
+
+
+            <!-- CURRENT USER QUESTION -->
+
+            {% if question %}
+
+            <div class="message user-message">
+
+                <span class="message-label">
+                    👤 You
+                </span>
+
+                {{ question }}
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- CURRENT AI ANSWER -->
+
+            {% if answer %}
+
+            <div class="message ai-message">
+
+                <span class="message-label">
+                    ✦ AI Tutor
+                </span>
+
+                {{ answer|linebreaksbr }}
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ERROR -->
+
+            {% if error %}
+
+            <div class="message ai-message error-message">
+
+                <span class="message-label">
+                    ⚠️ AI Tutor
+                </span>
+
+                {{ error }}
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- THINKING -->
+
+            <div
+                class="thinking"
+                id="thinking"
+            >
+
+                ✦ Thinking
+
+                <span class="dots">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             INPUT
+        ========================= -->
+
+        <div class="input-area">
+
+            <form
+                method="POST"
+                id="aiForm"
+            >
+
+                {% csrf_token %}
+
+                <div class="input-box">
+
+                    <textarea
+                        id="questionInput"
+                        name="question"
+                        placeholder="Ask your coding question..."
+                        required
+                        rows="1"
+                    ></textarea>
+
+                    <button
+                        type="submit"
+                        class="ask-btn"
+                        id="askButton"
+                    >
+                        Ask AI ✦
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <div class="hint">
+                AI can make mistakes. Always verify important code.
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =========================
+     HISTORY MODAL
+========================= -->
+
+<div
+    class="history-modal"
+    id="historyModal"
+>
+
+    <div class="history-panel">
+
+        <div class="history-header">
+
+            <div>
+                <h3>
+                    <i class="bi bi-clock-history"></i>
+                    AI Tutor History
+                </h3>
+
+                <p>
+                    Your conversations saved on this browser
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="history-close"
+                onclick="closeHistory()"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+        <div
+            class="history-list"
+            id="historyList"
+        >
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
+
+    const form =
+        document.getElementById("aiForm");
+
+    const textarea =
+        document.getElementById("questionInput");
+
+    const button =
+        document.getElementById("askButton");
+
+    const thinking =
+        document.getElementById("thinking");
+
+    const messages =
+        document.getElementById("messages");
+
+    const historyModal =
+        document.getElementById("historyModal");
+
+    const historyList =
+        document.getElementById("historyList");
+
+
+    /* =====================================================
+       STORAGE KEY
+    ===================================================== */
+
+    const HISTORY_KEY =
+        "codelearn_ai_tutor_history";
+
+
+    /* =====================================================
+       GET HISTORY
+    ===================================================== */
+
+    function getHistory() {
+
+        try {
+
+            return JSON.parse(
+                localStorage.getItem(HISTORY_KEY) || "[]"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "History loading error:",
+                error
+            );
+
+            return [];
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SAVE HISTORY
+    ===================================================== */
+
+    function saveHistory(question, answer) {
+
+        if (!question || !answer) {
+            return;
+        }
+
+
+        let history = getHistory();
+
+
+        const newChat = {
+
+            id: Date.now(),
+
+            question: question,
+
+            answer: answer,
+
+            date: new Date().toLocaleString()
+
+        };
+
+
+        history.push(newChat);
+
+
+        /*
+         * Keep latest 100 conversations
+         */
+
+        if (history.length > 100) {
+
+            history =
+                history.slice(-100);
+
+        }
+
+
+        localStorage.setItem(
+            HISTORY_KEY,
+            JSON.stringify(history)
+        );
+
+    }
+
+
+    /* =====================================================
+       QUICK PROMPT
+    ===================================================== */
+
+    function setPrompt(text) {
+
+        textarea.value = text;
+
+        textarea.focus();
+
+        textarea.style.height = "auto";
+
+        textarea.style.height =
+            Math.min(
+                textarea.scrollHeight,
+                130
+            ) + "px";
+
+    }
+
+
+    /* =====================================================
+       AUTO RESIZE
+    ===================================================== */
+
+    textarea.addEventListener(
+        "input",
+        function () {
+
+            this.style.height =
+                "auto";
+
+            this.style.height =
+                Math.min(
+                    this.scrollHeight,
+                    130
+                ) + "px";
+
+        }
+    );
+
+
+    /* =====================================================
+       ENTER TO SEND
+    ===================================================== */
+
+    textarea.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                form.requestSubmit();
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       FORM SUBMIT
+    ===================================================== */
+
+    form.addEventListener(
+        "submit",
+        function () {
+
+            const question =
+                textarea.value.trim();
+
+
+            if (!question) {
+                return;
+            }
+
+
+            sessionStorage.setItem(
+                "aiTutorScrollY",
+                String(window.scrollY)
+            );
+
+            button.disabled = true;
+
+            button.innerHTML =
+                "Thinking...";
+
+
+            thinking.classList.add(
+                "active"
+            );
+
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+        }
+    );
+
+
+    /* =====================================================
+       SAVE CURRENT RESPONSE
+    ===================================================== */
+
+    function saveCurrentResponse() {
+
+        const question =
+            "{{ question|escapejs }}";
+
+        const answer =
+            "{{ answer|escapejs }}";
+
+
+        if (
+            question &&
+            answer
+        ) {
+
+            const history =
+                getHistory();
+
+
+            /*
+             * Prevent duplicate save
+             * after browser refresh.
+             */
+
+            const alreadySaved =
+                history.some(
+                    item =>
+                        item.question === question &&
+                        item.answer === answer
+                );
+
+
+            if (!alreadySaved) {
+
+                saveHistory(
+                    question,
+                    answer
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SHOW HISTORY
+    ===================================================== */
+function showHistory() {
+
+    const history = getHistory();
+
+    historyList.innerHTML = "";
+
+    if (history.length === 0) {
+
+        historyList.innerHTML = `
+
+            <div class="empty-history">
+
+                <i class="bi bi-chat-square-text"></i>
+
+                <h4>
+                    No conversations yet
+                </h4>
+
+                <p>
+                    Your AI Tutor questions will appear here.
+                </p>
+
+            </div>
+
+        `;
+
+    } else {
+
+        const reversedHistory =
+            [...history].reverse();
+
+
+        reversedHistory.forEach(item => {
+
+            const historyItem =
+                document.createElement("button");
+
+            historyItem.type = "button";
+
+            historyItem.className =
+                "history-item";
+
+
+            historyItem.innerHTML = `
+
+                <div class="history-date">
+
+                    <i class="bi bi-clock"></i>
+
+                    ${escapeHtml(item.date)}
+
+                </div>
+
+
+                <div class="history-question">
+
+                    <span>
+                        👤 You
+                    </span>
+
+                    ${escapeHtml(item.question)}
+
+                </div>
+
+            `;
+
+
+            historyItem.addEventListener(
+                "click",
+                function () {
+
+                    loadHistoryItem(item);
+
+                }
+            );
+
+
+            historyList.appendChild(
+                historyItem
+            );
+
+        });
+
+    }
+
+
+    historyModal.classList.add("active");
+
+}
+
+    /* =====================================================
+       LOAD A SAVED CHAT
+    ===================================================== */
+
+    function loadHistoryItem(item) {
+
+        const url = new URL(window.location.href);
+
+        url.searchParams.set("chat", item.id);
+
+        window.history.pushState({}, "", url);
+
+        messages.innerHTML = `
+
+            <div class="message user-message">
+
+                <span class="message-label">
+                    👤 You
+                </span>
+
+                ${escapeHtml(item.question)}
+
+            </div>
+
+            <div class="message ai-message">
+
+                <span class="message-label">
+                    ✦ AI Tutor
+                </span>
+
+                ${escapeHtml(item.answer).replace(
+                    /\n/g,
+                    "<br>"
+                )}
+
+            </div>
+
+        `;
+
+        textarea.value = "";
+        textarea.style.height = "auto";
+
+        button.disabled = false;
+        button.innerHTML = "Ask AI ✦";
+
+        thinking.classList.remove("active");
+
+        closeHistory();
+
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+
+    /* =====================================================
+       NEW CHAT
+    ===================================================== */
+
+    function newChat() {
+
+        const cleanUrl =
+            window.location.pathname;
+
+        window.history.replaceState(
+            {},
+            "",
+            cleanUrl
+        );
+
+        messages.innerHTML = `
+
+            <div
+                class="message ai-message"
+                id="defaultMessage"
+            >
+
+                <span class="message-label">
+                    ✦ AI Tutor
+                </span>
+
+                👋 Hey! I'm your {{ SITE_NAME }} AI Tutor.
+
+                <br><br>
+
+                Ask me anything about programming.
+                I can explain concepts, debug your code,
+                give examples and help you practice.
+
+            </div>
+
+        `;
+
+        textarea.value = "";
+        textarea.style.height = "auto";
+
+        button.disabled = false;
+        button.innerHTML = "Ask AI ✦";
+
+        thinking.classList.remove("active");
+
+        closeHistory();
+
+        messages.scrollTop = 0;
+
+        textarea.focus();
+    }
+
+
+    /* =====================================================
+       CLOSE HISTORY
+    ===================================================== */
+
+    function closeHistory() {
+
+        historyModal.classList.remove("active");
+    }
+
+
+    /* =====================================================
+       CLEAR HISTORY
+    ===================================================== */
+
+    function clearHistory() {
+
+        const history = getHistory();
+
+        if (history.length === 0) {
+
+            alert(
+                "No AI Tutor history to clear."
+            );
+
+            return;
+        }
+
+        const confirmed = confirm(
+            "Clear all AI Tutor history from this browser?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        localStorage.removeItem(
+            HISTORY_KEY
+        );
+
+        showHistory();
+    }
+
+
+    /* =====================================================
+       ESCAPE HTML
+    ===================================================== */
+
+    function escapeHtml(text) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent = text;
+
+        return div.innerHTML;
+    }
+
+
+    /* =====================================================
+       BUTTON EVENTS
+    ===================================================== */
+
+    const newChatButton =
+        document.getElementById("newChatButton");
+
+    const historyButton =
+        document.getElementById("historyButton");
+
+    const clearHistoryButton =
+        document.getElementById("clearHistoryButton");
+
+
+    if (newChatButton) {
+
+        newChatButton.addEventListener(
+            "click",
+            newChat
+        );
+    }
+
+
+    if (historyButton) {
+
+        historyButton.addEventListener(
+            "click",
+            showHistory
+        );
+    }
+
+
+    if (clearHistoryButton) {
+
+        clearHistoryButton.addEventListener(
+            "click",
+            clearHistory
+        );
+    }
+
+
+    /* =====================================================
+       CLOSE MODAL
+    ===================================================== */
+
+    historyModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target === historyModal
+            ) {
+
+                closeHistory();
+            }
+        }
+    );
+
+
+    /* =====================================================
+       ESC KEY
+    ===================================================== */
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape" &&
+                historyModal.classList.contains("active")
+            ) {
+
+                closeHistory();
+            }
+        }
+    );
+
+
+    /* =====================================================
+       PAGE LOAD
+    ===================================================== */
+
+    window.addEventListener(
+        "load",
+        function () {
+
+            saveCurrentResponse();
+
+            const hasResponse =
+                "{{ answer|escapejs }}" ||
+                "{{ error|escapejs }}";
+
+            if (hasResponse) {
+
+                thinking.classList.remove(
+                    "active"
+                );
+            }
+
+
+            const savedScroll =
+                sessionStorage.getItem(
+                    "aiTutorScrollY"
+                );
+
+
+            if (savedScroll !== null) {
+
+                requestAnimationFrame(
+                    function () {
+
+                        window.scrollTo(
+                            0,
+                            parseInt(
+                                savedScroll,
+                                10
+                            )
+                        );
+                    }
+                );
+
+                sessionStorage.removeItem(
+                    "aiTutorScrollY"
+                );
+
+            } else {
+
+                messages.scrollTop =
+                    messages.scrollHeight;
+            }
+
+        }
+    );
+
+</script>
+
+{% endblock %}

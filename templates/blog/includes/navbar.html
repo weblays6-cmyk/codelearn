@@ -1,0 +1,42 @@
+<nav class="top-navbar">
+
+    <div class="top-navbar-left">
+        <a href="{% url 'blog:dashboard' %}" class="navbar-brand">
+            <div class="navbar-brand-icon">
+                <i class="bi bi-code-slash"></i>
+            </div>
+
+           <span>{{ SITE_NAME }}</span>
+        </a>
+    </div>
+
+
+    <div class="top-navbar-right">
+
+        {% if user.is_authenticated %}
+
+            <div class="navbar-user">
+                <div class="navbar-avatar">
+                    {{ user.email|first|upper }}
+                </div>
+
+                <span>
+                    {{ user.email }}
+                </span>
+            </div>
+
+        {% endif %}
+
+        <button
+            type="button"
+            class="theme-toggle"
+            id="themeToggle"
+            onclick="toggleTheme()"
+            aria-label="Toggle theme"
+        >
+            <i class="bi bi-moon-fill" id="themeIcon"></i>
+        </button>
+
+    </div>
+
+</nav>

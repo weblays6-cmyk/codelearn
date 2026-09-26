@@ -1,0 +1,199 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    Settings | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+
+            <div class="header-left">
+                <h1>Settings</h1>
+                <p>Manage your CodeLearn Hub preferences.</p>
+            </div>
+
+            <a href="{% url 'blog:dashboard' %}" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+                Dashboard
+            </a>
+
+        </div>
+
+
+        <!-- ACCOUNT -->
+        <div class="settings-card">
+
+            <div class="section-title">
+                <h2>Account</h2>
+                <p>Your CodeLearn Hub account information</p>
+            </div>
+
+            <div class="account-box">
+
+                <div class="account-item">
+                    <span class="label">Username</span>
+                    <span class="value">{{ request.user.username }}</span>
+                </div>
+
+                <div class="account-item">
+                    <span class="label">Account Status</span>
+                    <span class="value">Active</span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PREFERENCES -->
+        <div class="settings-card">
+
+            <div class="section-title">
+                <h2>Preferences</h2>
+                <p>Customize your learning experience</p>
+            </div>
+
+
+            <!-- Notifications -->
+            <div class="setting-row">
+
+                <div class="setting-info">
+
+                    <div class="setting-icon">
+                        <i class="bi bi-bell"></i>
+                    </div>
+
+                    <div class="setting-text">
+                        <h3>Notifications</h3>
+                        <p>Receive learning and course notifications.</p>
+                    </div>
+
+                </div>
+
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+
+            <!-- Email -->
+            <div class="setting-row">
+
+                <div class="setting-info">
+
+                    <div class="setting-icon">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+
+                    <div class="setting-text">
+                        <h3>Email Updates</h3>
+                        <p>Receive important updates through email.</p>
+                    </div>
+
+                </div>
+
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+
+            <!-- Language -->
+            <div class="setting-row">
+
+                <div class="setting-info">
+
+                    <div class="setting-icon">
+                        <i class="bi bi-translate"></i>
+                    </div>
+
+                    <div class="setting-text">
+                        <h3>Language</h3>
+                        <p>Select your preferred language.</p>
+                    </div>
+
+                </div>
+
+                <select class="select-box">
+                    <option>English</option>
+                    <option>Telugu</option>
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- SECURITY -->
+        <div class="settings-card">
+
+            <div class="section-title">
+                <h2>Security</h2>
+                <p>Manage your account security</p>
+            </div>
+
+
+            <div class="setting-row">
+
+                <div class="setting-info">
+
+                    <div class="setting-icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+
+                    <div class="setting-text">
+                        <h3>Password</h3>
+                        <p>Change your account password.</p>
+                    </div>
+
+                </div>
+
+                <button class="action-btn">
+                    Change
+                </button>
+
+            </div>
+
+
+            <div class="setting-row">
+
+                <div class="setting-info">
+
+                    <div class="setting-icon">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </div>
+
+                    <div class="setting-text">
+                        <h3>Logout</h3>
+                        <p>Sign out from your CodeLearn Hub account.</p>
+                    </div>
+
+                </div>
+
+                <form method="POST" action="{% url 'blog:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="danger-btn">
+                        Logout
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

@@ -1,0 +1,320 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    My Learning | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/my_learning.css' %}">
+{% endblock %}
+
+{% block content %}
+
+
+
+        <section class="page-header">
+
+            <div class="eyebrow">
+                <i class="bi bi-mortarboard"></i>
+                Your Learning Journey
+            </div>
+
+
+            <h1>
+                My <span>Learning</span>
+            </h1>
+
+
+            <p>
+                Track your courses, continue your progress,
+                and keep building your skills.
+            </p>
+
+        </section>
+
+
+        <!-- ================= SUMMARY ================= -->
+
+        <section class="summary">
+
+
+            <!-- ENROLLED -->
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    <i class="bi bi-book"></i>
+                </div>
+
+                <div class="summary-number">
+                    {{ total_courses }}
+                </div>
+
+                <div class="summary-label">
+                    Enrolled Courses
+                </div>
+
+            </div>
+
+
+            <!-- IN PROGRESS -->
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    <i class="bi bi-play-circle"></i>
+                </div>
+
+                <div class="summary-number">
+                    {{ in_progress_courses }}
+                </div>
+
+                <div class="summary-label">
+                    Courses In Progress
+                </div>
+
+            </div>
+
+
+            <!-- COMPLETED -->
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+
+                <div class="summary-number">
+                    {{ completed_courses }}
+                </div>
+
+                <div class="summary-label">
+                    Completed Courses
+                </div>
+
+            </div>
+
+
+            <!-- OVERALL -->
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+
+                <div class="summary-number">
+                    {{ average_progress }}%
+                </div>
+
+                <div class="summary-label">
+                    Overall Progress
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= COURSES ================= -->
+
+        <section>
+
+            <div class="section-heading">
+
+                <h2>
+                    Your Courses
+                </h2>
+
+                <span>
+                    {{ enrollments|length }}
+                    course{{ enrollments|length|pluralize }}
+                </span>
+
+            </div>
+
+
+            {% if enrollments %}
+
+
+                <div class="course-grid">
+
+
+                    {% for enrollment in enrollments %}
+
+
+                        <article class="course-card">
+
+
+                            <div class="course-top">
+
+
+                                <div class="course-icon">
+                                    <i class="bi bi-code-square"></i>
+                                </div>
+
+
+                                {% if enrollment.completed %}
+
+                                    <div class="status completed">
+                                        COMPLETED
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="status">
+                                        LEARNING
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- TITLE -->
+
+                            <div class="course-title">
+
+                                {{ enrollment.course.title }}
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+
+                            <div class="course-description">
+
+                                {% if enrollment.course.content %}
+
+                                    {{ enrollment.course.content|striptags|truncatewords:24 }}
+
+                                {% else %}
+
+                                    Continue learning and improve
+                                    your coding skills with this course.
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- PROGRESS -->
+
+                            <div class="progress-info">
+
+                                <span>
+                                    Course Progress
+                                </span>
+
+                                <span>
+                                    {{ enrollment.progress }}%
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress-bar">
+
+                                <div
+                                    class="progress-fill"
+                                    style="width: {{ enrollment.progress }}%;"
+                                ></div>
+
+                            </div>
+
+
+                            <!-- BOTTOM -->
+
+                            <div class="course-bottom">
+
+
+                                <div class="course-meta">
+
+                                    <i class="bi bi-calendar3"></i>
+
+                                    Joined
+                                    {{ enrollment.enrolled_at|date:"d M Y" }}
+
+                                </div>
+
+
+                                <a
+                                    href="{% url 'blog:post_detail' enrollment.course.pk %}"
+                                    class="continue-btn"
+                                >
+
+                                    {% if enrollment.completed %}
+
+                                        Review Course
+
+                                    {% else %}
+
+                                        Continue Learning
+
+                                    {% endif %}
+
+                                    <i class="bi bi-arrow-right"></i>
+
+                                </a>
+
+                            </div>
+
+
+                        </article>
+
+
+                    {% endfor %}
+
+
+                </div>
+
+
+            {% else %}
+
+
+                <!-- ================= EMPTY STATE ================= -->
+
+                <div class="empty">
+
+
+                    <div class="empty-icon">
+
+                        <i class="bi bi-mortarboard"></i>
+
+                    </div>
+
+
+                    <h3>
+                        No courses yet
+                    </h3>
+
+
+                    <p>
+                        You haven't enrolled in any courses yet.
+                        Explore our courses and start your learning journey.
+                    </p>
+
+
+                    <a
+                        href="{% url 'blog:blogpage' %}"
+                        class="browse-btn"
+                    >
+
+                        <i class="bi bi-compass"></i>
+
+                        Browse Courses
+
+                    </a>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </section>
+
+
+    
+{% endblock %}

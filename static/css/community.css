@@ -1,0 +1,606 @@
+/* Community page styles - common layout is provided by base.html/global.css/theme.css */
+
+/* ================= HEADER ================= */
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+
+            margin-bottom: 22px;
+        }
+
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            color: #a78bfa;
+
+            font-size: 9px;
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .page-header h1 {
+            margin-top: 8px;
+
+            font-size:
+                clamp(32px, 4vw, 46px);
+
+            letter-spacing: -1.8px;
+        }
+
+        .page-header h1 span {
+            background:
+                linear-gradient(
+                    90deg,
+                    #a78bfa,
+                    #60a5fa,
+                    #22d3ee
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            margin-top: 8px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        .create-post {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 11px 15px;
+
+            border-radius: 10px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        /* ================= COMMUNITY GRID ================= */
+
+        .community-layout {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.65fr)
+                minmax(270px, .65fr);
+
+            gap: 18px;
+        }
+
+        /* ================= POST BOX ================= */
+
+        .post-box {
+            padding: 18px;
+
+            margin-bottom: 16px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 17px;
+
+            background:
+                var(--card);
+        }
+
+        .post-box-top {
+            display: flex;
+            gap: 11px;
+        }
+
+        .mini-avatar {
+            width: 38px;
+            height: 38px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #2563eb
+                );
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .post-input {
+            flex: 1;
+
+            min-height: 42px;
+
+            padding: 12px 14px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,255,255,.025);
+
+            color: var(--muted);
+
+            font-size: 9px;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: flex-end;
+
+            margin-top: 11px;
+        }
+
+        .post-button {
+            padding: 8px 14px;
+
+            border: none;
+            border-radius: 8px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
+            font-size: 8px;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        /* ================= POST ================= */
+
+        .community-post {
+            padding: 18px;
+
+            margin-bottom: 14px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 17px;
+
+            background:
+                var(--card);
+
+            transition: .2s;
+        }
+
+        .community-post:hover {
+            border-color:
+                rgba(139,92,246,.24);
+
+            transform: translateY(-2px);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .post-user {
+            flex: 1;
+        }
+
+        .post-user strong {
+            display: block;
+            font-size: 10px;
+        }
+
+        .post-user span {
+            display: block;
+
+            margin-top: 3px;
+
+            color: var(--dim);
+
+            font-size: 7px;
+        }
+
+        .more {
+            color: var(--dim);
+            font-size: 16px;
+        }
+
+        .post-title {
+            margin-top: 14px;
+
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .post-content {
+            margin-top: 7px;
+
+            color: var(--muted);
+
+            font-size: 9px;
+            line-height: 1.7;
+        }
+
+        .post-tag {
+            display: inline-block;
+
+            margin-top: 12px;
+
+            padding: 5px 8px;
+
+            border-radius: 6px;
+
+            color: #a78bfa;
+
+            background:
+                rgba(139,92,246,.09);
+
+            font-size: 7px;
+            font-weight: 700;
+        }
+
+        .post-footer {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+            margin-top: 15px;
+            padding-top: 12px;
+
+            border-top:
+                1px solid
+                rgba(255,255,255,.05);
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            color: var(--dim);
+
+            font-size: 8px;
+
+            cursor: pointer;
+        }
+
+        .post-action:hover {
+            color: #a78bfa;
+        }
+
+        /* ================= RIGHT ================= */
+
+        .right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            padding: 18px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 17px;
+
+            background:
+                var(--card);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 14px;
+        }
+
+        .panel-header h2 {
+            font-size: 13px;
+        }
+
+        .panel-header span {
+            color: #a78bfa;
+
+            font-size: 7px;
+            font-weight: 800;
+        }
+
+        /* ================= TOP MEMBERS ================= */
+
+        .member {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            padding: 9px 0;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.05);
+        }
+
+        .member:last-child {
+            border-bottom: none;
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(139,92,246,.15);
+
+            color: #c4b5fd;
+
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-info strong {
+            display: block;
+            font-size: 8px;
+        }
+
+        .member-info span {
+            color: var(--dim);
+            font-size: 7px;
+        }
+
+        .rank {
+            color: #fbbf24;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        /* ================= TOPICS ================= */
+
+        .topic {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 9px 0;
+
+            color: var(--muted);
+
+            font-size: 8px;
+        }
+
+        .topic span:last-child {
+            color: var(--dim);
+        }
+
+        /* ================= COMMUNITY STATS ================= */
+
+        .community-stat {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            padding: 10px 0;
+        }
+
+        .community-stat-icon {
+            width: 35px;
+            height: 35px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            color: #a78bfa;
+
+            background:
+                rgba(139,92,246,.11);
+        }
+
+        .community-stat strong {
+            display: block;
+            font-size: 11px;
+        }
+
+        .community-stat span {
+            color: var(--dim);
+            font-size: 7px;
+        }
+
+        
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1050px) {
+    .community-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .create-post {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* FINAL READABILITY FIX */
+.page-header p { font-size:15px !important; line-height:1.65 !important; }
+.eyebrow { font-size:11px !important; }
+.create-post, .post-button { font-size:13px !important; }
+.post-input { font-size:13px !important; }
+.post-user strong { font-size:13px !important; }
+.post-user span { font-size:11px !important; }
+.post-title { font-size:18px !important; line-height:1.4 !important; }
+.post-content { font-size:15px !important; line-height:1.65 !important; }
+.post-tag { font-size:11px !important; }
+.post-action { font-size:12px !important; }
+.panel-header h2 { font-size:16px !important; }
+.panel-header span { font-size:11px !important; }
+.member-info strong { font-size:13px !important; }
+.member-info span { font-size:11px !important; }
+.rank { font-size:12px !important; }
+.topic { font-size:12px !important; }
+.community-stat strong { font-size:16px !important; }
+.community-stat span { font-size:12px !important; }
+
+
+/* ================= FINAL READABILITY OVERRIDE =================
+   Community page uses these exact classes. The original design
+   had 7px–10px text in the right sidebar, which is too small.
+================================================================= */
+
+.community-layout .post-title {
+    font-size: 18px !important;
+    line-height: 1.45 !important;
+}
+
+.community-layout .post-content {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+}
+
+.community-layout .post-user strong {
+    font-size: 13px !important;
+}
+
+.community-layout .post-user span {
+    font-size: 11px !important;
+}
+
+.community-layout .post-action {
+    font-size: 12px !important;
+}
+
+.community-layout .post-tag {
+    font-size: 11px !important;
+}
+
+/* Right sidebar */
+.community-layout .right .panel-header h2 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+}
+
+.community-layout .right .panel-header span {
+    font-size: 11px !important;
+}
+
+.community-layout .right .member-info strong {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+}
+
+.community-layout .right .member-info span {
+    font-size: 11px !important;
+}
+
+.community-layout .right .rank {
+    font-size: 12px !important;
+}
+
+.community-layout .right .topic {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.community-layout .right .topic span:last-child {
+    font-size: 12px !important;
+}
+
+.community-layout .right .community-stat strong {
+    font-size: 17px !important;
+}
+
+.community-layout .right .community-stat span {
+    font-size: 11px !important;
+}
+
+/* Post box */
+.community-layout .post-input {
+    font-size: 13px !important;
+}
+
+.community-layout .post-button {
+    font-size: 13px !important;
+}
+
+.create-post {
+    font-size: 13px !important;
+}
+
+/* Small labels stay compact but readable */
+.community-layout .eyebrow {
+    font-size: 11px !important;
+}
+
+.community-layout .panel {
+    font-size: 14px;
+}
+
+/* =====================================================
+   HIDE PAGE SCROLLBAR - KEEP SCROLLING
+===================================================== */
+
+html,
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}

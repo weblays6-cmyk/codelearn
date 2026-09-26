@@ -1,0 +1,538 @@
+{% extends "blog/base.html" %}
+
+{% load static %}
+
+{% block title %}
+Messages | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/messages.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="messages-page">
+
+    <div class="messages-header">
+
+        <div class="messages-header-content">
+
+            <div class="messages-title-row">
+
+                <div class="messages-title-icon">
+                    <i class="bi bi-chat-left-text-fill"></i>
+                </div>
+
+                <div>
+
+                    <span class="messages-eyebrow">
+                        MESSAGES
+                    </span>
+
+                    <h1>
+                        Conversations
+                    </h1>
+
+                    <p>
+                        Connect with developers, discuss projects,
+                        and collaborate privately.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="messages-header-actions">
+
+            <button
+                type="button"
+                class="new-message-btn"
+                id="newMessageBtn"
+            >
+                <i class="bi bi-pencil-square"></i>
+                New Message
+            </button>
+
+            <div class="messages-header-stat">
+                <span class="stat-dot"></span>
+                Private &amp; Secure
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <section class="messages-card">
+
+        <!-- =====================================================
+             MESSAGE SEARCH
+        ====================================================== -->
+
+        <div class="messages-toolbar">
+
+            <div class="messages-search">
+
+                <i class="bi bi-search"></i>
+
+                <input
+                    type="text"
+                    id="conversationSearch"
+                    placeholder="Search conversations..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+        </div>
+
+
+        {% if conversations %}
+
+            <div class="conversation-list" id="conversationList">
+
+                {% for conversation in conversations %}
+
+                    {% if conversation.project %}
+
+                        {% if conversation.project_owner == request.user %}
+
+                            {% with chat_user=conversation.participant %}
+
+                                <a
+                                    href="{% url 'blog:conversation_detail' conversation.id %}"
+                                    class="conversation-item"
+                                    data-conversation-search="{{ chat_user.username }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}"
+                                >
+
+                                    <div class="conversation-avatar">
+                                        {{ chat_user.username|first|upper }}
+                                    </div>
+
+                                    <div class="conversation-info">
+
+                                        <div class="conversation-top">
+
+                                            <strong>
+                                                {{ chat_user.username }}
+                                            </strong>
+
+                                            {% if conversation.unread_count %}
+                                                <span class="unread-badge">
+                                                    {{ conversation.unread_count }}
+                                                </span>
+                                            {% endif %}
+
+                                            {% if conversation.last_message_time %}
+                                                <span class="conversation-time">
+                                                    {{ conversation.last_message_time }}
+                                                </span>
+                                            {% endif %}
+
+                                        </div>
+
+                                        <div class="conversation-project">
+                                            <i class="bi bi-folder2-open"></i>
+                                            {{ conversation.project.title }}
+                                        </div>
+
+                                        <p class="conversation-preview">
+                                            {% if conversation.last_message %}
+                                                {% if conversation.last_message.sender == request.user %}
+                                                    You:
+                                                {% endif %}
+                                                {{ conversation.last_message.content|truncatechars:65 }}
+                                            {% else %}
+                                                Project conversation
+                                            {% endif %}
+                                        </p>
+
+                                    </div>
+
+                                    <i class="bi bi-chevron-right conversation-arrow"></i>
+
+                                </a>
+
+                            {% endwith %}
+
+                        {% else %}
+
+                            <a
+                                href="{% url 'blog:conversation_detail' conversation.id %}"
+                                class="conversation-item"
+                                data-conversation-search="{{ conversation.project_owner.username }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}"
+                            >
+
+                                <div class="conversation-avatar">
+                                    {{ conversation.project_owner.username|first|upper }}
+                                </div>
+
+                                <div class="conversation-info">
+
+                                    <div class="conversation-top">
+
+                                        <strong>
+                                            {{ conversation.project_owner.username }}
+                                        </strong>
+
+                                        {% if conversation.unread_count %}
+                                            <span class="unread-badge">
+                                                {{ conversation.unread_count }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if conversation.last_message_time %}
+                                            <span class="conversation-time">
+                                                {{ conversation.last_message_time }}
+                                            </span>
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div class="conversation-project">
+                                        <i class="bi bi-folder2-open"></i>
+                                        {{ conversation.project.title }}
+                                    </div>
+
+                                    <p class="conversation-preview">
+                                        {% if conversation.last_message %}
+                                            {% if conversation.last_message.sender == request.user %}
+                                                You:
+                                            {% endif %}
+                                            {{ conversation.last_message.content|truncatechars:65 }}
+                                        {% else %}
+                                            Project conversation
+                                        {% endif %}
+                                    </p>
+
+                                </div>
+
+                                <i class="bi bi-chevron-right conversation-arrow"></i>
+
+                            </a>
+
+                        {% endif %}
+
+                    {% else %}
+
+                        {% if conversation.project_owner == request.user %}
+
+                            {% with chat_user=conversation.participant %}
+
+                                <a
+                                    href="{% url 'blog:conversation_detail' conversation.id %}"
+                                    class="conversation-item"
+                                    data-conversation-search="{{ chat_user.username }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}"
+                                >
+
+                                    <div class="conversation-avatar">
+                                        {{ chat_user.username|first|upper }}
+                                    </div>
+
+                                    <div class="conversation-info">
+
+                                        <div class="conversation-top">
+
+                                            <strong>
+                                                {{ chat_user.username }}
+                                            </strong>
+
+                                            {% if conversation.unread_count %}
+                                                <span class="unread-badge">
+                                                    {{ conversation.unread_count }}
+                                                </span>
+                                            {% endif %}
+
+                                            {% if conversation.last_message_time %}
+                                                <span class="conversation-time">
+                                                    {{ conversation.last_message_time }}
+                                                </span>
+                                            {% endif %}
+
+                                        </div>
+
+                                        <div class="conversation-type">
+                                            <i class="bi bi-person"></i>
+                                            Personal
+                                        </div>
+
+                                        <p class="conversation-preview">
+                                            {% if conversation.last_message %}
+                                                {% if conversation.last_message.sender == request.user %}
+                                                    You:
+                                                {% endif %}
+                                                {{ conversation.last_message.content|truncatechars:65 }}
+                                            {% else %}
+                                                Private conversation
+                                            {% endif %}
+                                        </p>
+
+                                    </div>
+
+                                    <i class="bi bi-chevron-right conversation-arrow"></i>
+
+                                </a>
+
+                            {% endwith %}
+
+                        {% else %}
+
+                            <a
+                                href="{% url 'blog:conversation_detail' conversation.id %}"
+                                class="conversation-item"
+                                data-conversation-search="{{ conversation.project_owner.username }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}"
+                            >
+
+                                <div class="conversation-avatar">
+                                    {{ conversation.project_owner.username|first|upper }}
+                                </div>
+
+                                <div class="conversation-info">
+
+                                    <div class="conversation-top">
+
+                                        <strong>
+                                            {{ conversation.project_owner.username }}
+                                        </strong>
+
+                                        {% if conversation.unread_count %}
+                                            <span class="unread-badge">
+                                                {{ conversation.unread_count }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if conversation.last_message_time %}
+                                            <span class="conversation-time">
+                                                {{ conversation.last_message_time }}
+                                            </span>
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div class="conversation-type">
+                                        <i class="bi bi-person"></i>
+                                        Personal
+                                    </div>
+
+                                    <p class="conversation-preview">
+                                        {% if conversation.last_message %}
+                                            {% if conversation.last_message.sender == request.user %}
+                                                You:
+                                            {% endif %}
+                                            {{ conversation.last_message.content|truncatechars:65 }}
+                                        {% else %}
+                                            Private conversation
+                                        {% endif %}
+                                    </p>
+
+                                </div>
+
+                                <i class="bi bi-chevron-right conversation-arrow"></i>
+
+                            </a>
+
+                        {% endif %}
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+            <div class="messages-no-results" id="messagesNoResults">
+
+                <div class="messages-no-results-icon">
+                    <i class="bi bi-search"></i>
+                </div>
+
+                <h3>
+                    No conversations found
+                </h3>
+
+                <p>
+                    Try searching with another name, project, or message.
+                </p>
+
+            </div>
+
+        {% else %}
+
+            <div class="messages-empty">
+
+                <div class="messages-empty-icon">
+                    <i class="bi bi-chat-square-dots"></i>
+                </div>
+
+                <span class="messages-empty-label">
+                    NO CONVERSATIONS
+                </span>
+
+                <h2>
+                    Start a conversation
+                </h2>
+
+                <p>
+                    Connect with project creators and developers
+                    to discuss ideas, ask questions, and collaborate.
+                </p>
+
+                <a
+                    href="{% url 'blog:projects' %}"
+                    class="messages-empty-btn"
+                >
+                    <i class="bi bi-rocket-takeoff"></i>
+                    Explore Projects
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+
+<!-- =====================================================
+     NEW MESSAGE MODAL
+====================================================== -->
+
+<div
+    class="message-modal-overlay"
+    id="messageModal"
+    aria-hidden="true"
+>
+
+    <div
+        class="message-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="newMessageTitle"
+    >
+
+        <div class="message-modal-header">
+
+            <div>
+                <span class="modal-eyebrow">
+                    START CHAT
+                </span>
+
+                <h2 id="newMessageTitle">
+                    New Message
+                </h2>
+
+                <p>
+                    Search a developer and start a private conversation.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn"
+                id="closeMessageModal"
+                aria-label="Close"
+            >
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+        </div>
+
+
+        <div class="modal-search">
+
+            <i class="bi bi-search"></i>
+
+            <input
+                type="text"
+                id="userSearch"
+                placeholder="Search developers..."
+                autocomplete="off"
+            >
+
+        </div>
+
+
+        <div
+            class="user-search-list"
+            id="userSearchList"
+        >
+
+            {% for available_user in available_users %}
+
+                <button
+                    type="button"
+                    class="user-search-item"
+                    data-username="{{ available_user.username|lower }}"
+                    data-connect-url="{% url 'blog:start_personal_chat' available_user.id %}"
+                >
+
+                    <span class="user-search-avatar">
+                        {{ available_user.username|first|upper }}
+                    </span>
+
+                    <span class="user-search-info">
+
+                        <strong>
+                            {{ available_user.username }}
+                        </strong>
+
+                        <small>
+                            CodeLearn Hub developer
+                        </small>
+
+                    </span>
+
+                    <i class="bi bi-chevron-right"></i>
+
+                </button>
+
+            {% empty %}
+
+                <div class="user-search-empty">
+                    <i class="bi bi-people"></i>
+
+                    <strong>
+                        No developers available
+                    </strong>
+
+                    <span>
+                        New users will appear here.
+                    </span>
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div
+            class="user-search-no-results"
+            id="userSearchNoResults"
+        >
+
+            <i class="bi bi-search"></i>
+
+            <strong>
+                No matching developer
+            </strong>
+
+            <span>
+                Try another username.
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="{% static 'js/messages.js' %}"></script>
+{% endblock %}

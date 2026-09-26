@@ -1,0 +1,508 @@
+/* =========================================================
+   PROJECT FORM
+   ========================================================= */
+
+.project-form-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.project-form-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 32px;
+}
+
+.project-form-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.project-form-header h1 {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.project-form-header p {
+    margin: 10px 0 0;
+    max-width: 680px;
+    font-size: 15px;
+    line-height: 1.7;
+    opacity: 0.75;
+}
+
+.project-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.project-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+
+/* =========================================================
+   SECTION
+   ========================================================= */
+
+.project-form-section {
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.025);
+}
+
+.project-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+}
+
+.project-section-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(124,58,237,0.14);
+    font-size: 20px;
+}
+
+.project-section-heading h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 750;
+}
+
+.project-section-heading p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0.65;
+}
+
+
+/* =========================================================
+   FIELDS
+   ========================================================= */
+
+.project-form-field {
+    margin-bottom: 22px;
+}
+
+.project-form-field:last-child {
+    margin-bottom: 0;
+}
+
+.project-form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.project-form-field label span {
+    margin-left: 3px;
+}
+
+.project-form-field small {
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.6;
+}
+
+.project-form input,
+.project-form select,
+.project-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    background: rgba(255,255,255,0.035);
+    color: inherit;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.project-form textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.project-form input:focus,
+.project-form select:focus,
+.project-form textarea:focus {
+    border-color: rgba(124,58,237,0.75);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.10);
+    background: rgba(255,255,255,0.045);
+}
+
+.project-form input::placeholder,
+.project-form textarea::placeholder {
+    opacity: 0.45;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.project-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.project-collaboration-toggle {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 22px;
+    padding: 15px 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+}
+
+.project-collaboration-toggle input[type="checkbox"] {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: #7c3aed;
+}
+
+.project-collaboration-toggle label {
+    margin: 0 0 3px;
+    display: block;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.project-collaboration-toggle small {
+    display: block;
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.6;
+}
+
+
+/* =========================================================
+   IMAGE UPLOAD
+   ========================================================= */
+
+.project-image-upload {
+    padding: 36px 24px;
+    border: 1.5px dashed rgba(255,255,255,0.16);
+    border-radius: 14px;
+    text-align: center;
+    background: rgba(255,255,255,0.015);
+}
+
+.project-image-upload > i {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 38px;
+}
+
+.project-image-upload h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.project-image-upload p {
+    margin: 7px 0 18px;
+    font-size: 13px;
+    opacity: 0.65;
+}
+
+.project-image-upload input[type="file"] {
+    display: none;
+}
+
+.project-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 650;
+    background: rgba(124,58,237,0.15);
+}
+
+.project-image-preview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.project-image-preview:empty {
+    display: none;
+}
+
+.project-preview-item {
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.project-preview-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   AI INFO
+   ========================================================= */
+
+.project-ai-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+    border: 1px solid rgba(124,58,237,0.22);
+    border-radius: 14px;
+    background: rgba(124,58,237,0.06);
+}
+
+.project-ai-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: rgba(124,58,237,0.16);
+    font-size: 19px;
+}
+
+.project-ai-info h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.project-ai-info p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    opacity: 0.7;
+}
+
+
+/* =========================================================
+   ERRORS
+   ========================================================= */
+
+.project-form-error {
+    padding: 14px 16px;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.project-field-error {
+    margin-top: 7px;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.project-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0 25px;
+}
+
+.project-cancel-btn,
+.project-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.project-cancel-btn {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.project-submit-btn {
+    border: 0;
+    background: #7c3aed;
+    color: #fff;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+.project-back-btn:hover,
+.project-cancel-btn:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.project-upload-btn:hover {
+    background: rgba(124,58,237,0.23);
+}
+
+.project-submit-btn:hover {
+    filter: brightness(1.08);
+}
+
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+body.light-theme .project-form-section {
+    background: rgba(0,0,0,0.015);
+    border-color: rgba(0,0,0,0.09);
+}
+
+body.light-theme .project-form input,
+body.light-theme .project-form select,
+body.light-theme .project-form textarea {
+    background: #fff;
+    border-color: rgba(0,0,0,0.12);
+}
+
+body.light-theme .project-back-btn,
+body.light-theme .project-cancel-btn {
+    border-color: rgba(0,0,0,0.12);
+}
+
+body.light-theme .project-collaboration-toggle {
+    border-color: rgba(0,0,0,0.08);
+    background: rgba(0,0,0,0.015);
+}
+
+body.light-theme .project-image-upload {
+    border-color: rgba(0,0,0,0.15);
+}
+
+body.light-theme .project-ai-info {
+    border-color: rgba(124,58,237,0.18);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .project-form-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .project-form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .project-image-preview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .project-form-header h1 {
+        font-size: 29px;
+    }
+
+    .project-form-section {
+        padding: 20px;
+    }
+
+    .project-section-heading h2 {
+        font-size: 18px;
+    }
+
+    .project-image-preview {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .project-form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .project-cancel-btn,
+    .project-submit-btn {
+        width: 100%;
+    }
+
+}

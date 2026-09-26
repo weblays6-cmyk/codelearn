@@ -1,0 +1,993 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block title %}
+    Dashboard | {{ SITE_NAME }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+            <i class="bi bi-stars"></i>
+            YOUR JOURNEY TO SUCCESS
+        </div>
+
+        <h1>
+            Learn Code.
+            <span class="gradient-text">
+                Build Future.
+            </span>
+        </h1>
+
+        <p>
+            Hi <strong>{{ username }}</strong> 👋
+            Welcome back to {{ SITE_NAME }}.
+            Learn new skills, practice coding,
+            build real-world projects and become
+            job ready with AI-powered guidance.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a
+                href="{% url 'blog:blogpage' %}"
+                class="primary-btn"
+            >
+                <i class="bi bi-compass"></i>
+                Explore Courses
+            </a>
+
+            <a
+                href="#mission"
+                class="secondary-btn"
+            >
+                <i class="bi bi-lightning"></i>
+                Today's Mission
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CURRENT GOAL
+===================================================== -->
+
+<section class="goal-section">
+
+    <div class="goal-card-main">
+
+        <div class="goal-icon-main">
+            🎯
+        </div>
+
+        <div class="goal-content">
+
+            <span class="goal-label">
+                YOUR CURRENT GOAL
+            </span>
+
+            {% if user_profile.goal == "job" %}
+
+                <h2>Get a Job</h2>
+
+                <p>
+                    Become job-ready with practical
+                    skills, projects and career preparation.
+                </p>
+
+            {% elif user_profile.goal == "skill" %}
+
+                <h2>Learn New Skills</h2>
+
+                <p>
+                    Build strong programming skills
+                    through structured learning.
+                </p>
+
+            {% elif user_profile.goal == "projects" %}
+
+                <h2>Build Projects</h2>
+
+                <p>
+                    Build real-world applications
+                    and strengthen your portfolio.
+                </p>
+
+            {% elif user_profile.goal == "interview" %}
+
+                <h2>Prepare for Interviews</h2>
+
+                <p>
+                    Practice technical, HR and mock
+                    interviews and become interview-ready.
+                </p>
+
+            {% else %}
+
+                <h2>Choose Your Goal</h2>
+
+                <p>
+                    Select your primary goal to
+                    personalize your CodeLearn journey.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        <a
+            href="{% url 'blog:choose_goal' %}"
+            class="change-goal-btn"
+        >
+            Change Goal
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     STATS
+===================================================== -->
+
+<section class="stats">
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                <i class="bi bi-book"></i>
+            </div>
+
+            <span class="stat-change">
+                Start
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            0
+        </div>
+
+        <div class="stat-label">
+            Courses Enrolled
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                <i class="bi bi-code-square"></i>
+            </div>
+
+            <span class="stat-change">
+                Practice
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            0
+        </div>
+
+        <div class="stat-label">
+            Problems Solved
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                <i class="bi bi-folder2-open"></i>
+            </div>
+
+            <span class="stat-change">
+                Build
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            0
+        </div>
+
+        <div class="stat-label">
+            Projects Built
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                <i class="bi bi-fire"></i>
+            </div>
+
+            <span class="stat-change">
+                Keep going
+            </span>
+
+        </div>
+
+        <div class="stat-value">
+            0
+        </div>
+
+        <div class="stat-label">
+            Day Streak
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CONTINUE LEARNING
+===================================================== -->
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h3>
+                Continue Learning
+            </h3>
+
+            <span>
+                Pick up where you left off
+            </span>
+
+        </div>
+
+        <a
+            href="{% url 'blog:my_learning' %}"
+            class="view-all"
+        >
+            My Learning →
+        </a>
+
+    </div>
+
+
+    <div class="course-grid">
+
+        {% for enrollment in my_enrollments %}
+
+            {% with post=enrollment.course %}
+
+            <a
+                href="{% url 'blog:post_detail' post.pk %}"
+                class="course-card"
+            >
+
+                <div class="course-icon">
+
+                    {% if post.category == "Python" %}
+
+                        🐍
+
+                    {% elif post.category == "Django" %}
+
+                        ⚡
+
+                    {% elif post.category == "AI" %}
+
+                        🤖
+
+                    {% elif post.category == "JavaScript" %}
+
+                        JS
+
+                    {% else %}
+
+                        <i class="bi bi-code-square"></i>
+
+                    {% endif %}
+
+                </div>
+
+
+                <h4>
+                    {{ post.title }}
+                </h4>
+
+
+                <p>
+                    {{ post.category }}
+                    ·
+                    {{ post.difficulty }}
+                </p>
+
+
+                <div class="progress-wrap">
+
+                    <div class="progress-bg">
+
+                        <div
+                            class="progress-fill"
+                            style="width: {{ enrollment.progress }}%;"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="progress-info">
+
+                        <span>
+
+                            {% if enrollment.progress == 0 %}
+
+                                Not started
+
+                            {% else %}
+
+                                Continue learning
+
+                            {% endif %}
+
+                        </span>
+
+                        <span>
+                            {{ enrollment.progress }}%
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+            {% endwith %}
+
+        {% empty %}
+
+            <a
+                href="{% url 'blog:blogpage' %}"
+                class="course-card"
+            >
+
+                <div class="course-icon">
+                    <i class="bi bi-rocket-takeoff"></i>
+                </div>
+
+                <h4>
+                    Start Your First Course
+                </h4>
+
+                <p>
+                    Explore courses and start
+                    your learning journey.
+                </p>
+
+                <div class="progress-wrap">
+
+                    <span class="view-all">
+                        Explore Courses →
+                    </span>
+
+                </div>
+
+            </a>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     TODAY'S MISSION + AI
+===================================================== -->
+
+<section
+    class="section"
+    id="mission"
+>
+
+    <div class="two-column">
+
+
+        <!-- =========================
+             TODAY'S MISSION
+        ========================== -->
+
+        <div class="panel">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h3>
+                        Today's Mission
+                    </h3>
+
+                    <span>
+                        Personalized for your goal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            {% if user_profile.goal == "job" %}
+
+
+                <div class="mission">
+
+                    <div class="mission-icon purple">
+                        🎓
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Complete one learning lesson
+                        </h5>
+
+                        <p>
+                            Build skills for your target role.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Learn
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon blue">
+                        💻
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Solve 2 coding problems
+                        </h5>
+
+                        <p>
+                            Improve your problem-solving skills.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Practice
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon green">
+                        🚀
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Work on one project task
+                        </h5>
+
+                        <p>
+                            Build something for your portfolio.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Build
+                    </span>
+
+                </div>
+
+
+            {% elif user_profile.goal == "skill" %}
+
+
+                <div class="mission">
+
+                    <div class="mission-icon purple">
+                        📚
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Complete today's lesson
+                        </h5>
+
+                        <p>
+                            Continue your learning journey.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Learn
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon blue">
+                        🧠
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Take a concept quiz
+                        </h5>
+
+                        <p>
+                            Test your understanding.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Quiz
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon green">
+                        ✨
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Practice a new concept
+                        </h5>
+
+                        <p>
+                            Turn learning into practical skill.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Practice
+                    </span>
+
+                </div>
+
+
+            {% elif user_profile.goal == "projects" %}
+
+
+                <div class="mission">
+
+                    <div class="mission-icon purple">
+                        🚀
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Complete one project task
+                        </h5>
+
+                        <p>
+                            Move your project forward.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Build
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon blue">
+                        🗄️
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Improve your database design
+                        </h5>
+
+                        <p>
+                            Strengthen your project foundation.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Work
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon green">
+                        🐙
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Update your GitHub project
+                        </h5>
+
+                        <p>
+                            Keep your portfolio ready.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        GitHub
+                    </span>
+
+                </div>
+
+
+            {% elif user_profile.goal == "interview" %}
+
+
+                <div class="mission">
+
+                    <div class="mission-icon purple">
+                        🎤
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Practice 5 interview questions
+                        </h5>
+
+                        <p>
+                            Strengthen your technical knowledge.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Start
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon blue">
+                        🧑‍💻
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Take a mock interview
+                        </h5>
+
+                        <p>
+                            Practice answering naturally.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Mock
+                    </span>
+
+                </div>
+
+
+                <div class="mission">
+
+                    <div class="mission-icon green">
+                        📄
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Practice project explanation
+                        </h5>
+
+                        <p>
+                            Prepare to explain your work clearly.
+                        </p>
+
+                    </div>
+
+                    <span class="mission-btn">
+                        Review
+                    </span>
+
+                </div>
+
+
+            {% else %}
+
+
+                <div class="mission">
+
+                    <div class="mission-icon purple">
+                        🎯
+                    </div>
+
+                    <div class="mission-info">
+
+                        <h5>
+                            Choose your learning goal
+                        </h5>
+
+                        <p>
+                            Personalize your CodeLearn journey.
+                        </p>
+
+                    </div>
+
+                    <a
+                        href="{% url 'blog:choose_goal' %}"
+                        class="mission-btn"
+                    >
+                        Choose
+                    </a>
+
+                </div>
+
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =========================
+             AI ASSISTANT
+        ========================== -->
+
+        <div class="panel ai-panel">
+
+            <div class="ai-glow"></div>
+
+
+            <div class="ai-header">
+
+                <div class="ai-avatar">
+                    🤖
+                </div>
+
+                <div>
+
+                    <h4>
+                        Your AI Learning Assistant
+                    </h4>
+
+                    <p>
+                        Personalized guidance for your journey
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="ai-message">
+
+                {% if user_profile.goal == "job" %}
+
+                    Your goal is to get a job.
+                    Focus on learning,
+                    coding practice,
+                    projects and interview preparation.
+
+                {% elif user_profile.goal == "skill" %}
+
+                    Your goal is to learn new skills.
+                    Keep learning consistently
+                    and practice every concept.
+
+                {% elif user_profile.goal == "projects" %}
+
+                    Your goal is to build projects.
+                    Focus on practical implementation,
+                    quality and portfolio building.
+
+                {% elif user_profile.goal == "interview" %}
+
+                    Your goal is interview preparation.
+                    Practice technical questions,
+                    mock interviews and project explanations.
+
+                {% else %}
+
+                    Choose a goal and {{ SITE_NAME }}
+                    will personalize your learning journey.
+
+                {% endif %}
+
+            </div>
+
+
+            <a
+                href="{% url 'blog:ai_tutor' %}"
+                class="ai-action"
+            >
+
+                Ask AI Tutor
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     RECOMMENDED
+===================================================== -->
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h3>
+                Recommended For You
+            </h3>
+
+            <span>
+                Skills that can move your career forward
+            </span>
+
+        </div>
+
+        <a
+            href="{% url 'blog:blogpage' %}"
+            class="view-all"
+        >
+            Explore →
+        </a>
+
+    </div>
+
+
+    <div class="recommend-grid">
+
+
+        <a
+            href="{% url 'blog:blogpage' %}?search=Python"
+            class="recommend"
+        >
+
+            <div class="recommend-icon">
+                🐍
+            </div>
+
+            <h5>
+                Python
+            </h5>
+
+            <p>
+                Build a strong programming foundation.
+            </p>
+
+        </a>
+
+
+        <a
+            href="{% url 'blog:blogpage' %}?search=Django"
+            class="recommend"
+        >
+
+            <div class="recommend-icon">
+                ⚡
+            </div>
+
+            <h5>
+                Django
+            </h5>
+
+            <p>
+                Learn backend development with Python.
+            </p>
+
+        </a>
+
+
+        <div class="recommend">
+
+            <div class="recommend-icon">
+                🧠
+            </div>
+
+            <h5>
+                Data Structures
+            </h5>
+
+            <p>
+                Prepare for technical coding interviews.
+            </p>
+
+        </div>
+
+
+        <div class="recommend">
+
+            <div class="recommend-icon">
+                🎯
+            </div>
+
+            <h5>
+                Interview Prep
+            </h5>
+
+            <p>
+                Practice technical and HR interviews.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+{% endblock %}

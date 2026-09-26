@@ -1,0 +1,240 @@
+/* CODELEARN HUB - COMMON READABILITY */
+
+:root {
+    --readable-body-size: 15px;
+    --readable-secondary-size: 14px;
+}
+
+body {
+    font-size: var(--readable-body-size);
+    line-height: 1.6;
+}
+
+.main-content {
+    font-size: var(--readable-body-size);
+}
+
+.main-content p {
+    font-size: var(--readable-body-size) !important;
+    line-height: 1.65 !important;
+}
+
+.main-content li {
+    font-size: var(--readable-body-size) !important;
+    line-height: 1.6 !important;
+}
+
+/* Sidebar */
+.sidebar .nav-link,
+.sidebar .nav-link-custom {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+}
+
+.sidebar .nav-label,
+.sidebar .nav-title {
+    font-size: 11px !important;
+}
+
+/* Navbar */
+.top-navbar,
+.navbar-user {
+    font-size: 14px;
+}
+
+.navbar-brand {
+    font-size: 17px;
+}
+
+/* Forms */
+.main-content label {
+    font-size: 14px !important;
+}
+
+.main-content input,
+.main-content select,
+.main-content textarea {
+    font-size: 14px !important;
+}
+
+.main-content button {
+    font-size: 14px;
+}
+
+/* Descriptions and subtitles */
+.main-content [class*="description"],
+.main-content [class*="subtitle"],
+.main-content [class*="summary"] {
+    font-size: var(--readable-secondary-size) !important;
+    line-height: 1.6 !important;
+}
+
+/* Card descriptions */
+.main-content [class*="card"] p {
+    font-size: var(--readable-secondary-size) !important;
+    line-height: 1.6 !important;
+}
+
+/* Footer */
+.site-footer,
+.site-footer strong,
+.site-footer span {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+/* Small badges remain compact */
+.main-content .badge,
+.main-content .status,
+.main-content .status-badge,
+.main-content .tag,
+.main-content .chip,
+.main-content .eyebrow,
+.main-content .new-badge {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+}
+
+/* Do not affect Bootstrap icons */
+.bi,
+[class^="bi-"],
+[class*=" bi-"] {
+    line-height: 1;
+}
+/* =========================================================
+   PUBLIC / LANDING / LOGIN PAGE READABILITY
+   These pages do not use .main-content.
+========================================================= */
+
+/* Public navbar */
+.navbar .nav-link,
+.navbar .nav-login,
+.navbar .nav-join {
+    font-size: 14px !important;
+}
+
+.navbar .brand {
+    font-size: 18px !important;
+}
+
+/* Hero */
+.hero-description {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+}
+
+.hero .eyebrow {
+    font-size: 11px !important;
+}
+
+.hero .primary-btn,
+.hero .secondary-btn {
+    font-size: 14px !important;
+}
+
+.hero-trust .trust-item {
+    font-size: 12px !important;
+}
+
+/* Login card */
+.login-subtitle {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+}
+
+.login-card label,
+.login-card .field label {
+    font-size: 13px !important;
+}
+
+.login-card input {
+    font-size: 14px !important;
+}
+
+.login-card input::placeholder {
+    font-size: 13px !important;
+}
+
+.login-submit,
+.google-login-btn {
+    font-size: 13px !important;
+}
+
+.login-card .divider {
+    font-size: 11px !important;
+}
+
+.signup-text {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
+
+.login-card .forgot-password,
+.login-card a {
+    font-size: 12px;
+}
+
+/* Public feature sections */
+.section-heading p,
+.section > p {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+}
+
+.section-label {
+    font-size: 11px !important;
+}
+
+.feature-card p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+}
+
+.feature-card h3,
+.feature-card h4 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+}
+
+/* Journey / steps */
+.journey-card p,
+.journey-step p,
+.step-card p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+}
+
+.journey-card h3,
+.journey-step h3,
+.step-card h3 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+}
+
+.journey-card span,
+.journey-step span,
+.step-card span {
+    font-size: 12px !important;
+}
+
+/* CTA */
+.cta p,
+.cta-section p {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+}
+
+.cta button,
+.cta a,
+.cta-section button,
+.cta-section a {
+    font-size: 14px !important;
+}
+
+/* Public form/error messages */
+.form-error,
+.error-message,
+.login-error {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+}

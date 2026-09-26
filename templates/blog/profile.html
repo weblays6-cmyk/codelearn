@@ -1,0 +1,470 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    Profile | {{ SITE_NAME }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="profile-header">
+
+
+            <div class="profile-main">
+
+
+                <div class="big-avatar">
+
+                    {{ username|first|upper }}
+
+                </div>
+
+
+                <div class="profile-text">
+
+
+                    <div class="eyebrow">
+
+                        <i class="bi bi-person-badge"></i>
+
+                        CodeLearn Hub Profile
+
+                    </div>
+
+
+                    <h1>
+                        Welcome, {{ username }}
+                    </h1>
+
+
+                    <p>
+                        Your learning journey, goals and progress
+                        in one place.
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div class="profile-badge">
+
+                <i class="bi bi-mortarboard-fill"></i>
+
+                <span>
+                    Learner
+                </span>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================================
+             CONTENT GRID
+        ====================================================== -->
+
+        <div class="content-grid">
+
+
+            <!-- ACCOUNT -->
+
+            <div class="card-box">
+
+
+                <div class="card-title">
+
+
+                    <div class="card-title-icon">
+
+                        <i class="bi bi-person"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Account Information
+                        </h2>
+
+                        <p>
+                            Your basic account details
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        Username
+                    </span>
+
+                    <span class="info-value">
+                        {{ username }}
+                    </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        Total Posts
+                    </span>
+
+                    <span class="info-value">
+                        {{ posts|length }}
+                    </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        Account Type
+                    </span>
+
+                    <span class="info-value">
+                        Learner
+                    </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        Platform
+                    </span>
+
+                    <span class="info-value">
+                        CodeLearn Hub
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- GOAL -->
+
+            <div class="card-box">
+
+
+                <div class="card-title">
+
+
+                    <div class="card-title-icon">
+
+                        <i class="bi bi-bullseye"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Learning Goal
+                        </h2>
+
+                        <p>
+                            Your current learning direction
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="goal-box">
+
+
+                    <div class="goal-icon">
+
+                        <i class="bi bi-rocket-takeoff"></i>
+
+                    </div>
+
+
+                    <div class="goal-text">
+
+
+                        <small>
+                            Current Goal
+                        </small>
+
+
+                        {% if request.user.profile_data.goal %}
+
+                            <strong>
+
+                                {{ request.user.profile_data.get_goal_display }}
+
+                            </strong>
+
+                        {% else %}
+
+                            <strong>
+                                Set Your Learning Goal
+                            </strong>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                </div>
+
+
+                <a
+                    href="{% url 'blog:choose_goal' %}"
+                    class="browse-btn"
+                >
+
+                    <i class="bi bi-pencil"></i>
+
+                    Change Goal
+
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =====================================================
+             LEARNING STATS
+        ====================================================== -->
+
+        <div class="card-box learning-overview-card">
+
+
+            <div class="card-title">
+
+
+                <div class="card-title-icon">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h2>
+                        Learning Overview
+                    </h2>
+
+                    <p>
+                        Keep track of your CodeLearn Hub activity
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="stats-grid">
+
+
+                <div class="stat">
+
+
+                    <div class="stat-number">
+                        {{ posts|length }}
+                    </div>
+
+
+                    <div class="stat-label">
+                        Posts Created
+                    </div>
+
+
+                </div>
+
+
+                <div class="stat">
+
+
+                    <div class="stat-number">
+                        0
+                    </div>
+
+
+                    <div class="stat-label">
+                        Problems Solved
+                    </div>
+
+
+                </div>
+
+
+                <div class="stat">
+
+
+                    <div class="stat-number">
+                        0%
+                    </div>
+
+
+                    <div class="stat-label">
+                        Learning Progress
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =====================================================
+             MY POSTS
+        ====================================================== -->
+
+        <div class="card-box">
+
+
+            <div class="card-title">
+
+
+                <div class="card-title-icon">
+
+                    <i class="bi bi-file-earmark-code"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h2>
+                        My Posts
+                    </h2>
+
+                    <p>
+                        Content you have shared
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+            {% if posts %}
+
+
+                {% for post in posts %}
+
+
+                    <div class="post-item">
+
+
+                        <div>
+
+
+                            <div class="post-title">
+
+                                {{ post.title }}
+
+                            </div>
+
+
+                            <div class="post-date">
+
+                                <i class="bi bi-calendar3"></i>
+
+                                {{ post.created_at|date:"d M Y" }}
+
+                            </div>
+
+
+                        </div>
+
+
+                        <a
+                            href="{% url 'blog:post_detail' post.pk %}"
+                            class="post-btn"
+                        >
+
+                            View
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </a>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <div class="empty">
+
+
+                    <div class="empty-icon">
+
+                        <i class="bi bi-file-earmark-code"></i>
+
+                    </div>
+
+
+                    <h3>
+                        No posts yet
+                    </h3>
+
+
+                    <p>
+                        You haven't created any posts yet.
+                    </p>
+
+
+                    <a
+                        href="{% url 'blog:create_post' %}"
+                        class="browse-btn"
+                    >
+
+                        <i class="bi bi-plus-circle"></i>
+
+                        Create Post
+
+                    </a>
+
+
+                </div>
+
+
+            {% endif %}
+
+
+        </div>
+{% endblock %}

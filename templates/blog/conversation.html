@@ -1,0 +1,898 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if conversation.project %}
+        {{ conversation.project.title }} | Messages | {{ SITE_NAME }}
+    {% else %}
+        Chat with {{ chat_user.username }} | Messages | {{ SITE_NAME }}
+    {% endif %}
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/conversation.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div
+    class="conversation-page"
+    data-conversation-id="{{ conversation.id }}"
+>
+
+    <section class="chat-card">
+
+
+        <!-- =================================================
+             CHAT HEADER
+        ================================================== -->
+
+        <header class="chat-header">
+
+            <a
+                href="{% url 'blog:messages' %}"
+                class="chat-back"
+                aria-label="Back to messages"
+                title="Back"
+            >
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+
+            <a
+                href="{% url 'blog:user_profile' chat_user.id %}"
+                class="chat-user-link"
+            >
+
+                <div class="chat-user-avatar">
+                    {{ chat_user.username|first|upper }}
+                </div>
+
+
+                <div class="chat-header-info">
+
+                    <div class="chat-name-row">
+
+                        <h1>
+                            {{ chat_user.username }}
+                        </h1>
+
+                    </div>
+
+
+                    {% if conversation.project %}
+
+                        <span class="chat-project-link">
+
+                            <i class="bi bi-folder2-open"></i>
+
+                            {{ conversation.project.title }}
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="chat-project-link">
+
+                            <i class="bi bi-lock"></i>
+
+                            Private conversation
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </a>
+
+
+            <div class="chat-header-actions">
+
+
+                <!-- PROFILE -->
+
+                <a
+                    href="{% url 'blog:user_profile' chat_user.id %}"
+                    class="chat-action-btn"
+                    title="View profile"
+                >
+
+                    <i class="bi bi-person"></i>
+
+                </a>
+
+
+                <!-- PROJECT -->
+
+                {% if conversation.project %}
+
+                    <a
+                        href="{% url 'blog:project_detail' conversation.project.id %}"
+                        class="chat-action-btn"
+                        title="Open project"
+                    >
+
+                        <i class="bi bi-folder2-open"></i>
+
+                    </a>
+
+                {% endif %}
+
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             CHAT MESSAGES
+        ================================================== -->
+
+        <main
+            class="chat-messages"
+            id="chatMessages"
+            data-status-url="{% url 'blog:conversation_status' conversation.id %}"
+        >
+
+
+            {% if messages %}
+
+
+                {% for message in messages %}
+
+
+                    <div
+                        class="
+                            chat-message-row
+                            {% if message.sender == request.user %}
+                                message-row-me
+                            {% else %}
+                                message-row-other
+                            {% endif %}
+                        "
+                        data-message-id="{{ message.id }}"
+                    >
+
+
+                        <!-- OTHER USER AVATAR -->
+
+                        {% if message.sender != request.user %}
+
+                            <div class="chat-small-avatar">
+
+                                {{ message.sender.username|first|upper }}
+
+                            </div>
+
+                        {% endif %}
+
+
+
+                        <div
+                            class="
+                                message-content
+                                {% if message.sender == request.user %}
+                                    message-content-me
+                                {% endif %}
+                            "
+                        >
+
+
+                            <!-- MESSAGE BUBBLE -->
+
+                            <div class="message-bubble">
+
+                                {% if message.deleted_for_everyone %}
+
+                                <span class="message-deleted">
+                                    <i class="bi bi-ban"></i>
+                                    This message was deleted
+                                </span>
+
+                            {% else %}
+
+                                {% if message.content %}
+
+                            <span class="message-text">
+                                {{ message.content|linebreaksbr }}
+                            </span>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+    {% if message.attachments.all %}
+
+        <div class="message-attachments">
+
+            {% for attachment in message.attachments.all %}
+
+                {% with filename=attachment.original_name|lower %}
+
+                    {% if ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".webp" in filename or ".bmp" in filename %}
+
+                        <a
+                            href="{{ attachment.file.url }}"
+                            target="_blank"
+                            class="message-image-link"
+                        >
+
+                            <img
+                                src="{{ attachment.file.url }}"
+                                alt="{{ attachment.original_name }}"
+                                class="message-image"
+                            >
+
+                        </a>
+
+                    {% else %}
+
+                        <a
+                            href="{{ attachment.file.url }}"
+                            target="_blank"
+                            download
+                            class="message-file"
+                        >
+
+                            <span class="message-file-icon">
+
+                                <i class="bi bi-file-earmark"></i>
+
+                            </span>
+
+
+                            <span class="message-file-info">
+
+                                <strong>
+                                    {{ attachment.original_name|truncatechars:35 }}
+                                </strong>
+
+                                <small>
+                                    Open / Download
+                                </small>
+
+                            </span>
+
+
+                            <i class="bi bi-download"></i>
+
+                        </a>
+
+                    {% endif %}
+
+                {% endwith %}
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+
+                            <!-- MESSAGE META -->
+
+                            <div class="message-meta">
+
+                                <span class="message-time">
+
+                                    {{ message.created_at|date:"d M Y, h:i A" }}
+
+                                </span>
+
+
+                                {% if message.sender == request.user %}
+
+                                    <span
+                                        class="
+                                            message-status
+                                            {% if message.is_read %}
+                                                seen
+                                            {% elif message.is_delivered %}
+                                                delivered
+                                            {% else %}
+                                                sent
+                                            {% endif %}
+                                        "
+                                        title="
+                                            {% if message.is_read %}
+                                                Seen
+                                            {% elif message.is_delivered %}
+                                                Delivered
+                                            {% else %}
+                                                Sent
+                                            {% endif %}
+                                        "
+                                    >
+
+                                        {% if message.is_read %}
+
+                                            ✓✓
+
+                                        {% elif message.is_delivered %}
+
+                                            ✓✓
+
+                                        {% else %}
+
+                                            ✓
+
+                                        {% endif %}
+
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+
+
+                            <!-- MESSAGE ACTIONS -->
+
+                            <div class="message-actions">
+
+
+                                {% if message.sender != request.user %}
+
+                                    <!-- REPLY -->
+
+                                    <button
+                                        type="button"
+                                        class="
+                                            message-action-btn
+                                            message-reply-btn
+                                        "
+                                        data-message-id="{{ message.id }}"
+                                        data-message-text="{{ message.content|escape }}"
+                                        title="Reply"
+                                        aria-label="Reply"
+                                    >
+
+                                        <i class="bi bi-reply"></i>
+
+                                    </button>
+
+                                {% endif %}
+
+
+
+                                <!-- COPY -->
+
+                                <button
+                                    type="button"
+                                    class="
+                                        message-action-btn
+                                        message-copy-btn
+                                    "
+                                    data-copy-text="{{ message.content|escape }}"
+                                    title="Copy"
+                                    aria-label="Copy"
+                                >
+
+                                    <i class="bi bi-copy"></i>
+
+                                </button>
+
+                                <!-- DELETE -->
+
+                                    <button
+                                        type="button"
+                                        class="message-action-btn message-delete-btn"
+                                        data-message-id="{{ message.id }}"
+                                        data-message-sender="{{ message.sender.id }}"
+                                        title="Delete"
+                                        aria-label="Delete"
+                                    >
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <!-- =================================================
+                     EMPTY CHAT
+                ================================================== -->
+
+                <div
+                    class="chat-empty"
+                    id="chatEmpty"
+                >
+
+                    <div class="chat-empty-icon">
+
+                        <i class="bi bi-chat-heart"></i>
+
+                    </div>
+
+
+                    <span>
+                        START CONVERSATION
+                    </span>
+
+
+                    <h2>
+                        Say hello 👋
+                    </h2>
+
+
+                    <p>
+                        Send a message to start your private conversation.
+                    </p>
+
+
+                    <button
+                        type="button"
+                        class="say-hello-btn"
+                        id="sayHelloBtn"
+                    >
+
+                        <i class="bi bi-hand-wave"></i>
+
+                        Say hello
+
+                    </button>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </main>
+
+        <!-- =================================================
+     DELETE MESSAGE MODAL
+================================================= -->
+
+<div
+    class="delete-message-overlay"
+    id="deleteMessageModal"
+    hidden
+    aria-hidden="true"
+>
+
+    <div
+        class="delete-message-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteMessageTitle"
+    >
+
+        <div class="delete-message-icon">
+            <i class="bi bi-trash3"></i>
+        </div>
+
+        <h3 id="deleteMessageTitle">
+            Delete message?
+        </h3>
+
+        <p>
+            What do you want to do with this message?
+        </p>
+
+
+        <div class="delete-message-options">
+
+            <!-- DELETE FOR ME -->
+
+            <button
+                type="button"
+                class="delete-option-btn"
+                id="deleteForMeBtn"
+            >
+
+                <span class="delete-option-icon">
+                    <i class="bi bi-trash3"></i>
+                </span>
+
+                <span class="delete-option-text">
+                    <strong>Delete for me</strong>
+                    <small>
+                        Remove this message only for you
+                    </small>
+                </span>
+
+            </button>
+
+
+            <!-- DELETE FOR EVERYONE -->
+
+            <button
+                type="button"
+                class="delete-option-btn delete-everyone-btn"
+                id="deleteForEveryoneBtn"
+            >
+
+                <span class="delete-option-icon">
+                    <i class="bi bi-trash3-fill"></i>
+                </span>
+
+                <span class="delete-option-text">
+                    <strong>Delete for everyone</strong>
+                    <small>
+                        Remove this message for everyone
+                    </small>
+                </span>
+
+            </button>
+
+
+            <!-- CANCEL -->
+
+            <button
+                type="button"
+                class="delete-cancel-btn"
+                id="cancelDeleteBtn"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+        <!-- =================================================
+             REPLY PREVIEW
+        ================================================== -->
+
+        <div
+            class="reply-preview"
+            id="replyPreview"
+            hidden
+            aria-hidden="true"
+        >
+
+
+            <div class="reply-preview-icon">
+
+                <i class="bi bi-reply-fill"></i>
+
+            </div>
+
+
+            <div class="reply-preview-content">
+
+                <strong>
+
+                    Replying to
+                    {{ chat_user.username }}
+
+                </strong>
+
+
+                <span
+                    id="replyPreviewText"
+                ></span>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="cancelReply"
+                title="Cancel reply"
+                aria-label="Cancel reply"
+            >
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             EMOJI PICKER
+        ================================================== -->
+
+        <div
+    class="emoji-picker"
+    id="emojiPicker"
+    hidden
+>
+
+    <div class="emoji-picker-header">
+
+        <strong>Emojis</strong>
+
+        <button
+            type="button"
+            id="closeEmojiPicker"
+            aria-label="Close emoji picker"
+        >
+            <i class="bi bi-x-lg"></i>
+        </button>
+
+    </div>
+
+
+    <div class="emoji-category">
+
+        <span>Smileys & People</span>
+
+        <div class="emoji-grid">
+
+            <button type="button" data-emoji="😀">😀</button>
+            <button type="button" data-emoji="😃">😃</button>
+            <button type="button" data-emoji="😄">😄</button>
+            <button type="button" data-emoji="😁">😁</button>
+            <button type="button" data-emoji="😆">😆</button>
+            <button type="button" data-emoji="😅">😅</button>
+            <button type="button" data-emoji="😂">😂</button>
+            <button type="button" data-emoji="🤣">🤣</button>
+            <button type="button" data-emoji="😊">😊</button>
+            <button type="button" data-emoji="😇">😇</button>
+            <button type="button" data-emoji="🙂">🙂</button>
+            <button type="button" data-emoji="🙃">🙃</button>
+            <button type="button" data-emoji="😉">😉</button>
+            <button type="button" data-emoji="😌">😌</button>
+            <button type="button" data-emoji="😍">😍</button>
+            <button type="button" data-emoji="🥰">🥰</button>
+            <button type="button" data-emoji="😘">😘</button>
+            <button type="button" data-emoji="😗">😗</button>
+            <button type="button" data-emoji="😙">😙</button>
+            <button type="button" data-emoji="😚">😚</button>
+            <button type="button" data-emoji="😋">😋</button>
+            <button type="button" data-emoji="😛">😛</button>
+            <button type="button" data-emoji="😜">😜</button>
+            <button type="button" data-emoji="🤪">🤪</button>
+            <button type="button" data-emoji="🤨">🤨</button>
+            <button type="button" data-emoji="🧐">🧐</button>
+            <button type="button" data-emoji="🤓">🤓</button>
+            <button type="button" data-emoji="😎">😎</button>
+            <button type="button" data-emoji="🥳">🥳</button>
+            <button type="button" data-emoji="🤩">🤩</button>
+            <button type="button" data-emoji="😭">😭</button>
+            <button type="button" data-emoji="😢">😢</button>
+            <button type="button" data-emoji="😡">😡</button>
+            <button type="button" data-emoji="🤬">🤬</button>
+            <button type="button" data-emoji="😱">😱</button>
+            <button type="button" data-emoji="😴">😴</button>
+            <button type="button" data-emoji="🤔">🤔</button>
+            <button type="button" data-emoji="🙄">🙄</button>
+            <button type="button" data-emoji="😏">😏</button>
+            <button type="button" data-emoji="😮">😮</button>
+
+        </div>
+
+    </div>
+
+
+    <div class="emoji-category">
+
+        <span>Gestures</span>
+
+        <div class="emoji-grid">
+
+            <button type="button" data-emoji="👍">👍</button>
+            <button type="button" data-emoji="👎">👎</button>
+            <button type="button" data-emoji="👌">👌</button>
+            <button type="button" data-emoji="✌️">✌️</button>
+            <button type="button" data-emoji="🤞">🤞</button>
+            <button type="button" data-emoji="🤟">🤟</button>
+            <button type="button" data-emoji="🤘">🤘</button>
+            <button type="button" data-emoji="👏">👏</button>
+            <button type="button" data-emoji="🙌">🙌</button>
+            <button type="button" data-emoji="👐">👐</button>
+            <button type="button" data-emoji="🤝">🤝</button>
+            <button type="button" data-emoji="🙏">🙏</button>
+            <button type="button" data-emoji="💪">💪</button>
+            <button type="button" data-emoji="👋">👋</button>
+
+        </div>
+
+    </div>
+
+
+    <div class="emoji-category">
+
+        <span>Hearts & Symbols</span>
+
+        <div class="emoji-grid">
+
+            <button type="button" data-emoji="❤️">❤️</button>
+            <button type="button" data-emoji="🧡">🧡</button>
+            <button type="button" data-emoji="💛">💛</button>
+            <button type="button" data-emoji="💚">💚</button>
+            <button type="button" data-emoji="💙">💙</button>
+            <button type="button" data-emoji="💜">💜</button>
+            <button type="button" data-emoji="🖤">🖤</button>
+            <button type="button" data-emoji="🤍">🤍</button>
+            <button type="button" data-emoji="💔">💔</button>
+            <button type="button" data-emoji="💕">💕</button>
+            <button type="button" data-emoji="💖">💖</button>
+            <button type="button" data-emoji="💗">💗</button>
+            <button type="button" data-emoji="💯">💯</button>
+            <button type="button" data-emoji="🔥">🔥</button>
+            <button type="button" data-emoji="⭐">⭐</button>
+            <button type="button" data-emoji="✨">✨</button>
+            <button type="button" data-emoji="🎉">🎉</button>
+            <button type="button" data-emoji="🎊">🎊</button>
+            <button type="button" data-emoji="🚀">🚀</button>
+            <button type="button" data-emoji="💥">💥</button>
+
+        </div>
+
+    </div>
+
+
+    <div class="emoji-category">
+
+        <span>Objects & Activities</span>
+
+        <div class="emoji-grid">
+
+            <button type="button" data-emoji="⚽">⚽</button>
+            <button type="button" data-emoji="🏆">🏆</button>
+            <button type="button" data-emoji="🎮">🎮</button>
+            <button type="button" data-emoji="🎵">🎵</button>
+            <button type="button" data-emoji="🎧">🎧</button>
+            <button type="button" data-emoji="📱">📱</button>
+            <button type="button" data-emoji="💻">💻</button>
+            <button type="button" data-emoji="⌨️">⌨️</button>
+            <button type="button" data-emoji="📚">📚</button>
+            <button type="button" data-emoji="💡">💡</button>
+            <button type="button" data-emoji="☕">☕</button>
+            <button type="button" data-emoji="🍕">🍕</button>
+            <button type="button" data-emoji="🍔">🍔</button>
+            <button type="button" data-emoji="❤️‍🔥">❤️‍🔥</button>
+
+        </div>
+
+    </div>
+
+</div>
+        <!-- =================================================
+             COMPOSER
+        ================================================== -->
+
+       <form
+            method="POST"
+            id="messageForm"
+            class="message-composer"
+            data-send-url="{% url 'blog:conversation_detail' conversation.id %}"
+            
+        >
+
+            {% csrf_token %}
+
+
+            <!-- EMOJI -->
+
+            <button
+                type="button"
+                class="composer-icon-btn"
+                id="emojiBtn"
+                title="Emoji"
+                aria-label="Emoji"
+            >
+
+                <i class="bi bi-emoji-smile"></i>
+
+            </button>
+
+
+
+            <!-- PLUS -->
+
+             <button
+                type="button"
+                class="composer-icon-btn"
+                 id="attachBtn"
+                 title="Attach file"
+                aria-label="Attach file"
+                >
+                <i class="bi bi-plus-lg"></i>
+                </button>
+
+                        <input
+                            type="file"
+                            id="messageFileInput"
+                            name="attachments"
+                            multiple
+                            hidden
+                            accept="
+                                image/*,
+                                video/*,
+                                audio/*,
+                                .pdf,
+                                .doc,
+                                .docx,
+                                .xls,
+                                .xlsx,
+                                .ppt,
+                                .pptx,
+                                .txt,
+                                .zip,
+                                .rar
+                            "
+                        >
+
+            <!-- MESSAGE INPUT -->
+
+            <textarea
+                id="messageInput"
+                name="content"
+                rows="1"
+                placeholder="Write a message..."
+                autocomplete="off"
+            ></textarea>
+
+
+
+            <!-- SEND -->
+
+            <button
+                type="submit"
+                class="send-message-btn"
+                id="sendMessageBtn"
+                title="Send"
+                aria-label="Send"
+            >
+
+                <i class="bi bi-send-fill"></i>
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- =================================================
+             HELPER
+        ================================================== -->
+
+        <div class="chat-helper">
+
+            Enter to send
+            ·
+            Shift + Enter for new line
+
+        </div>
+
+
+    </section>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script src="{% static 'js/conversation.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,885 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sign Up | CodeLearn Hub</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            background: #070816;
+
+            color: #f5f7ff;
+
+            font-family:
+                Inter,
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            overflow-y: auto;
+
+            padding: 30px 0;
+        }
+
+
+        /* =====================================
+           BACKGROUND GLOW
+        ====================================== */
+
+        body::before {
+
+            content: "";
+
+            position: fixed;
+
+            width: 520px;
+
+            height: 520px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(113, 77, 255, .11);
+
+            filter: blur(35px);
+
+            top: -230px;
+
+            left: -180px;
+
+            pointer-events: none;
+        }
+
+
+        body::after {
+
+            content: "";
+
+            position: fixed;
+
+            width: 450px;
+
+            height: 450px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(36, 111, 255, .08);
+
+            filter: blur(35px);
+
+            bottom: -220px;
+
+            right: -150px;
+
+            pointer-events: none;
+        }
+
+
+        /* =====================================
+           PAGE
+        ====================================== */
+
+        .page {
+
+            width: 100%;
+
+            max-width: 470px;
+
+            padding: 20px;
+
+            position: relative;
+
+            z-index: 2;
+
+            animation:
+                pageIn .6s ease both;
+        }
+
+
+        @keyframes pageIn {
+
+            from {
+
+                opacity: 0;
+
+                transform:
+                    translateY(15px);
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform:
+                    translateY(0);
+            }
+        }
+
+
+        /* =====================================
+           LOGO
+        ====================================== */
+
+        .logo {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            margin-bottom: 24px;
+        }
+
+
+        .logo-icon {
+
+            width: 43px;
+
+            height: 43px;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #805cff,
+                    #4d8dff
+                );
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 20px;
+
+            box-shadow:
+                0 10px 35px
+                rgba(92, 76, 255, .25);
+        }
+
+
+        .logo-text {
+
+            font-size: 19px;
+
+            font-weight: 850;
+
+            line-height: 1.05;
+        }
+
+
+        .logo-text span {
+
+            display: block;
+
+            color: #a991ff;
+        }
+
+
+        /* =====================================
+           CARD
+        ====================================== */
+
+        .signup-card {
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #131525,
+                    #0c0e1b
+                );
+
+            border:
+                1px solid #2b2e45;
+
+            border-radius: 22px;
+
+            padding: 30px;
+
+            box-shadow:
+                0 25px 70px
+                rgba(0,0,0,.35);
+        }
+
+
+        /* =====================================
+           HEADER
+        ====================================== */
+
+        .eyebrow {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            color: #a78bfa;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: 1.3px;
+
+            text-transform: uppercase;
+
+            margin-bottom: 10px;
+        }
+
+
+        .signup-card h1 {
+
+            font-size: 28px;
+
+            font-weight: 850;
+
+            margin: 0 0 7px;
+        }
+
+
+        .signup-card h1 span {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #a78bfa,
+                    #60a5fa,
+                    #22d3ee
+                );
+
+            -webkit-background-clip: text;
+
+            -webkit-text-fill-color: transparent;
+        }
+
+
+        .subtitle {
+
+            color: #707791;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+
+            margin-bottom: 24px;
+        }
+
+
+        /* =====================================
+           FORM
+        ====================================== */
+
+        .form-group {
+
+            margin-bottom: 16px;
+        }
+
+
+        .form-label {
+
+            display: block;
+
+            color: #dce0ec;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            margin-bottom: 8px;
+        }
+
+
+        .input-wrapper {
+
+            position: relative;
+        }
+
+
+        .input-icon {
+
+            position: absolute;
+
+            left: 13px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            color: #646b86;
+
+            font-size: 14px;
+
+            pointer-events: none;
+        }
+
+
+        .input-wrapper input {
+
+            width: 100%;
+
+            height: 43px;
+
+            padding:
+                0 13px 0 39px;
+
+            border:
+                1px solid #2b2e46;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            background: #0b0e1b;
+
+            color: white;
+
+            font-size: 11px;
+
+            transition: .2s;
+        }
+
+
+        .input-wrapper input::placeholder {
+
+            color: #555c75;
+        }
+
+
+        .input-wrapper input:focus {
+
+            border-color: #745bf0;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(116,91,240,.12);
+        }
+
+
+        /* =====================================
+           DJANGO ERROR
+        ====================================== */
+
+        .errorlist {
+
+            list-style: none;
+
+            padding: 0;
+
+            margin: 7px 0 0;
+
+            color: #ff7185;
+
+            font-size: 9px;
+        }
+
+
+        .form-errors {
+
+            background:
+                rgba(255,87,110,.07);
+
+            border:
+                1px solid
+                rgba(255,87,110,.20);
+
+            border-radius: 10px;
+
+            padding: 11px 13px;
+
+            margin-bottom: 16px;
+
+            color: #ff8294;
+
+            font-size: 10px;
+        }
+
+
+        /* =====================================
+           SIGNUP BUTTON
+        ====================================== */
+
+        .signup-btn {
+
+            width: 100%;
+
+            height: 44px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7654ff,
+                    #4b74ff
+                );
+
+            color: white;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 10px 25px
+                rgba(87,76,255,.18);
+
+            transition: .2s;
+
+            margin-top: 4px;
+        }
+
+
+        .signup-btn:hover {
+
+            transform:
+                translateY(-1px);
+
+            opacity: .92;
+        }
+
+
+        /* =====================================
+           DIVIDER
+        ====================================== */
+
+        .divider {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin: 22px 0;
+        }
+
+
+        .divider-line {
+
+            flex: 1;
+
+            height: 1px;
+
+            background: #24273a;
+        }
+
+
+        .divider span {
+
+            color: #51576e;
+
+            font-size: 9px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* =====================================
+           LOGIN
+        ====================================== */
+
+        .login-area {
+
+            text-align: center;
+        }
+
+
+        .login-area p {
+
+            color: #696f86;
+
+            font-size: 10px;
+
+            margin: 0 0 10px;
+        }
+
+
+        .login-btn {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 7px;
+
+            width: 100%;
+
+            height: 42px;
+
+            text-decoration: none;
+
+            border:
+                1px solid #343750;
+
+            background: #111424;
+
+            border-radius: 10px;
+
+            color: #c9cde0;
+
+            font-size: 10px;
+
+            font-weight: 750;
+
+            transition: .2s;
+        }
+
+
+        .login-btn:hover {
+
+            color: white;
+
+            background: #181b2d;
+
+            border-color: #6252a5;
+        }
+
+
+        /* =====================================
+           FOOTER
+        ====================================== */
+
+        .footer {
+
+            text-align: center;
+
+            color: #454b62;
+
+            font-size: 9px;
+
+            margin-top: 17px;
+        }
+
+
+        /* =====================================
+           MOBILE
+        ====================================== */
+
+        @media(max-width: 500px) {
+
+            body {
+
+                padding: 20px 0;
+            }
+
+            .page {
+
+                padding: 15px;
+            }
+
+            .signup-card {
+
+                padding: 24px 20px;
+            }
+
+            .signup-card h1 {
+
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+
+    <!-- =====================================
+         LOGO
+    ====================================== -->
+
+    <div class="logo">
+
+        <div class="logo-icon">
+
+            <i class="bi bi-code-slash"></i>
+
+        </div>
+
+
+        <div class="logo-text">
+
+            CodeLearn
+
+            <span>Hub</span>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================
+         SIGNUP CARD
+    ====================================== -->
+
+    <div class="signup-card">
+
+
+        <div class="eyebrow">
+
+            <i class="bi bi-person-plus"></i>
+
+            Start Learning
+
+        </div>
+
+
+        <h1>
+
+            Create your <span>account</span>
+
+        </h1>
+
+
+        <p class="subtitle">
+
+            Join CodeLearn Hub and start learning,
+            practicing and building real-world skills.
+
+        </p>
+
+
+
+        <!-- FORM ERRORS -->
+
+        {% if form.non_field_errors %}
+
+            <div class="form-errors">
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+        {% endif %}
+
+
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+
+
+            <!-- USERNAME -->
+
+            <!-- EMAIL -->
+        <div class="form-group">
+
+            <label
+                class="form-label"
+                for="{{ form.email.id_for_label }}"
+            >
+                Email Address
+            </label>
+
+            <div class="input-wrapper">
+
+                <i class="bi bi-envelope input-icon"></i>
+
+                {{ form.email }}
+
+            </div>
+
+            {% if form.email.errors %}
+                {{ form.email.errors }}
+            {% endif %}
+
+        </div>
+
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label
+                    class="form-label"
+                    for="{{ form.password1.id_for_label }}"
+                >
+
+                    Password
+
+                </label>
+
+
+                <div class="input-wrapper">
+
+                    <i class="bi bi-lock input-icon"></i>
+
+                    {{ form.password1 }}
+
+                </div>
+
+
+                {% if form.password1.errors %}
+
+                    {{ form.password1.errors }}
+
+                {% endif %}
+
+
+            </div>
+
+
+
+            <!-- CONFIRM PASSWORD -->
+
+            <div class="form-group">
+
+                <label
+                    class="form-label"
+                    for="{{ form.password2.id_for_label }}"
+                >
+
+                    Confirm Password
+
+                </label>
+
+
+                <div class="input-wrapper">
+
+                    <i class="bi bi-shield-lock input-icon"></i>
+
+                    {{ form.password2 }}
+
+                </div>
+
+
+                {% if form.password2.errors %}
+
+                    {{ form.password2.errors }}
+
+                {% endif %}
+
+
+            </div>
+
+
+
+            <!-- SUBMIT -->
+
+            <button
+                type="submit"
+                class="signup-btn"
+            >
+
+                <i class="bi bi-person-plus"></i>
+
+                Create CodeLearn Account
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- DIVIDER -->
+
+        <div class="divider">
+
+            <div class="divider-line"></div>
+
+            <span>or</span>
+
+            <div class="divider-line"></div>
+
+        </div>
+
+
+
+        <!-- LOGIN -->
+
+        <div class="login-area">
+
+            <p>
+                Already have an account?
+            </p>
+
+
+            <a
+                href="{% url 'blog:login' %}"
+                class="login-btn"
+            >
+
+                <i class="bi bi-box-arrow-in-right"></i>
+
+                Login to Your Account
+
+            </a>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="footer">
+
+        CodeLearn Hub · Learn. Practice. Build.
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
