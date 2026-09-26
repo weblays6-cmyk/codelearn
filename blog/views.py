@@ -48,7 +48,7 @@ from .forms import (
 
 
 # =========================================================
-# COURSE / BLOG LIST
+# COURSE / BLOG LIST uyhnyuyu
 # =========================================================
 
 def blog(request):
