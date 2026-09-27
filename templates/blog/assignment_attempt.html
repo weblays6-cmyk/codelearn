@@ -3,58 +3,145 @@
 
 {% block title %}{{ assignment.title }} | {{ SITE_NAME }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/assignment_attempt.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="assignments-page">
-    <section class="page-header">
+<div class="assignment-attempt-page">
+    <a class="assignment-back-link" href="{% url 'blog:assignments' %}">
+        <i class="bi bi-arrow-left"></i> Back to assignments
+    </a>
+
+    <section class="assignment-attempt-header">
         <div>
-            <div class="eyebrow"><i class="bi bi-clipboard-check"></i> Assignment</div>
+            <div class="assignment-eyebrow"><i class="bi bi-clipboard-check"></i> Assignment workspace</div>
             <h1>{{ assignment.title }}</h1>
             <p>{{ assignment.instructions|default:assignment.description }}</p>
         </div>
+        <div class="assignment-type-badge">
+            <i
+                class="bi bi-{% if assignment.assignment_type == 'QUIZ' %}ui-checks{% elif assignment.assignment_type == 'CODING' %}code-slash{% else %}file-earmark-text{% endif %}"></i>
+            {{ assignment.get_assignment_type_display }}
+        </div>
     </section>
 
-    <form method="post" id="attemptForm" class="content">
+    {% if error_message %}<p role="alert" class="assignment-error">{{ error_message }}</p>{% endif %}
+
+    <div class="assignment-attempt-meta">
+        <div><span>Points</span><strong>{{ assignment.max_score }}</strong></div>
+        <div><span>Passing mark</span><strong>{{ assignment.passing_marks }}</strong></div>
+        <div><span>Attempt</span><strong>{{ attempt.attempt_number }} / {{ assignment.max_attempts }}</strong></div>
+        {% if assignment.due_date %}<div><span>Due</span><strong>{{ assignment.due_date|date:"M j, Y H:i" }}</strong>
+        </div>{% endif %}
+    </div>
+
+    {% if attempt.status != 'IN_PROGRESS' %}
+    <section class="assignment-result-card" aria-live="polite">
+        <div class="result-icon"><i class="bi bi-{% if attempt.passed %}check2{% else %}clipboard-check{% endif %}"></i>
+        </div>
+        <div class="result-copy">
+            <span class="result-kicker">Submission {{ attempt.status|lower }}</span>
+            <h2>{% if attempt.passed %}Assignment passed{% elif attempt.score != None %}Keep practicing{% else
+                %}Submission received{% endif %}</h2>
+            {% if attempt.score != None %}
+            <p class="result-score">Score: {{ attempt.score }} / {{ attempt.max_score }} <span>({{ attempt.percentage
+                    }}%)</span></p>
+            {% else %}
+            <p>Your work has been submitted and is awaiting instructor review.</p>
+            {% endif %}
+            {% if attempt.feedback %}<p>{{ attempt.feedback }}</p>{% endif %}
+            {% if submission and submission.file %}<p><a href="{{ submission.file.url }}">Download submitted file</a>
+            </p>{% endif %}
+            {% if submission and submission.answer %}<details>
+                <summary>View submitted response</summary>
+                <pre>{{ submission.answer }}</pre>
+            </details>{% endif %}
+            {% if can_retry %}<a class="assignment-primary-button" href="?new=1">Start another attempt <i
+                    class="bi bi-arrow-right"></i></a>{% endif %}
+        </div>
+    </section>
+    {% else %}
+    <form method="post" id="attemptForm" class="assignment-attempt-form" enctype="multipart/form-data">
         {% csrf_token %}
+        {{ attempt.answer_data|json_script:"savedAnswers" }}
         <input type="hidden" name="answer_data" id="answerData">
         <input type="hidden" name="source_code" id="sourceCode">
+        <input type="hidden" name="language" id="languageValue">
         <input type="hidden" name="action" value="submit">
 
-        {% if questions %}
+        {% if assignment.assignment_type == 'QUIZ' %}
         {% for question in questions %}
-        <article class="assignment" style="margin-bottom:16px;">
+        <article class="assignment-question-card">
             <h3>{{ forloop.counter }}. {{ question.question }}</h3>
             {% for option in question.options.all %}
-            <label style="display:block;margin:12px 0;color:#cbd5e1;">
+            <label class="assignment-option">
                 <input type="{% if question.question_type == 'MULTIPLE' %}checkbox{% else %}radio{% endif %}"
                     name="question_{{ question.id }}" value="{{ option.id }}">
-                {{ option.option_text }}
+                <span>{{ option.option_text }}</span>
             </label>
             {% endfor %}
         </article>
+        {% empty %}
+        <p role="alert">This quiz has no questions yet. Contact the course instructor.</p>
         {% endfor %}
+        {% elif assignment.assignment_type == 'FILE_UPLOAD' %}
+        <article class="assignment-response-card">
+            <label for="assignmentFile" class="assignment-field-label">Upload your completed work</label>
+            <input id="assignmentFile" type="file" name="file" required>
+            <label for="response" class="assignment-field-label">Notes for your instructor</label>
+            <textarea id="response" rows="5">{{ attempt.answer_data.response }}</textarea>
+        </article>
+        {% elif assignment.assignment_type == 'CODING' %}
+        <article class="assignment-response-card">
+            <label for="languageSelect" class="assignment-field-label">Programming language</label>
+            <select id="languageSelect">
+                <option value="python" {% if attempt.language=='python' %}selected{% endif %}>Python</option>
+                <option value="javascript" {% if attempt.language=='javascript' %}selected{% endif %}>JavaScript
+                </option>
+                <option value="java" {% if attempt.language=='java' %}selected{% endif %}>Java</option>
+            </select>
+            <label for="codeResponse" class="assignment-field-label">Your code</label>
+            <textarea id="codeResponse" rows="16">{{ attempt.source_code }}</textarea>
+        </article>
         {% else %}
-        <article class="assignment">
-            <label for="response" class="assignment-desc">Your response</label>
-            <textarea id="response" rows="12"
-                style="width:100%;margin-top:14px;background:#0f1422;color:#f8fafc;border:1px solid #30364d;border-radius:10px;padding:14px;">{{ attempt.answer_data.response }}</textarea>
+        <article class="assignment-response-card">
+            <label for="response" class="assignment-field-label">{% if assignment.assignment_type == 'PROJECT' %}Project
+                details or link{% else %}Your response{% endif %}</label>
+            <textarea id="response" rows="12">{{ attempt.answer_data.response }}</textarea>
         </article>
         {% endif %}
 
-        <div style="display:flex;gap:12px;margin-top:18px;">
-            <button type="button" class="assignment-btn" id="saveButton">Save Draft</button>
-            <button type="submit" class="assignment-btn">Submit Assignment <i class="bi bi-arrow-right"></i></button>
+        <div class="assignment-form-actions">
+            <button type="button" class="assignment-secondary-button" id="saveButton"><i
+                    class="bi bi-cloud-arrow-up"></i> Save draft</button>
+            <button type="submit" class="assignment-primary-button">Submit assignment <i
+                    class="bi bi-arrow-right"></i></button>
         </div>
-        <div id="saveState" class="assignment-desc" style="margin-top:10px;"></div>
+        <div id="saveState" class="assignment-save-state" role="status"></div>
     </form>
+    {% endif %}
 </div>
 
 <script>
     (function () {
         const form = document.getElementById('attemptForm');
+        if (!form) return;
         const answerData = document.getElementById('answerData');
         const sourceCode = document.getElementById('sourceCode');
+        const languageValue = document.getElementById('languageValue');
         const saveState = document.getElementById('saveState');
         const csrf = form.querySelector('[name=csrfmiddlewaretoken]').value;
+        const savedAnswers = JSON.parse(document.getElementById('savedAnswers').textContent);
+
+        form.querySelectorAll('[name^="question_"]').forEach(function (input) {
+            const key = input.name.replace('question_', '');
+            const selected = savedAnswers[key] || [];
+            input.checked = (Array.isArray(selected) ? selected : [selected]).map(String).includes(input.value);
+        });
+
+        const codeResponse = document.getElementById('codeResponse');
+        if (codeResponse && !codeResponse.value) codeResponse.value = '{{ attempt.source_code|escapejs }}';
 
         function collectAnswers() {
             const values = {};
@@ -66,8 +153,11 @@
             });
             const response = document.getElementById('response');
             if (response) values.response = response.value;
+            const codeResponse = document.getElementById('codeResponse');
+            if (codeResponse) sourceCode.value = codeResponse.value;
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) languageValue.value = languageSelect.value;
             answerData.value = JSON.stringify(values);
-            sourceCode.value = '';
             return answerData.value;
         }
 
@@ -77,10 +167,17 @@
                 csrfmiddlewaretoken: csrf,
                 action: 'save',
                 answer_data: collectAnswers(),
-                source_code: sourceCode.value
+                source_code: sourceCode.value,
+                language: languageValue.value
             });
-            const response = await fetch(window.location.href, { method: 'POST', body: body });
-            saveState.textContent = response.ok ? 'Saved' : 'Unable to save';
+            try {
+                const response = await fetch(window.location.href, { method: 'POST', body: body });
+                saveState.textContent = response.ok ? 'Draft saved' : 'Unable to save draft';
+                saveState.classList.toggle('is-error', !response.ok);
+            } catch (error) {
+                saveState.textContent = 'Unable to save draft';
+                saveState.classList.add('is-error');
+            }
         }
 
         document.getElementById('saveButton').addEventListener('click', save);

@@ -196,14 +196,16 @@ Assignments | {{ SITE_NAME }}
                     <span class="status {{ assignment.display_status|lower }}">{{ assignment.display_status }}</span>
                 </div>
                 <div class="assignment-meta">
-                    <span><i class="bi bi-bookmark"></i>{% if assignment.assignment_source == 'STANDALONE' %}Standalone{% else %}Course Assignment{% endif %}</span>
+                    <span><i class="bi bi-bookmark"></i>{% if assignment.assignment_source == 'STANDALONE'
+                        %}Standalone{% else %}Course Assignment{% endif %}</span>
                     <span><i class="bi bi-star"></i>{{ assignment.max_score }} Marks</span>
                     <span><i class="bi bi-clock"></i>~{{ assignment.estimated_duration }} min</span>
                     {% if assignment.due_date %}<span><i class="bi bi-calendar-event"></i>Due {{
                         assignment.due_date|date:"M j" }}</span>{% endif %}
                 </div>
                 <div class="assignment-bottom">
-                    <span class="course-tag">{% if assignment.course %}{{ assignment.course.title }}{% elif assignment.lesson %}{{ assignment.lesson.course.title }}{% else %}Standalone{% endif %}</span>
+                    <span class="course-tag">{% if assignment.course %}{{ assignment.course.title }}{% elif
+                        assignment.lesson %}{{ assignment.lesson.course.title }}{% else %}Standalone{% endif %}</span>
                     <a href="{% url 'blog:assignment_attempt' assignment.pk %}" class="assignment-btn">
                         {% if assignment.display_status == 'PASSED' or assignment.display_status == 'EVALUATED' %}View
                         Result{% else %}Start Assignment{% endif %}
@@ -624,9 +626,7 @@ Assignments | {{ SITE_NAME }}
 
                         <div class="circle-text">
 
-                            <strong>
-                                69%
-                            </strong>
+                            <strong>{{ completion_percent }}%</strong>
 
                             <span>
                                 Completed
@@ -640,14 +640,18 @@ Assignments | {{ SITE_NAME }}
                     <div class="completion-info">
 
                         <p>
-                            You're doing well!
-                            Complete 2 more assignments
-                            to reach 80%.
+                            {% if completion_percent >= 80 %}
+                            You're on track. Keep completing assignments.
+                            {% elif remaining_to_80 %}
+                            Complete {{ remaining_to_80 }} more assignment{{ remaining_to_80|pluralize }} to reach 80%.
+                            {% else %}
+                            Start an assignment to build your progress.
+                            {% endif %}
                         </p>
 
 
                         <div class="mini-progress">
-                            <div></div>
+                            <div style="width:{{ completion_percent }}%;"></div>
                         </div>
 
                     </div>
@@ -675,6 +679,7 @@ Assignments | {{ SITE_NAME }}
                 </div>
 
 
+                {% for assignment in upcoming_assignments %}
                 <div class="deadline-item">
 
                     <div class="deadline-icon orange">
@@ -684,70 +689,25 @@ Assignments | {{ SITE_NAME }}
                     <div class="deadline-info">
 
                         <strong>
-                            Python Functions
+                            {{ assignment.title }}
                         </strong>
 
                         <span>
-                            Tomorrow
+                            {{ assignment.due_date|date:"M j, Y" }}
                         </span>
 
                     </div>
 
                     <span class="days" style="color:#fbbf24;">
-                        1d
+                        <i class="bi bi-arrow-right"></i>
                     </span>
 
                 </div>
-
-
+                {% empty %}
                 <div class="deadline-item">
-
-                    <div class="deadline-icon blue">
-                        <i class="bi bi-calendar3"></i>
-                    </div>
-
-                    <div class="deadline-info">
-
-                        <strong>
-                            Django Models
-                        </strong>
-
-                        <span>
-                            In 3 days
-                        </span>
-
-                    </div>
-
-                    <span class="days" style="color:#60a5fa;">
-                        3d
-                    </span>
-
+                    <div class="deadline-info"><span>No upcoming deadlines.</span></div>
                 </div>
-
-
-                <div class="deadline-item">
-
-                    <div class="deadline-icon purple">
-                        <i class="bi bi-calendar3"></i>
-                    </div>
-
-                    <div class="deadline-info">
-
-                        <strong>
-                            React Components
-                        </strong>
-
-                        <span>
-                            In 6 days
-                        </span>
-
-                    </div>
-
-                    <span class="days" style="color:#a78bfa;">
-                        6d
-                    </span>
-
-                </div>
+                {% endfor %}
 
             </div>
 
@@ -773,7 +733,7 @@ Assignments | {{ SITE_NAME }}
                 <div class="score">
 
                     <strong>
-                        84%
+                        {{ average_score }}%
                     </strong>
 
                     <br>

@@ -8,6 +8,7 @@ from google import genai
 from django.http import JsonResponse, HttpResponseForbidden
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -42,10 +43,19 @@ from .models import (
     Assignment,
     AssignmentAudience,
     AssignmentAttempt,
+    AssignmentSubmission,
     UserAssignmentProgress,
+    LessonProgress,
     PracticeProblem,
     PracticeProgress,
     PracticeSubmission,
+)
+from .services.course_progress import (
+    can_access_lesson,
+    mark_lesson_completed,
+    refresh_enrollment_progress,
+    refresh_progress_for_assignment,
+    start_lesson,
 )
 
 from .forms import (
@@ -65,7 +75,7 @@ def blog(request):
     search = request.GET.get('search', '').strip()
     category = request.GET.get('category', '').strip()
 
-    posts = Post.objects.all().order_by('-created_at')
+    posts = Post.objects.filter(status='PUBLISHED').order_by('-created_at')
 
     if search:
         posts = posts.filter(
@@ -108,14 +118,21 @@ def dashboard(request):
         user=request.user
     )
 
-    recent_posts = Post.objects.all().order_by(
+    recent_posts = Post.objects.filter(status='PUBLISHED').order_by(
         '-created_at'
     )[:4]
+
+    my_enrollments = Enrollment.objects.filter(
+        student=request.user
+    ).select_related('course')
+    for enrollment in my_enrollments:
+        refresh_enrollment_progress(request.user, enrollment.course)
 
     context = {
         'username': request.user.username,
         'recent_posts': recent_posts,
         'user_profile': profile,
+        'my_enrollments': my_enrollments,
     }
 
     return render(
@@ -135,6 +152,9 @@ def my_learning(request):
     enrollments = Enrollment.objects.filter(
         student=request.user
     ).select_related('course')
+
+    for enrollment in enrollments:
+        refresh_enrollment_progress(request.user, enrollment.course)
 
     total_courses = enrollments.count()
 
@@ -214,7 +234,8 @@ def post_detail(request, pk):
 
     post = get_object_or_404(
         Post,
-        pk=pk
+        pk=pk,
+        status='PUBLISHED',
     )
 
     comments = Comment.objects.filter(
@@ -227,6 +248,23 @@ def post_detail(request, pk):
         student=request.user,
         course=post
     ).first()
+
+    course_assignments = Assignment.objects.filter(
+        Q(assignment_source='COURSE', course=post)
+        | Q(assignment_source='COURSE', lesson__course=post),
+        status='PUBLISHED',
+    ).filter(
+        Q(release_date__isnull=True) | Q(release_date__lte=timezone.now())
+    ).select_related('course', 'lesson').distinct() if enrollment else Assignment.objects.none()
+    assignment_progress = {
+        item.assignment_id: item
+        for item in UserAssignmentProgress.objects.filter(
+            user=request.user,
+            assignment__in=course_assignments,
+        ).select_related('latest_attempt')
+    }
+    for assignment in course_assignments:
+        assignment.user_progress = assignment_progress.get(assignment.id)
 
     if request.method == "POST":
 
@@ -279,6 +317,7 @@ def post_detail(request, pk):
         'form': form,
         'lessons': lessons,
         'enrollment': enrollment,
+        'course_assignments': course_assignments,
     }
 
     return render(
@@ -344,7 +383,8 @@ def lesson_detail(request, pk):
 
     lesson = get_object_or_404(
         Lesson,
-        pk=pk
+        pk=pk,
+        course__status='PUBLISHED',
     )
 
     if not request.user.is_authenticated:
@@ -354,13 +394,22 @@ def lesson_detail(request, pk):
         student=request.user,
         course=lesson.course
     ).exists()
+    if not enrolled:
+        return redirect('blog:post_detail', pk=lesson.course_id)
+    if not can_access_lesson(request.user, lesson):
+        return HttpResponseForbidden('Complete the earlier lessons first.')
+
+    lesson_progress = start_lesson(request.user, lesson)
+    ordered_lessons = list(lesson.course.lessons.all())
+    lesson_index = next(index for index, item in enumerate(ordered_lessons) if item.pk == lesson.pk)
+
     assignments = Assignment.objects.filter(
         assignment_source='COURSE',
         status='PUBLISHED',
         lesson=lesson
     ).filter(
         Q(release_date__isnull=True) | Q(release_date__lte=timezone.now())
-    ) if enrolled else Assignment.objects.none()
+    )
 
     progress = {
         item.assignment_id: item
@@ -369,6 +418,8 @@ def lesson_detail(request, pk):
             assignment__in=assignments
         )
     }
+    for assignment in assignments:
+        assignment.user_progress = progress.get(assignment.id)
 
     context = {
         'lesson': lesson,
@@ -376,6 +427,9 @@ def lesson_detail(request, pk):
         'lesson_assignments': assignments,
         'assignment_progress': progress,
         'enrolled': enrolled,
+        'lesson_progress': lesson_progress,
+        'previous_lesson': ordered_lessons[lesson_index - 1] if lesson_index else None,
+        'next_lesson': ordered_lessons[lesson_index + 1] if lesson_index + 1 < len(ordered_lessons) else None,
     }
 
     return render(
@@ -385,11 +439,24 @@ def lesson_detail(request, pk):
     )
 
 
+@login_required
+def complete_lesson(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden('POST required.')
+
+    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=pk)
+    if not can_access_lesson(request.user, lesson):
+        return HttpResponseForbidden('You must join this course first.')
+
+    mark_lesson_completed(request.user, lesson)
+    return redirect('blog:lesson_detail', pk=lesson.pk)
+
+
 # =========================================================
 # CREATE COURSE / POST
 # =========================================================
 
-@login_required
+@user_passes_test(lambda user: user.is_staff)
 def create_post(request):
 
     if request.method == "POST":
@@ -431,7 +498,7 @@ def create_post(request):
 # UPDATE COURSE / POST
 # =========================================================
 
-@login_required
+@user_passes_test(lambda user: user.is_staff)
 def update_post(request, pk):
 
     post = get_object_or_404(
@@ -482,7 +549,7 @@ def update_post(request, pk):
 # DELETE COURSE / POST
 # =========================================================
 
-@login_required
+@user_passes_test(lambda user: user.is_staff)
 def delete_post(request, pk):
 
     post = get_object_or_404(
@@ -1387,6 +1454,30 @@ def assignments(request):
     if search:
         assignments_qs = assignments_qs.filter(title__icontains=search)
 
+    summary_progress = {
+        item.assignment_id: item
+        for item in UserAssignmentProgress.objects.filter(
+            user=request.user,
+            assignment__in=assignments_qs,
+        )
+    }
+    summary_items = list(assignments_qs)
+    summary_completed = [
+        item for item in summary_items
+        if summary_progress.get(item.id) and summary_progress[item.id].status in ('EVALUATED', 'PASSED')
+    ]
+    scored_items = [
+        summary_progress[item.id]
+        for item in summary_items
+        if item.id in summary_progress and summary_progress[item.id].best_score is not None
+    ]
+    completion_percent = round(len(summary_completed) * 100 / len(summary_items)) if summary_items else 0
+    average_score = round(sum(
+        progress.best_score * 100 / progress.assignment.max_score
+        for progress in scored_items
+        if progress.assignment.max_score
+    ) / len(scored_items)) if scored_items else 0
+
     progress_records = {
         item.assignment_id: item
         for item in UserAssignmentProgress.objects.filter(
@@ -1427,6 +1518,13 @@ def assignments(request):
             'status_filter': status_filter.lower(),
             'source_filter': source_filter.lower(),
             'search': search,
+            'completion_percent': completion_percent,
+            'remaining_to_80': max(0, round((80 * len(summary_items) / 100) - len(summary_completed))) if summary_items else 0,
+            'average_score': average_score,
+            'upcoming_assignments': [
+                item for item in summary_items
+                if item.due_date and item.due_date >= timezone.now()
+            ][:3],
         }
     )
 
@@ -1436,15 +1534,24 @@ def assignment_attempt(request, pk):
     assignment = get_object_or_404(Assignment.objects.select_related('course', 'lesson__course'), pk=pk)
     if not _can_access_assignment(request.user, assignment):
         return HttpResponseForbidden('You do not have access to this assignment.')
+    if assignment.lesson and not can_access_lesson(request.user, assignment.lesson):
+        return HttpResponseForbidden('Complete the earlier lessons first.')
 
     progress, _ = UserAssignmentProgress.objects.get_or_create(
         user=request.user,
         assignment=assignment
     )
     attempt = progress.latest_attempt
-    if not attempt or attempt.status != 'IN_PROGRESS':
+    start_new_attempt = request.GET.get('new') == '1'
+    if not attempt or (start_new_attempt and attempt.status != 'IN_PROGRESS'):
         if progress.attempts_used >= assignment.max_attempts:
-            return HttpResponseForbidden('No attempts remaining.')
+            if not attempt:
+                return HttpResponseForbidden('No attempts remaining.')
+            start_new_attempt = False
+        else:
+            start_new_attempt = True
+
+    if start_new_attempt and (not attempt or attempt.status != 'IN_PROGRESS'):
         attempt = AssignmentAttempt.objects.create(
             assignment=assignment,
             user=request.user,
@@ -1458,27 +1565,53 @@ def assignment_attempt(request, pk):
         progress.save()
 
     if request.method == 'POST':
+        if attempt.status != 'IN_PROGRESS':
+            return JsonResponse({'error': 'This attempt was already submitted.'}, status=409)
+
+        try:
+            answer_data = json.loads(request.POST.get('answer_data', '{}'))
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Invalid answer data.'}, status=400)
+        if not isinstance(answer_data, dict):
+            return JsonResponse({'error': 'Answers must be an object.'}, status=400)
+
         if request.POST.get('action') == 'save':
-            attempt.answer_data = json.loads(request.POST.get('answer_data', '{}'))
+            attempt.answer_data = answer_data
             attempt.source_code = request.POST.get('source_code', '')
             attempt.language = request.POST.get('language', '')
             attempt.save()
             return JsonResponse({'saved': True})
 
-        if attempt.status != 'IN_PROGRESS':
-            return JsonResponse({'error': 'This attempt was already submitted.'}, status=409)
-        attempt.answer_data = json.loads(request.POST.get('answer_data', '{}'))
+        if assignment.due_date and assignment.due_date < timezone.now() and not assignment.late_submission_allowed:
+            return render(request, 'blog/assignment_attempt.html', {
+                'assignment': assignment,
+                'attempt': attempt,
+                'questions': assignment.questions.prefetch_related('options').all(),
+                'error_message': 'The deadline has passed and late submissions are not allowed.',
+            }, status=403)
+
+        uploaded_file = request.FILES.get('file')
+        if assignment.assignment_type == 'FILE_UPLOAD' and not uploaded_file and not attempt.answer_data.get('file_name'):
+            return render(request, 'blog/assignment_attempt.html', {
+                'assignment': assignment,
+                'attempt': attempt,
+                'questions': assignment.questions.prefetch_related('options').all(),
+                'error_message': 'Choose a file before submitting.',
+            }, status=400)
+
+        attempt.answer_data = answer_data
         attempt.source_code = request.POST.get('source_code', '')
+        attempt.language = request.POST.get('language', '')
         attempt.status = 'SUBMITTED'
         attempt.submitted_at = timezone.now()
         if assignment.assignment_type == 'QUIZ':
             score = 0
             for question in assignment.questions.prefetch_related('options'):
-                selected = attempt.answer_data.get(str(question.id), [])
+                selected = answer_data.get(str(question.id), [])
                 if not isinstance(selected, list):
                     selected = [selected]
                 correct = list(question.options.filter(is_correct=True).values_list('id', flat=True))
-                if sorted(map(int, selected)) == sorted(correct):
+                if sorted(map(str, selected)) == sorted(map(str, correct)):
                     score += question.marks
             attempt.score = score
             attempt.max_score = sum(q.marks for q in assignment.questions.all()) or assignment.max_score
@@ -1492,15 +1625,32 @@ def assignment_attempt(request, pk):
             progress.best_score = max(progress.best_score or 0, score)
         else:
             progress.status = 'SUBMITTED'
+            response = answer_data.get('response', '')
+            submission = AssignmentSubmission(
+                assignment=assignment,
+                student=request.user,
+                answer=attempt.source_code or response,
+            )
+            if uploaded_file:
+                submission.file = uploaded_file
+                answer_data['file_name'] = uploaded_file.name
+                attempt.answer_data = answer_data
+            submission.save()
         progress.submitted_at = timezone.now()
         progress.save()
         attempt.save()
+        refresh_progress_for_assignment(request.user, assignment)
         return redirect('blog:assignment_attempt', pk=assignment.pk)
 
     return render(request, 'blog/assignment_attempt.html', {
         'assignment': assignment,
         'attempt': attempt,
         'questions': assignment.questions.prefetch_related('options').all(),
+        'submission': AssignmentSubmission.objects.filter(
+            assignment=assignment,
+            student=request.user,
+        ).order_by('-submitted_at').first(),
+        'can_retry': attempt.status != 'IN_PROGRESS' and progress.attempts_used < assignment.max_attempts,
     })
 
 

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 # =========================================================
@@ -7,6 +8,12 @@ from django.contrib.auth.models import User
 # =========================================================
 
 class Post(models.Model):
+
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PUBLISHED', 'Published'),
+        ('ARCHIVED', 'Archived'),
+    ]
 
     CATEGORY_CHOICES = [
         ('Python', 'Python'),
@@ -60,6 +67,14 @@ class Post(models.Model):
 
     content = models.TextField()
 
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PUBLISHED',
+    )
+
+    sequential_learning = models.BooleanField(default=False)
+
     image = models.ImageField(
         upload_to='posts/',
         blank=True,
@@ -80,6 +95,29 @@ class Post(models.Model):
 
 
 # =========================================================
+# COURSE MODULE
+# =========================================================
+
+class Module(models.Model):
+
+    course = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='modules',
+    )
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"
+
+
+# =========================================================
 # LESSON
 # =========================================================
 
@@ -89,6 +127,14 @@ class Lesson(models.Model):
         Post,
         on_delete=models.CASCADE,
         related_name='lessons'
+    )
+
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.SET_NULL,
+        related_name='lessons',
+        null=True,
+        blank=True,
     )
 
     title = models.CharField(
@@ -186,6 +232,21 @@ class Assignment(models.Model):
         auto_now_add=True
     )
 
+    def clean(self):
+        errors = {}
+
+        if self.assignment_source == 'COURSE' and not self.course and not self.lesson:
+            errors['course'] = 'Course assignments must be linked to a course or lesson.'
+
+        if self.assignment_source == 'STANDALONE' and (self.course or self.lesson):
+            errors['assignment_source'] = 'Standalone assignments cannot be linked to a course or lesson.'
+
+        if self.course and self.lesson and self.lesson.course_id != self.course_id:
+            errors['lesson'] = 'The selected lesson must belong to the selected course.'
+
+        if errors:
+            raise ValidationError(errors)
+
     def __str__(self):
         parent = self.lesson or self.course
         return f"{parent} - {self.title}" if parent else self.title
@@ -276,6 +337,9 @@ class AssignmentQuestion(models.Model):
     marks = models.PositiveIntegerField(default=1)
     order = models.PositiveIntegerField(default=1)
 
+    def __str__(self):
+        return f"{self.assignment.title} - Question {self.order}"
+
 
 class AssignmentOption(models.Model):
 
@@ -283,6 +347,9 @@ class AssignmentOption(models.Model):
     option_text = models.CharField(max_length=500)
     is_correct = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.question} - Option {self.order}"
 
 
 # =========================================================
@@ -442,6 +509,12 @@ class UserProfile(models.Model):
 
 class Enrollment(models.Model):
 
+    STATUS_CHOICES = [
+        ('ENROLLED', 'Enrolled'),
+        ('IN_PROGRESS', 'In progress'),
+        ('COMPLETED', 'Completed'),
+    ]
+
     student = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -457,6 +530,11 @@ class Enrollment(models.Model):
     enrolled_at = models.DateTimeField(
         auto_now_add=True
     )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ENROLLED')
+    started_at = models.DateTimeField(null=True, blank=True)
+    last_accessed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     progress = models.PositiveIntegerField(
         default=0
@@ -495,6 +573,9 @@ class LessonProgress(models.Model):
     completed = models.BooleanField(
         default=False
     )
+
+    started_at = models.DateTimeField(null=True, blank=True)
+    last_accessed_at = models.DateTimeField(null=True, blank=True)
 
     completed_at = models.DateTimeField(
         null=True,

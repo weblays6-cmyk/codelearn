@@ -6,593 +6,593 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <link rel="stylesheet" href="{% static 'css/practice_solver.css' %}">
-    <!-- Monaco Editor (loaded here so it's ready before practice.js runs; practice.js
+<!-- Monaco Editor (loaded here so it's ready before practice.js runs; practice.js
          falls back to the plain textarea automatically if this fails to load, e.g. offline) -->
 </head>
 {% endblock %}
 
 {% block content %}
+<div class="practice-page">
+
+
     <div class="practice-page">
 
+        <!-- ===================== LIST VIEW ===================== -->
+        <div id="listView">
 
-        <div class="practice-page">
+            <!-- PAGE HEADER -->
+            <section class="page-header">
+                <div>
+                    <div class="eyebrow">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        Practice Arena
+                    </div>
 
-            <!-- ===================== LIST VIEW ===================== -->
-            <div id="listView">
-
-                <!-- PAGE HEADER -->
-                <section class="page-header">
-                    <div>
-                        <div class="eyebrow">
-                            <i class="bi bi-lightning-charge-fill"></i>
-                            Practice Arena
-                        </div>
-
-                        <h1>
-                            Practice.
-                            <span style="
+                    <h1>
+                        Practice.
+                        <span style="
                         background:linear-gradient(90deg,#a78bfa,#60a5fa,#22d3ee);
                         -webkit-background-clip:text;
                         color:transparent;
                     ">
-                                Improve.
-                            </span>
-                        </h1>
+                            Improve.
+                        </span>
+                    </h1>
 
-                        <p>
-                            Solve problems, build coding skills,
-                            and get job ready.
-                        </p>
+                    <p>
+                        Solve problems, build coding skills,
+                        and get job ready.
+                    </p>
+                </div>
+
+                <div class="motivation">
+                    “Small progress every day
+                    becomes a big skill tomorrow.”
+                    <strong>Keep your streak alive 🔥</strong>
+                </div>
+            </section>
+
+            <!-- STATS -->
+            <section class="stats">
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon green">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <span class="stat-change">+3 this week</span>
+                    </div>
+                    <div class="stat-value" id="statSolved">24</div>
+                    <div class="stat-label">Problems Solved</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon blue">
+                            <i class="bi bi-play-circle"></i>
+                        </div>
+                        <span class="stat-change">Active</span>
+                    </div>
+                    <div class="stat-value" id="statProgress">12</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon orange">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <span class="stat-change" id="pendingNote">8 remaining</span>
+                    </div>
+                    <div class="stat-value" id="statPending">8</div>
+                    <div class="stat-label">Pending Problems</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon purple">
+                            <i class="bi bi-bar-chart"></i>
+                        </div>
+                        <span class="stat-change">+8%</span>
+                    </div>
+                    <div class="stat-value" id="statAccuracy">68%</div>
+                    <div class="stat-label">Overall Accuracy</div>
+                </div>
+
+            </section>
+
+            <!-- CONTENT -->
+            <section class="content-grid">
+
+                <!-- PROBLEM LIST -->
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2>Coding Challenges</h2>
+                            <span>Improve your problem-solving skills</span>
+                        </div>
+                        <span>44 Problems</span>
                     </div>
 
-                    <div class="motivation">
-                        “Small progress every day
-                        becomes a big skill tomorrow.”
-                        <strong>Keep your streak alive 🔥</strong>
-                    </div>
-                </section>
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="python">Python</button>
+                        <button class="filter-btn" data-filter="django">Django</button>
+                        <button class="filter-btn" data-filter="javascript">JavaScript</button>
+                        <button class="filter-btn" data-filter="sql">SQL</button>
+                        <button class="filter-btn" data-filter="html">HTML/CSS</button>
 
-                <!-- STATS -->
-                <section class="stats">
-
-                    <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon green">
-                                <i class="bi bi-check2-circle"></i>
-                            </div>
-                            <span class="stat-change">+3 this week</span>
-                        </div>
-                        <div class="stat-value" id="statSolved">24</div>
-                        <div class="stat-label">Problems Solved</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon blue">
-                                <i class="bi bi-play-circle"></i>
-                            </div>
-                            <span class="stat-change">Active</span>
-                        </div>
-                        <div class="stat-value" id="statProgress">12</div>
-                        <div class="stat-label">In Progress</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon orange">
-                                <i class="bi bi-clock"></i>
-                            </div>
-                            <span class="stat-change" id="pendingNote">8 remaining</span>
-                        </div>
-                        <div class="stat-value" id="statPending">8</div>
-                        <div class="stat-label">Pending Problems</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon purple">
-                                <i class="bi bi-bar-chart"></i>
-                            </div>
-                            <span class="stat-change">+8%</span>
-                        </div>
-                        <div class="stat-value" id="statAccuracy">68%</div>
-                        <div class="stat-label">Overall Accuracy</div>
-                    </div>
-
-                </section>
-
-                <!-- CONTENT -->
-                <section class="content-grid">
-
-                    <!-- PROBLEM LIST -->
-                    <div class="panel">
-
-                        <div class="panel-header">
-                            <div>
-                                <h2>Coding Challenges</h2>
-                                <span>Improve your problem-solving skills</span>
-                            </div>
-                            <span>44 Problems</span>
-                        </div>
-
-                        <div class="filters">
-                            <button class="filter-btn active" data-filter="all">All</button>
-                            <button class="filter-btn" data-filter="python">Python</button>
-                            <button class="filter-btn" data-filter="django">Django</button>
-                            <button class="filter-btn" data-filter="javascript">JavaScript</button>
-                            <button class="filter-btn" data-filter="sql">SQL</button>
-                            <button class="filter-btn" data-filter="html">HTML/CSS</button>
-
-                            <div class="problem-search">
-                                <i class="bi bi-search"></i>
-                                <input type="text" id="problemSearch" placeholder="Search problems...">
-                            </div>
-                        </div>
-
-                        <div class="filters-row2">
-                            <select id="difficultyFilter" aria-label="Filter by difficulty">
-                                <option value="all">All Difficulties</option>
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-
-                            <select id="topicFilter" aria-label="Filter by topic">
-                                <option value="all">All Topics</option>
-                            </select>
-
-                            <select id="statusFilter" aria-label="Filter by status">
-                                <option value="all">All Statuses</option>
-                                <option value="solved">Solved</option>
-                                <option value="attempted">Attempted</option>
-                                <option value="not_attempted">Not Attempted</option>
-                            </select>
-
-                            <button class="filters-clear" id="filtersClear" type="button">Clear filters</button>
-                        </div>
-
-                        <div class="problems">
-
-                            <!-- PROBLEM 1 -->
-                            <div class="problem" data-id="two-sum" data-category="python" data-name="two sum">
-                                <div class="problem-status solved-status"><i class="bi bi-check-lg"></i></div>
-                                <div class="problem-info">
-                                    <h3>1. Two Sum</h3>
-                                    <p>Find two numbers in an array that add up to a target.</p>
-                                    <div class="tags">
-                                        <span class="tag">Array</span>
-                                        <span class="tag">HashMap</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty easy">EASY</span>
-                                    <div class="solve-rate">92% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:92%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve Again</button>
-                            </div>
-
-                            <!-- PROBLEM 2 -->
-                            <div class="problem" data-id="reverse-a-string" data-category="python"
-                                data-name="reverse a string">
-                                <div class="problem-status solved-status"><i class="bi bi-check-lg"></i></div>
-                                <div class="problem-info">
-                                    <h3>2. Reverse a String</h3>
-                                    <p>Reverse a string without using built-in reverse methods.</p>
-                                    <div class="tags">
-                                        <span class="tag">String</span>
-                                        <span class="tag">Loops</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty easy">EASY</span>
-                                    <div class="solve-rate">88% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:88%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve Again</button>
-                            </div>
-
-                            <!-- PROBLEM 3 -->
-                            <div class="problem" data-id="palindrome-check" data-category="python"
-                                data-name="palindrome check">
-                                <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
-                                <div class="problem-info">
-                                    <h3>3. Palindrome Check</h3>
-                                    <p>Check whether a string is a palindrome.</p>
-                                    <div class="tags">
-                                        <span class="tag">String</span>
-                                        <span class="tag">Logic</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty easy">EASY</span>
-                                    <div class="solve-rate">76% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:76%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Continue</button>
-                            </div>
-
-                            <!-- PROBLEM 4 -->
-                            <div class="problem" data-id="fizzbuzz" data-category="python" data-name="fizzbuzz">
-                                <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
-                                <div class="problem-info">
-                                    <h3>4. FizzBuzz</h3>
-                                    <p>Print numbers from 1 to n using FizzBuzz logic.</p>
-                                    <div class="tags">
-                                        <span class="tag">Loops</span>
-                                        <span class="tag">Conditions</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty easy">EASY</span>
-                                    <div class="solve-rate">81% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:81%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Continue</button>
-                            </div>
-
-                            <!-- PROBLEM 5 -->
-                            <div class="problem" data-id="valid-parentheses" data-category="django"
-                                data-name="valid parentheses">
-                                <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
-                                <div class="problem-info">
-                                    <h3>5. Valid Parentheses</h3>
-                                    <p>Check if brackets are correctly balanced.</p>
-                                    <div class="tags">
-                                        <span class="tag">Stack</span>
-                                        <span class="tag">Logic</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty medium">MEDIUM</span>
-                                    <div class="solve-rate">62% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:62%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve</button>
-                            </div>
-
-                            <!-- PROBLEM 6 -->
-                            <div class="problem" data-id="merge-two-sorted-lists" data-category="python"
-                                data-name="merge two sorted lists">
-                                <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
-                                <div class="problem-info">
-                                    <h3>6. Merge Two Sorted Lists</h3>
-                                    <p>Merge two sorted linked lists.</p>
-                                    <div class="tags">
-                                        <span class="tag">Linked List</span>
-                                        <span class="tag">Recursion</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty medium">MEDIUM</span>
-                                    <div class="solve-rate">54% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:54%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve</button>
-                            </div>
-
-                            <!-- PROBLEM 7 -->
-                            <div class="problem" data-id="longest-substring" data-category="javascript"
-                                data-name="longest substring">
-                                <div class="problem-status pending-status"><i class="bi bi-circle"></i></div>
-                                <div class="problem-info">
-                                    <h3>7. Longest Substring</h3>
-                                    <p>Find the longest substring without repeating characters.</p>
-                                    <div class="tags">
-                                        <span class="tag">String</span>
-                                        <span class="tag">Sliding Window</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty medium">MEDIUM</span>
-                                    <div class="solve-rate">49% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:49%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve</button>
-                            </div>
-
-                            <!-- PROBLEM 8 -->
-                            <div class="problem" data-id="valid-bst" data-category="django" data-name="valid bst">
-                                <div class="problem-status pending-status"><i class="bi bi-circle"></i></div>
-                                <div class="problem-info">
-                                    <h3>8. Validate Binary Search Tree</h3>
-                                    <p>Check if a binary tree is a valid BST.</p>
-                                    <div class="tags">
-                                        <span class="tag">Tree</span>
-                                        <span class="tag">Recursion</span>
-                                    </div>
-                                </div>
-                                <div class="problem-meta">
-                                    <span class="difficulty hard">HARD</span>
-                                    <div class="solve-rate">36% solved</div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width:36%"></div>
-                                    </div>
-                                </div>
-                                <button class="solve-btn">Solve</button>
-                            </div>
-
+                        <div class="problem-search">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="problemSearch" placeholder="Search problems...">
                         </div>
                     </div>
 
-                    <!-- RIGHT COLUMN -->
-                    <div class="right-column">
+                    <div class="filters-row2">
+                        <select id="difficultyFilter" aria-label="Filter by difficulty">
+                            <option value="all">All Difficulties</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
 
-                        <!-- PROGRESS -->
-                        <div class="panel progress-panel">
-                            <div class="progress-header">
-                                <h3>Your Progress</h3>
-                                <a href="#" class="details-link">See Details →</a>
-                            </div>
+                        <select id="topicFilter" aria-label="Filter by topic">
+                            <option value="all">All Topics</option>
+                        </select>
 
-                            <div class="progress-body">
-                                <div class="circle" id="progressCircle">
-                                    <div class="circle-content">
-                                        <strong id="circlePct">68%</strong>
-                                        <span>Overall</span>
-                                    </div>
-                                </div>
+                        <select id="statusFilter" aria-label="Filter by status">
+                            <option value="all">All Statuses</option>
+                            <option value="solved">Solved</option>
+                            <option value="attempted">Attempted</option>
+                            <option value="not_attempted">Not Attempted</option>
+                        </select>
 
-                                <div class="legend">
-                                    <div class="legend-item">
-                                        <span class="legend-dot" style="background:#22c55e"></span>
-                                        Solved <strong id="legendSolved">24</strong>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot" style="background:#3b82f6"></span>
-                                        In Progress <strong id="legendProgress">12</strong>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot" style="background:#f59e0b"></span>
-                                        Pending <strong id="legendPending">8</strong>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot" style="background:#475569"></span>
-                                        Total <strong id="legendTotal">44</strong>
-                                    </div>
+                        <button class="filters-clear" id="filtersClear" type="button">Clear filters</button>
+                    </div>
+
+                    <div class="problems">
+
+                        <!-- PROBLEM 1 -->
+                        <div class="problem" data-id="two-sum" data-category="python" data-name="two sum">
+                            <div class="problem-status solved-status"><i class="bi bi-check-lg"></i></div>
+                            <div class="problem-info">
+                                <h3>1. Two Sum</h3>
+                                <p>Find two numbers in an array that add up to a target.</p>
+                                <div class="tags">
+                                    <span class="tag">Array</span>
+                                    <span class="tag">HashMap</span>
                                 </div>
                             </div>
+                            <div class="problem-meta">
+                                <span class="difficulty easy">EASY</span>
+                                <div class="solve-rate">92% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:92%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Solve Again</button>
                         </div>
 
-                        <!-- STREAK -->
-                        <div class="panel streak-panel">
-                            <div class="streak-header">
-                                <h3>🔥 Practice Streak</h3>
-                                <span class="streak-count">7 days</span>
+                        <!-- PROBLEM 2 -->
+                        <div class="problem" data-id="reverse-a-string" data-category="python"
+                            data-name="reverse a string">
+                            <div class="problem-status solved-status"><i class="bi bi-check-lg"></i></div>
+                            <div class="problem-info">
+                                <h3>2. Reverse a String</h3>
+                                <p>Reverse a string without using built-in reverse methods.</p>
+                                <div class="tags">
+                                    <span class="tag">String</span>
+                                    <span class="tag">Loops</span>
+                                </div>
                             </div>
-
-                            <div class="week-labels">
-                                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-                                <span>Fri</span><span>Sat</span><span>Sun</span>
+                            <div class="problem-meta">
+                                <span class="difficulty easy">EASY</span>
+                                <div class="solve-rate">88% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:88%"></div>
+                                </div>
                             </div>
-
-                            <div class="heatmap">
-                                <span class="heat"></span>
-                                <span class="heat one"></span>
-                                <span class="heat two"></span>
-                                <span class="heat three"></span>
-                                <span class="heat one"></span>
-                                <span class="heat"></span>
-                                <span class="heat two"></span>
-
-                                <span class="heat two"></span>
-                                <span class="heat three"></span>
-                                <span class="heat"></span>
-                                <span class="heat four"></span>
-                                <span class="heat three"></span>
-                                <span class="heat two"></span>
-                                <span class="heat four"></span>
-
-                                <span class="heat three"></span>
-                                <span class="heat two"></span>
-                                <span class="heat four"></span>
-                                <span class="heat three"></span>
-                                <span class="heat"></span>
-                                <span class="heat two"></span>
-                                <span class="heat three"></span>
-
-                                <span class="heat"></span>
-                                <span class="heat one"></span>
-                                <span class="heat two"></span>
-                                <span class="heat four"></span>
-                                <span class="heat three"></span>
-                                <span class="heat two"></span>
-                                <span class="heat four"></span>
-                            </div>
-
-                            <p class="streak-message">Great job! Keep your streak alive.</p>
+                            <button class="solve-btn">Solve Again</button>
                         </div>
 
-                        <!-- RECENT ACTIVITY -->
-                        <div class="panel activity-panel">
-                            <div class="activity-header">
-                                <h3>Recent Activity</h3>
-                                <a href="#" class="details-link">View All →</a>
-                            </div>
-
-                            <div id="activityList">
-                                <div class="activity-item">
-                                    <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
-                                    <div class="activity-info">
-                                        <strong>Solved Two Sum</strong>
-                                        <span>2 hours ago</span>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon blue"><i class="bi bi-play-fill"></i></div>
-                                    <div class="activity-info">
-                                        <strong>Attempted Valid Parentheses</strong>
-                                        <span>5 hours ago</span>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
-                                    <div class="activity-info">
-                                        <strong>Solved Reverse a String</strong>
-                                        <span>Yesterday</span>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon purple"><i class="bi bi-play-fill"></i></div>
-                                    <div class="activity-info">
-                                        <strong>Started Merge Two Lists</strong>
-                                        <span>Yesterday</span>
-                                    </div>
+                        <!-- PROBLEM 3 -->
+                        <div class="problem" data-id="palindrome-check" data-category="python"
+                            data-name="palindrome check">
+                            <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
+                            <div class="problem-info">
+                                <h3>3. Palindrome Check</h3>
+                                <p>Check whether a string is a palindrome.</p>
+                                <div class="tags">
+                                    <span class="tag">String</span>
+                                    <span class="tag">Logic</span>
                                 </div>
                             </div>
-                        </div>
-
-                    </div>
-
-                </section>
-
-                <!-- ADVANCED TOOLS -->
-                <section class="tools">
-
-                    <div class="tool-card">
-                        <div class="tool-icon purple"><i class="bi bi-code-square"></i></div>
-                        <h3>Code Playground</h3>
-                        <p>Write, run and test your code with instant feedback.</p>
-                        <a href="#" class="tool-btn">Open Playground →</a>
-                    </div>
-
-                    <div class="tool-card">
-                        <div class="tool-icon orange"><i class="bi bi-stopwatch"></i></div>
-                        <h3>Mock Tests</h3>
-                        <p>Take timed coding tests similar to real interviews.</p>
-                        <a href="#" class="tool-btn">Start Test →</a>
-                    </div>
-
-                    <div class="tool-card">
-                        <div class="tool-icon blue"><i class="bi bi-grid-3x3-gap"></i></div>
-                        <h3>Problem Sets</h3>
-                        <p>Practice topic-wise curated coding problem sets.</p>
-                        <a href="#" class="tool-btn">Explore Sets →</a>
-                    </div>
-
-                    <div class="tool-card">
-                        <div class="tool-icon" style="background:rgba(236,72,153,.12);color:#f472b6;">
-                            <i class="bi bi-trophy"></i>
-                        </div>
-                        <h3>Leaderboard</h3>
-                        <p>Compare your practice score and challenge your friends.</p>
-                        <a href="#" class="tool-btn">Coming Soon →</a>
-                    </div>
-
-                </section>
-
-            </div>
-
-            <!-- ===================== SOLVER VIEW ===================== -->
-            <section id="solverView" class="solver" hidden>
-
-                <header class="solver-topbar">
-                    <button id="backBtn" class="solver-back">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </button>
-
-                    <span id="solverTitle" class="solver-title"></span>
-
-                    <div class="solver-actions">
-                        <button id="runBtn" class="btn-run">
-                            <i class="bi bi-play-fill"></i> <span class="btn-label">Run</span>
-                        </button>
-                        <button id="submitBtn" class="btn-submit">
-                            <i class="bi bi-cloud-upload"></i> <span class="btn-label">Submit</span>
-                        </button>
-                    </div>
-                </header>
-
-                <div class="solver-body">
-
-                    <!-- LEFT: DESCRIPTION / SUBMISSIONS -->
-                    <div class="solver-panel solver-left">
-                        <div class="desc-tabs">
-                            <button class="desc-tab-btn active" data-desctab="description"
-                                type="button">Description</button>
-                            <button class="desc-tab-btn" data-desctab="submissions" type="button">Submissions</button>
-                        </div>
-                        <div class="desc-body" id="descBody"></div>
-                        <div class="desc-body" id="submissionsBody" hidden></div>
-                    </div>
-
-                    <!-- RIGHT: EDITOR + TESTCASES -->
-                    <div class="solver-right">
-
-                        <div class="solver-panel editor-panel">
-                            <div class="editor-toolbar">
-                                <div class="editor-toolbar-left">
-                                    <select id="langSelect" class="editor-lang-select" aria-label="Language">
-                                        <option value="python">Python 3</option>
-                                        <option value="javascript">JavaScript</option>
-                                        <option value="java">Java</option>
-                                    </select>
-                                    <span class="editor-saved" id="saveStatus">Saved</span>
-                                </div>
-                                <div class="editor-toolbar-right">
-                                    <button id="resetCodeBtn" class="editor-tool-btn" type="button"
-                                        title="Reset to starter code">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                    </button>
-                                    <button id="fullscreenBtn" class="editor-tool-btn" type="button"
-                                        title="Toggle fullscreen">
-                                        <i class="bi bi-arrows-fullscreen"></i>
-                                    </button>
+                            <div class="problem-meta">
+                                <span class="difficulty easy">EASY</span>
+                                <div class="solve-rate">76% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:76%"></div>
                                 </div>
                             </div>
-                            <div id="monacoHost" hidden></div>
-                            <textarea id="codeEditor" spellcheck="false"></textarea>
+                            <button class="solve-btn">Continue</button>
                         </div>
 
-                        <div class="solver-panel testcase-panel">
-                            <div class="tc-tabs">
-                                <button class="tc-tab active" data-tab="testcase">
-                                    <i class="bi bi-check2-square"></i> Testcase
-                                </button>
-                                <button class="tc-tab" data-tab="result">
-                                    <i class="bi bi-terminal"></i> Test Result
-                                </button>
+                        <!-- PROBLEM 4 -->
+                        <div class="problem" data-id="fizzbuzz" data-category="python" data-name="fizzbuzz">
+                            <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
+                            <div class="problem-info">
+                                <h3>4. FizzBuzz</h3>
+                                <p>Print numbers from 1 to n using FizzBuzz logic.</p>
+                                <div class="tags">
+                                    <span class="tag">Loops</span>
+                                    <span class="tag">Conditions</span>
+                                </div>
                             </div>
-                            <div class="tc-pane" id="testcasePane"></div>
-                            <div class="tc-pane" id="resultPane" hidden></div>
+                            <div class="problem-meta">
+                                <span class="difficulty easy">EASY</span>
+                                <div class="solve-rate">81% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:81%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Continue</button>
+                        </div>
+
+                        <!-- PROBLEM 5 -->
+                        <div class="problem" data-id="valid-parentheses" data-category="django"
+                            data-name="valid parentheses">
+                            <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
+                            <div class="problem-info">
+                                <h3>5. Valid Parentheses</h3>
+                                <p>Check if brackets are correctly balanced.</p>
+                                <div class="tags">
+                                    <span class="tag">Stack</span>
+                                    <span class="tag">Logic</span>
+                                </div>
+                            </div>
+                            <div class="problem-meta">
+                                <span class="difficulty medium">MEDIUM</span>
+                                <div class="solve-rate">62% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:62%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Solve</button>
+                        </div>
+
+                        <!-- PROBLEM 6 -->
+                        <div class="problem" data-id="merge-two-sorted-lists" data-category="python"
+                            data-name="merge two sorted lists">
+                            <div class="problem-status progress-status"><i class="bi bi-play-fill"></i></div>
+                            <div class="problem-info">
+                                <h3>6. Merge Two Sorted Lists</h3>
+                                <p>Merge two sorted linked lists.</p>
+                                <div class="tags">
+                                    <span class="tag">Linked List</span>
+                                    <span class="tag">Recursion</span>
+                                </div>
+                            </div>
+                            <div class="problem-meta">
+                                <span class="difficulty medium">MEDIUM</span>
+                                <div class="solve-rate">54% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:54%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Solve</button>
+                        </div>
+
+                        <!-- PROBLEM 7 -->
+                        <div class="problem" data-id="longest-substring" data-category="javascript"
+                            data-name="longest substring">
+                            <div class="problem-status pending-status"><i class="bi bi-circle"></i></div>
+                            <div class="problem-info">
+                                <h3>7. Longest Substring</h3>
+                                <p>Find the longest substring without repeating characters.</p>
+                                <div class="tags">
+                                    <span class="tag">String</span>
+                                    <span class="tag">Sliding Window</span>
+                                </div>
+                            </div>
+                            <div class="problem-meta">
+                                <span class="difficulty medium">MEDIUM</span>
+                                <div class="solve-rate">49% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:49%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Solve</button>
+                        </div>
+
+                        <!-- PROBLEM 8 -->
+                        <div class="problem" data-id="valid-bst" data-category="django" data-name="valid bst">
+                            <div class="problem-status pending-status"><i class="bi bi-circle"></i></div>
+                            <div class="problem-info">
+                                <h3>8. Validate Binary Search Tree</h3>
+                                <p>Check if a binary tree is a valid BST.</p>
+                                <div class="tags">
+                                    <span class="tag">Tree</span>
+                                    <span class="tag">Recursion</span>
+                                </div>
+                            </div>
+                            <div class="problem-meta">
+                                <span class="difficulty hard">HARD</span>
+                                <div class="solve-rate">36% solved</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:36%"></div>
+                                </div>
+                            </div>
+                            <button class="solve-btn">Solve</button>
                         </div>
 
                     </div>
                 </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="right-column">
+
+                    <!-- PROGRESS -->
+                    <div class="panel progress-panel">
+                        <div class="progress-header">
+                            <h3>Your Progress</h3>
+                            <a href="#" class="details-link">See Details →</a>
+                        </div>
+
+                        <div class="progress-body">
+                            <div class="circle" id="progressCircle">
+                                <div class="circle-content">
+                                    <strong id="circlePct">68%</strong>
+                                    <span>Overall</span>
+                                </div>
+                            </div>
+
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <span class="legend-dot" style="background:#22c55e"></span>
+                                    Solved <strong id="legendSolved">24</strong>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot" style="background:#3b82f6"></span>
+                                    In Progress <strong id="legendProgress">12</strong>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot" style="background:#f59e0b"></span>
+                                    Pending <strong id="legendPending">8</strong>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot" style="background:#475569"></span>
+                                    Total <strong id="legendTotal">44</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STREAK -->
+                    <div class="panel streak-panel">
+                        <div class="streak-header">
+                            <h3>🔥 Practice Streak</h3>
+                            <span class="streak-count">7 days</span>
+                        </div>
+
+                        <div class="week-labels">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+                            <span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+
+                        <div class="heatmap">
+                            <span class="heat"></span>
+                            <span class="heat one"></span>
+                            <span class="heat two"></span>
+                            <span class="heat three"></span>
+                            <span class="heat one"></span>
+                            <span class="heat"></span>
+                            <span class="heat two"></span>
+
+                            <span class="heat two"></span>
+                            <span class="heat three"></span>
+                            <span class="heat"></span>
+                            <span class="heat four"></span>
+                            <span class="heat three"></span>
+                            <span class="heat two"></span>
+                            <span class="heat four"></span>
+
+                            <span class="heat three"></span>
+                            <span class="heat two"></span>
+                            <span class="heat four"></span>
+                            <span class="heat three"></span>
+                            <span class="heat"></span>
+                            <span class="heat two"></span>
+                            <span class="heat three"></span>
+
+                            <span class="heat"></span>
+                            <span class="heat one"></span>
+                            <span class="heat two"></span>
+                            <span class="heat four"></span>
+                            <span class="heat three"></span>
+                            <span class="heat two"></span>
+                            <span class="heat four"></span>
+                        </div>
+
+                        <p class="streak-message">Great job! Keep your streak alive.</p>
+                    </div>
+
+                    <!-- RECENT ACTIVITY -->
+                    <div class="panel activity-panel">
+                        <div class="activity-header">
+                            <h3>Recent Activity</h3>
+                            <a href="#" class="details-link">View All →</a>
+                        </div>
+
+                        <div id="activityList">
+                            <div class="activity-item">
+                                <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
+                                <div class="activity-info">
+                                    <strong>Solved Two Sum</strong>
+                                    <span>2 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon blue"><i class="bi bi-play-fill"></i></div>
+                                <div class="activity-info">
+                                    <strong>Attempted Valid Parentheses</strong>
+                                    <span>5 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
+                                <div class="activity-info">
+                                    <strong>Solved Reverse a String</strong>
+                                    <span>Yesterday</span>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon purple"><i class="bi bi-play-fill"></i></div>
+                                <div class="activity-info">
+                                    <strong>Started Merge Two Lists</strong>
+                                    <span>Yesterday</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ADVANCED TOOLS -->
+            <section class="tools">
+
+                <div class="tool-card">
+                    <div class="tool-icon purple"><i class="bi bi-code-square"></i></div>
+                    <h3>Code Playground</h3>
+                    <p>Write, run and test your code with instant feedback.</p>
+                    <a href="#" class="tool-btn">Open Playground →</a>
+                </div>
+
+                <div class="tool-card">
+                    <div class="tool-icon orange"><i class="bi bi-stopwatch"></i></div>
+                    <h3>Mock Tests</h3>
+                    <p>Take timed coding tests similar to real interviews.</p>
+                    <a href="#" class="tool-btn">Start Test →</a>
+                </div>
+
+                <div class="tool-card">
+                    <div class="tool-icon blue"><i class="bi bi-grid-3x3-gap"></i></div>
+                    <h3>Problem Sets</h3>
+                    <p>Practice topic-wise curated coding problem sets.</p>
+                    <a href="#" class="tool-btn">Explore Sets →</a>
+                </div>
+
+                <div class="tool-card">
+                    <div class="tool-icon" style="background:rgba(236,72,153,.12);color:#f472b6;">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <h3>Leaderboard</h3>
+                    <p>Compare your practice score and challenge your friends.</p>
+                    <a href="#" class="tool-btn">Coming Soon →</a>
+                </div>
+
             </section>
 
         </div>
 
+        <!-- ===================== SOLVER VIEW ===================== -->
+        <section id="solverView" class="solver" hidden>
+
+            <header class="solver-topbar">
+                <button id="backBtn" class="solver-back">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+
+                <span id="solverTitle" class="solver-title"></span>
+
+                <div class="solver-actions">
+                    <button id="runBtn" class="btn-run">
+                        <i class="bi bi-play-fill"></i> <span class="btn-label">Run</span>
+                    </button>
+                    <button id="submitBtn" class="btn-submit">
+                        <i class="bi bi-cloud-upload"></i> <span class="btn-label">Submit</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="solver-body">
+
+                <!-- LEFT: DESCRIPTION / SUBMISSIONS -->
+                <div class="solver-panel solver-left">
+                    <div class="desc-tabs">
+                        <button class="desc-tab-btn active" data-desctab="description"
+                            type="button">Description</button>
+                        <button class="desc-tab-btn" data-desctab="submissions" type="button">Submissions</button>
+                    </div>
+                    <div class="desc-body" id="descBody"></div>
+                    <div class="desc-body" id="submissionsBody" hidden></div>
+                </div>
+
+                <!-- RIGHT: EDITOR + TESTCASES -->
+                <div class="solver-right">
+
+                    <div class="solver-panel editor-panel">
+                        <div class="editor-toolbar">
+                            <div class="editor-toolbar-left">
+                                <select id="langSelect" class="editor-lang-select" aria-label="Language">
+                                    <option value="python">Python 3</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="java">Java</option>
+                                </select>
+                                <span class="editor-saved" id="saveStatus">Saved</span>
+                            </div>
+                            <div class="editor-toolbar-right">
+                                <button id="resetCodeBtn" class="editor-tool-btn" type="button"
+                                    title="Reset to starter code">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </button>
+                                <button id="fullscreenBtn" class="editor-tool-btn" type="button"
+                                    title="Toggle fullscreen">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="monacoHost" hidden></div>
+                        <textarea id="codeEditor" spellcheck="false"></textarea>
+                    </div>
+
+                    <div class="solver-panel testcase-panel">
+                        <div class="tc-tabs">
+                            <button class="tc-tab active" data-tab="testcase">
+                                <i class="bi bi-check2-square"></i> Testcase
+                            </button>
+                            <button class="tc-tab" data-tab="result">
+                                <i class="bi bi-terminal"></i> Test Result
+                            </button>
+                        </div>
+                        <div class="tc-pane" id="testcasePane"></div>
+                        <div class="tc-pane" id="resultPane" hidden></div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
 
     </div>
+
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.head.insertAdjacentHTML('beforeend', '<meta name="csrf-token" content="{{ csrf_token }}">');
-    window.PRACTICE_STATE = {{ practice_state|safe }};
+    window.PRACTICE_STATE = {{ practice_state | safe }};
     window.PRACTICE_ENDPOINTS = {
         saveDraft: "{% url 'blog:practice_save_draft' %}",
         record: "{% url 'blog:practice_record' %}"
     };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-<script src="{% static 'js/practice.js' %}"></script>
+<script src="{% static 'js/practice.js' %}?v=20260927-1"></script>
 {% endblock %}

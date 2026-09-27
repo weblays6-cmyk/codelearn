@@ -36,6 +36,12 @@ urlpatterns = [
         name="lesson_detail"
     ),
 
+    path(
+        "lesson/<int:pk>/complete/",
+        views.complete_lesson,
+        name="complete_lesson"
+    ),
+
     # =========================================================
     # DASHBOARD
     # =========================================================

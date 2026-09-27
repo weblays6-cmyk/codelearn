@@ -355,6 +355,11 @@
 
   const TIME_LIMIT_MS = 3000;
 
+  function csrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : "";
+  }
+
   let pyodideReadyPromise = null;
   function ensurePyodide() {
     if (pyodideReadyPromise) return pyodideReadyPromise;
@@ -925,10 +930,6 @@ def __build_tree(arr):
     }
 
     let draftSaveTimer = null;
-    function csrfToken() {
-      const meta = document.querySelector('meta[name="csrf-token"]');
-      return meta ? meta.content : "";
-    }
 
     function onEditorChange(value) {
       if (!currentId) return;
@@ -944,7 +945,7 @@ def __build_tree(arr):
             "X-CSRFToken": csrfToken(),
           },
           body: JSON.stringify({ problemId: currentId, language: lang, sourceCode: value }),
-        }).catch(() => {});
+        }).catch(() => { });
       }, 700);
     }
 
