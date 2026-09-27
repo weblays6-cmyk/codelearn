@@ -1279,3 +1279,118 @@ class PracticeSubmission(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+
+
+# =========================================================
+# USER FOLLOW REQUESTS
+# =========================================================
+
+class FollowRequest(models.Model):
+
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("ACCEPTED", "Accepted"),
+        ("REJECTED", "Rejected"),
+    ]
+
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="sent_follow_requests"
+    )
+
+    receiver = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="received_follow_requests"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["sender", "receiver"],
+                name="unique_follow_request"
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(
+                    sender=models.F("receiver")
+                ),
+                name="prevent_self_follow_request"
+            ),
+        ]
+
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.sender.username} → "
+            f"{self.receiver.username} "
+            f"({self.status})"
+        )
+        
+# =========================================================
+# NOTIFICATIONS
+# =========================================================
+
+class Notification(models.Model):
+
+    NOTIFICATION_TYPES = [
+        ("FOLLOW_REQUEST", "Follow Request"),
+        ("FOLLOW_ACCEPTED", "Follow Accepted"),
+        ("FOLLOW_REJECTED", "Follow Rejected"),
+        ("FOLLOW_BACK", "Follow Back"),
+    ]
+
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="sent_notifications"
+    )
+
+    notification_type = models.CharField(
+        max_length=30,
+        choices=NOTIFICATION_TYPES
+    )
+
+    message = models.CharField(
+        max_length=255
+    )
+
+    is_read = models.BooleanField(
+        default=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.sender.username} → "
+            f"{self.recipient.username}: "
+            f"{self.notification_type}"
+        )

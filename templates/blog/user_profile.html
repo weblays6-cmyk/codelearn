@@ -162,7 +162,7 @@
     display: grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(5, 1fr);
 
     gap: 12px;
 
@@ -517,6 +517,61 @@ body.light-theme .profile-info-row {
 
 }
 
+.profile-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.profile-follow-btn {
+    min-width: 120px;
+}
+
+.profile-follow-btn.pending {
+    background: #252a40;
+    color: #b8bfd5;
+    border: 1px solid #3b4160;
+}
+
+.profile-follow-btn.following {
+    background: rgba(34, 197, 94, 0.12);
+    color: #5ee58a;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.profile-follow-btn.accept {
+    background: linear-gradient(
+        135deg,
+        #7657ff,
+        #4d73ff
+    );
+}
+
+.profile-secondary-btn {
+    min-height: 43px;
+    padding: 0 17px;
+    border: 1px solid #3a405b;
+    border-radius: 10px;
+    background: transparent;
+    color: #aeb5c9;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.profile-secondary-btn:hover {
+    border-color: #ef6464;
+    color: #ff7777;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.profile-follow-btn.pending:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 </style>
 
 {% endblock %}
@@ -572,19 +627,62 @@ body.light-theme .profile-info-row {
 
             {% if not is_owner %}
 
-            <button
-                type="button"
-                class="profile-connect-btn"
-            >
+            <div class="profile-action-group">
 
-                <i class="bi bi-chat-dots"></i>
+                {% if is_following %}
 
-                Connect
+                    <button
+                        type="button"
+                        class="profile-connect-btn profile-follow-btn following"
+                        data-action="unfollow"
+                        data-url="{% url 'blog:unfollow_user' profile_user.id %}"
+                    >
+                        <i class="bi bi-person-check-fill"></i>
+                        Following
+                    </button>
 
-            </button>
+                {% elif outgoing_pending %}
+
+                    <button
+                        type="button"
+                        class="profile-connect-btn profile-follow-btn pending"
+                        data-action="cancel"
+                        data-url="{% url 'blog:cancel_follow_request' profile_user.id %}"
+                    >
+                        <i class="bi bi-clock-history"></i>
+                        Pending
+                    </button>
+
+                {% elif incoming_pending %}
+
+                    <button
+                        type="button"
+                        class="profile-connect-btn profile-follow-btn accept"
+                        data-action="accept"
+                        data-url="{% url 'blog:accept_follow_request' incoming_request_id %}"
+                        title="Follow request received"
+                    >
+                        <i class="bi bi-person-check"></i>
+                        Accept & Chat
+                    </button>
+
+                {% else %}
+
+                    <button
+                        type="button"
+                        class="profile-connect-btn profile-follow-btn"
+                        data-action="follow"
+                        data-url="{% url 'blog:send_follow_request' profile_user.id %}"
+                    >
+                        <i class="bi bi-person-plus-fill"></i>
+                        Follow
+                    </button>
+
+                {% endif %}
+
+            </div>
 
             {% endif %}
-
         </div>
 
 
@@ -603,6 +701,16 @@ body.light-theme .profile-info-row {
                     Followers
                 </span>
 
+            </div>
+
+            <div class="profile-stat">
+                <strong>
+                    {{ following_count }}
+                </strong>
+
+                <span>
+                    Following
+                </span>
             </div>
 
 
@@ -857,5 +965,226 @@ body.light-theme .profile-info-row {
     </div>
 
 </div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.addEventListener("click", async function (event) {
+
+        const button =
+            event.target.closest(".profile-follow-btn");
+
+        if (!button) {
+            return;
+        }
+
+        if (button.disabled) {
+            return;
+        }
+
+        const action =
+            button.dataset.action;
+
+        const url =
+            button.dataset.url;
+
+        if (!url) {
+            console.error(
+                "Follow URL is missing."
+            );
+            return;
+        }
+
+        button.disabled = true;
+
+        const originalHTML =
+            button.innerHTML;
+
+        button.innerHTML = `
+            <i class="bi bi-arrow-repeat"></i>
+            Processing...
+        `;
+
+        try {
+
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "X-Requested-With":
+                                "XMLHttpRequest",
+
+                            "X-CSRFToken":
+                                getCookie("csrftoken")
+                        }
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (
+                !response.ok ||
+                !data.success
+            ) {
+                throw new Error(
+                    data.error ||
+                    "Something went wrong."
+                );
+            }
+
+
+            /* =========================================
+               FOLLOW → PENDING
+            ========================================= */
+
+            if (action === "follow") {
+
+                button.dataset.action =
+                    "cancel";
+
+                button.dataset.url =
+                    "{% url 'blog:cancel_follow_request' profile_user.id %}";
+
+                button.className =
+                    "profile-connect-btn profile-follow-btn pending";
+
+                button.innerHTML = `
+                    <i class="bi bi-clock-history"></i>
+                    Pending
+                `;
+            }
+
+
+            /* =========================================
+               PENDING → FOLLOW
+            ========================================= */
+
+            else if (action === "cancel") {
+
+                button.dataset.action =
+                    "follow";
+
+                button.dataset.url =
+                    "{% url 'blog:send_follow_request' profile_user.id %}";
+
+                button.className =
+                    "profile-connect-btn profile-follow-btn";
+
+                button.innerHTML = `
+                    <i class="bi bi-person-plus-fill"></i>
+                    Follow
+                `;
+            }
+
+
+            /* =========================================
+               FOLLOWING → FOLLOW
+            ========================================= */
+
+            else if (action === "unfollow") {
+
+                button.dataset.action =
+                    "follow";
+
+                button.dataset.url =
+                    "{% url 'blog:send_follow_request' profile_user.id %}";
+
+                button.className =
+                    "profile-connect-btn profile-follow-btn";
+
+                button.innerHTML = `
+                    <i class="bi bi-person-plus-fill"></i>
+                    Follow
+                `;
+            }
+
+            else if (action === "accept") {
+
+                window.location.href = data.redirect_url;
+                return;
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Follow request error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Unable to process request."
+            );
+
+            button.innerHTML =
+                originalHTML;
+
+        } finally {
+
+            button.disabled = false;
+        }
+
+    });
+
+
+    /* =========================================
+       CSRF COOKIE
+    ========================================= */
+
+    function getCookie(name) {
+
+        let cookieValue = null;
+
+        if (
+            document.cookie &&
+            document.cookie !== ""
+        ) {
+
+            const cookies =
+                document.cookie.split(";");
+
+            for (
+                let cookie of cookies
+            ) {
+
+                cookie =
+                    cookie.trim();
+
+                if (
+                    cookie.substring(
+                        0,
+                        name.length + 1
+                    ) ===
+                    name + "="
+                ) {
+
+                    cookieValue =
+                        decodeURIComponent(
+                            cookie.substring(
+                                name.length + 1
+                            )
+                        );
+
+                    break;
+                }
+            }
+        }
+
+        return cookieValue;
+    }
+
+});
+
+</script>
 
 {% endblock %}

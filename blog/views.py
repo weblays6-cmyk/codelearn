@@ -49,6 +49,8 @@ from .models import (
     PracticeProblem,
     PracticeProgress,
     PracticeSubmission,
+    FollowRequest,
+    Notification,
 )
 from .services.course_progress import (
     can_access_lesson,
@@ -916,28 +918,54 @@ def reset_password(request):
 
 
 # =========================================================
-# EMAIL LOGIN
+# USERNAME / EMAIL LOGIN
 # =========================================================
 
 def login_view(request):
 
     if request.method == "POST":
 
-        email = request.POST.get(
-            "email",
+        identifier = request.POST.get(
+            "username",
             ""
-        ).strip().lower()
+        ).strip()
 
         password = request.POST.get(
             "password",
             ""
         )
 
-        try:
+        # -------------------------------------------------
+        # EMPTY FIELD CHECK
+        # -------------------------------------------------
 
-            user = User.objects.get(
-                email__iexact=email
+        if not identifier or not password:
+
+            return render(
+                request,
+                "blog/login.html",
+                {
+                    "error":
+                        "Please enter username/email and password."
+                }
             )
+
+        # -------------------------------------------------
+        # FIND USERS BY USERNAME OR EMAIL
+        # -------------------------------------------------
+
+        users = User.objects.filter(
+            Q(username__iexact=identifier) |
+            Q(email__iexact=identifier)
+        )
+
+        authenticated_user = None
+
+        # -------------------------------------------------
+        # CHECK PASSWORD
+        # -------------------------------------------------
+
+        for user in users:
 
             authenticated_user = authenticate(
                 request,
@@ -946,13 +974,25 @@ def login_view(request):
             )
 
             if authenticated_user is not None:
+                break
 
-                login(
-                    request,
-                    authenticated_user
-                )
+        # -------------------------------------------------
+        # LOGIN SUCCESS
+        # -------------------------------------------------
 
-                try:
+        if authenticated_user is not None:
+
+            login(
+                request,
+                authenticated_user
+            )
+
+            # Send login email if available.
+            # Email failure should NOT stop login.
+
+            try:
+
+                if authenticated_user.email:
 
                     send_gmail(
                         authenticated_user.email,
@@ -968,41 +1008,38 @@ CodeLearn Hub Team
 """
                     )
 
-                except Exception as error:
+            except Exception as error:
 
-                    print(
-                        "Login email failed:",
-                        error
-                    )
-
-                return redirect(
-                    "blog:dashboard"
+                print(
+                    "Login email failed:",
+                    error
                 )
 
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
+            return redirect(
+                "blog:dashboard"
             )
 
-        except User.DoesNotExist:
+        # -------------------------------------------------
+        # LOGIN FAILED
+        # -------------------------------------------------
 
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
-            )
+        return render(
+            request,
+            "blog/login.html",
+            {
+                "error":
+                    "Invalid username/email or password."
+            }
+        )
+
+    # -----------------------------------------------------
+    # GET REQUEST
+    # -----------------------------------------------------
 
     return render(
         request,
         "blog/login.html"
     )
-
-
 # =========================================================
 # DELETE COMMENT
 # =========================================================
@@ -1150,22 +1187,74 @@ def user_profile(request, user_id):
         user=profile_user
     )
 
+    # Followers
+    follower_count = FollowRequest.objects.filter(
+        receiver=profile_user,
+        status="ACCEPTED"
+    ).count()
+
+    # Following
+    following_count = FollowRequest.objects.filter(
+        sender=profile_user,
+        status="ACCEPTED"
+    ).count()
+
+    is_owner = request.user == profile_user
+
+    # Current user's relationship with this profile
+    is_following = FollowRequest.objects.filter(
+        sender=request.user,
+        receiver=profile_user,
+        status="ACCEPTED"
+    ).exists()
+
+    outgoing_pending = FollowRequest.objects.filter(
+        sender=request.user,
+        receiver=profile_user,
+        status="PENDING"
+    ).exists()
+
+    incoming_request = FollowRequest.objects.filter(
+            sender=profile_user,
+            receiver=request.user,
+            status="PENDING"
+    ).first()
+
+    incoming_pending = incoming_request is not None 
+
+# incoming_pending = incoming_request is not None
+
     context = {
+
         "profile_user": profile_user,
+
         "user_profile": user_profile,
+
         "posts": posts,
+
         "projects": projects,
 
-        # Basic statistics
         "post_count": posts.count(),
+
         "project_count": projects.count(),
 
-        # Temporary values until follower/like system is added
-        "follower_count": 0,
-        "profile_like_count": 0,
+        "follower_count": follower_count,
 
-        # Current user's relationship
-        "is_owner": request.user == profile_user,
+        "following_count": following_count,
+
+        "is_owner": is_owner,
+
+        "is_following": is_following,
+
+        "outgoing_pending": outgoing_pending,
+
+        "incoming_pending": incoming_pending,
+
+        "incoming_request_id": (
+            incoming_request.id
+            if incoming_request
+            else None
+),
     }
 
     return render(
@@ -1173,7 +1262,310 @@ def user_profile(request, user_id):
         "blog/user_profile.html",
         context
     )
+# =========================================================
+# USER FOLLOW SYSTEM
+# =========================================================
 
+@login_required
+def send_follow_request(request, user_id):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=400)
+
+    receiver = get_object_or_404(
+        User,
+        id=user_id
+    )
+
+    # Cannot follow yourself
+    if request.user == receiver:
+        return JsonResponse({
+            "success": False,
+            "error": "You cannot follow yourself."
+        }, status=400)
+
+    existing_request = FollowRequest.objects.filter(
+        sender=request.user,
+        receiver=receiver
+    ).first()
+
+    # Already accepted
+    if existing_request and existing_request.status == "ACCEPTED":
+        return JsonResponse({
+            "success": False,
+            "error": "You are already following this user."
+        }, status=400)
+
+    # Existing pending request
+    if existing_request and existing_request.status == "PENDING":
+        return JsonResponse({
+            "success": False,
+            "error": "Follow request already pending."
+        }, status=400)
+
+    # Re-use rejected request
+    if existing_request and existing_request.status == "REJECTED":
+
+        existing_request.status = "PENDING"
+        existing_request.save(
+            update_fields=["status", "updated_at"]
+        )
+
+        is_follow_back = FollowRequest.objects.filter(
+            sender=receiver,
+            receiver=request.user,
+            status="ACCEPTED"
+        ).exists()
+
+        notification_type = (
+            "FOLLOW_BACK"
+            if is_follow_back
+            else "FOLLOW_REQUEST"
+        )
+
+        notification_message = (
+            f"@{request.user.username} wants to follow you back."
+            if is_follow_back
+            else f"@{request.user.username} sent you a follow request."
+        )
+
+        Notification.objects.create(
+            recipient=receiver,
+            sender=request.user,
+            notification_type=notification_type,
+            message=notification_message
+        )
+
+        return JsonResponse({
+            "success": True,
+            "status": "PENDING",
+            "message": "Follow request sent."
+        })
+
+    # Check if receiver already follows sender
+    is_follow_back = FollowRequest.objects.filter(
+        sender=receiver,
+        receiver=request.user,
+        status="ACCEPTED"
+    ).exists()
+
+    follow_request = FollowRequest.objects.create(
+        sender=request.user,
+        receiver=receiver,
+        status="PENDING"
+    )
+
+    notification_type = (
+        "FOLLOW_BACK"
+        if is_follow_back
+        else "FOLLOW_REQUEST"
+    )
+
+    notification_message = (
+        f"@{request.user.username} wants to follow you back."
+        if is_follow_back
+        else f"@{request.user.username} sent you a follow request."
+    )
+
+    Notification.objects.create(
+        recipient=receiver,
+        sender=request.user,
+        notification_type=notification_type,
+        message=notification_message
+    )
+
+    return JsonResponse({
+        "success": True,
+        "status": "PENDING",
+        "request_id": follow_request.id,
+        "message": "Follow request sent."
+    })
+
+
+# cancle flow
+
+@login_required
+def cancel_follow_request(request, user_id):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=400)
+
+    receiver = get_object_or_404(
+        User,
+        id=user_id
+    )
+
+    follow_request = FollowRequest.objects.filter(
+        sender=request.user,
+        receiver=receiver,
+        status="PENDING"
+    ).first()
+
+    if not follow_request:
+        return JsonResponse({
+            "success": False,
+            "error": "No pending follow request found."
+        }, status=404)
+
+    follow_request.delete()
+
+    return JsonResponse({
+        "success": True,
+        "status": "NONE",
+        "message": "Follow request cancelled."
+    })
+
+# accept follow reqest
+@login_required
+def accept_follow_request(request, request_id):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=400)
+
+    follow_request = get_object_or_404(
+        FollowRequest,
+        id=request_id,
+        receiver=request.user,
+        status="PENDING"
+    )
+
+    follow_request.status = "ACCEPTED"
+
+    follow_request.save(
+        update_fields=["status", "updated_at"]
+    )
+
+    Notification.objects.create(
+        recipient=follow_request.sender,
+        sender=request.user,
+        notification_type="FOLLOW_ACCEPTED",
+        message=(
+            f"@{request.user.username} accepted your "
+            f"follow request."
+        )
+    )
+
+    conversation = Conversation.objects.filter(
+        project__isnull=True
+    ).filter(
+        Q(
+            project_owner=request.user,
+            participant=follow_request.sender
+        ) |
+        Q(
+            project_owner=follow_request.sender,
+            participant=request.user
+        )
+    ).first()
+
+    if conversation is None:
+        conversation = Conversation.objects.create(
+            project=None,
+            project_owner=request.user,
+            participant=follow_request.sender
+        )
+
+    return JsonResponse({
+        "success": True,
+        "status": "ACCEPTED",
+        "conversation_id": conversation.id,
+        "redirect_url": reverse(
+            "blog:conversation_detail",
+            args=[conversation.id]
+        ),
+        "message": "Follow request accepted."
+    })
+# Reject Follow Request
+@login_required
+def reject_follow_request(request, request_id):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=400)
+
+    follow_request = get_object_or_404(
+        FollowRequest,
+        id=request_id,
+        receiver=request.user,
+        status="PENDING"
+    )
+
+    sender = follow_request.sender
+
+    follow_request.status = "REJECTED"
+
+    follow_request.save(
+        update_fields=["status", "updated_at"]
+    )
+
+    Notification.objects.create(
+        recipient=sender,
+        sender=request.user,
+        notification_type="FOLLOW_REJECTED",
+        message=(
+            f"@{request.user.username} declined "
+            f"your follow request."
+        )
+    )
+
+    return JsonResponse({
+        "success": True,
+        "status": "REJECTED",
+        "message": "Follow request rejected."
+    })
+
+# Unfollow
+
+@login_required
+def unfollow_user(request, user_id):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=400)
+
+    target_user = get_object_or_404(
+        User,
+        id=user_id
+    )
+
+    if request.user == target_user:
+        return JsonResponse({
+            "success": False,
+            "error": "You cannot unfollow yourself."
+        }, status=400)
+
+    follow_request = FollowRequest.objects.filter(
+        sender=request.user,
+        receiver=target_user,
+        status="ACCEPTED"
+    ).first()
+
+    if not follow_request:
+        return JsonResponse({
+            "success": False,
+            "error": "You are not following this user."
+        }, status=400)
+
+    follow_request.delete()
+
+    return JsonResponse({
+        "success": True,
+        "status": "NONE",
+        "message": "User unfollowed."
+    })
 # =========================================================
 # PERSONAL CHAT CONNECT
 # =========================================================
