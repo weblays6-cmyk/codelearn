@@ -126,8 +126,35 @@ class Assignment(models.Model):
     lesson = models.ForeignKey(
         Lesson,
         on_delete=models.CASCADE,
-        related_name='assignments'
+        related_name='assignments',
+        null=True,
+        blank=True
     )
+
+    course = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='assignments',
+        null=True,
+        blank=True
+    )
+
+    SOURCE_CHOICES = [
+        ('STANDALONE', 'Standalone'),
+        ('COURSE', 'Course'),
+    ]
+    TYPE_CHOICES = [
+        ('QUIZ', 'Quiz'),
+        ('CODING', 'Coding'),
+        ('TEXT', 'Text'),
+        ('FILE_UPLOAD', 'File upload'),
+        ('PROJECT', 'Project'),
+    ]
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PUBLISHED', 'Published'),
+        ('ARCHIVED', 'Archived'),
+    ]
 
     title = models.CharField(
         max_length=200
@@ -135,16 +162,127 @@ class Assignment(models.Model):
 
     description = models.TextField()
 
+    instructions = models.TextField(blank=True)
+    assignment_source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='COURSE')
+    assignment_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='TEXT')
+    difficulty = models.CharField(max_length=20, default='Beginner')
+
     max_score = models.PositiveIntegerField(
         default=100
     )
+
+    passing_marks = models.PositiveIntegerField(default=50)
+    estimated_duration = models.PositiveIntegerField(default=30)
+    release_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    max_attempts = models.PositiveIntegerField(default=1)
+    late_submission_allowed = models.BooleanField(default=False)
+    required = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_assignments')
+    published_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(
         auto_now_add=True
     )
 
     def __str__(self):
-        return f"{self.lesson.title} - {self.title}"
+        parent = self.lesson or self.course
+        return f"{parent} - {self.title}" if parent else self.title
+
+
+class AssignmentAudience(models.Model):
+
+    AUDIENCE_CHOICES = [
+        ('ALL_USERS', 'All users'),
+        ('SELECTED_USER', 'Selected user'),
+    ]
+
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='audiences')
+    audience_type = models.CharField(max_length=20, choices=AUDIENCE_CHOICES)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='assignment_audiences')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('assignment', 'audience_type', 'user'), name='unique_assignment_audience')]
+
+
+class UserAssignmentProgress(models.Model):
+
+    STATUS_CHOICES = [
+        ('NOT_STARTED', 'Not started'),
+        ('IN_PROGRESS', 'In progress'),
+        ('SUBMITTED', 'Submitted'),
+        ('EVALUATED', 'Evaluated'),
+        ('PASSED', 'Passed'),
+        ('FAILED', 'Failed'),
+        ('OVERDUE', 'Overdue'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_progress')
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='progress_records')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NOT_STARTED')
+    started_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    best_score = models.PositiveIntegerField(null=True, blank=True)
+    attempts_used = models.PositiveIntegerField(default=0)
+    latest_attempt = models.ForeignKey('AssignmentAttempt', on_delete=models.SET_NULL, null=True, blank=True, related_name='latest_for_progress')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('user', 'assignment'), name='unique_user_assignment_progress')]
+
+
+class AssignmentAttempt(models.Model):
+
+    STATUS_CHOICES = [
+        ('IN_PROGRESS', 'In progress'),
+        ('SUBMITTED', 'Submitted'),
+        ('EVALUATED', 'Evaluated'),
+    ]
+
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='attempts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_attempts')
+    attempt_number = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_PROGRESS')
+    answer_data = models.JSONField(default=dict, blank=True)
+    source_code = models.TextField(blank=True)
+    language = models.CharField(max_length=30, blank=True)
+    score = models.PositiveIntegerField(null=True, blank=True)
+    max_score = models.PositiveIntegerField(default=0)
+    percentage = models.PositiveIntegerField(null=True, blank=True)
+    passed = models.BooleanField(null=True, blank=True)
+    feedback = models.TextField(blank=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_saved_at = models.DateTimeField(auto_now=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('assignment', 'user', 'attempt_number'), name='unique_assignment_attempt_number')]
+
+
+class AssignmentQuestion(models.Model):
+
+    QUESTION_TYPES = [
+        ('SINGLE', 'Single choice'),
+        ('MULTIPLE', 'Multiple choice'),
+        ('TRUE_FALSE', 'True/false'),
+    ]
+
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='questions')
+    question = models.TextField()
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='SINGLE')
+    marks = models.PositiveIntegerField(default=1)
+    order = models.PositiveIntegerField(default=1)
+
+
+class AssignmentOption(models.Model):
+
+    question = models.ForeignKey(AssignmentQuestion, on_delete=models.CASCADE, related_name='options')
+    option_text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=1)
 
 
 # =========================================================
@@ -966,3 +1104,97 @@ class MessageAttachment(models.Model):
     def __str__(self):
 
         return self.original_name
+
+
+# =========================================================
+# CODING PRACTICE
+# =========================================================
+
+class PracticeProblem(models.Model):
+
+    DIFFICULTY_CHOICES = [
+        ('EASY', 'Easy'),
+        ('MEDIUM', 'Medium'),
+        ('HARD', 'Hard'),
+    ]
+
+    slug = models.SlugField(max_length=120, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES)
+    category = models.CharField(max_length=40, default='python')
+    tags = models.JSONField(default=list, blank=True)
+    function_name = models.CharField(max_length=100)
+    starter_code = models.JSONField(default=dict)
+    example = models.JSONField(default=dict, blank=True)
+    constraints = models.JSONField(default=list, blank=True)
+    public_tests = models.JSONField(default=list)
+    hidden_tests = models.JSONField(default=list)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return self.title
+
+
+class PracticeProgress(models.Model):
+
+    STATUS_CHOICES = [
+        ('NOT_ATTEMPTED', 'Not attempted'),
+        ('ATTEMPTED', 'Attempted'),
+        ('SOLVED', 'Solved'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='practice_progress')
+    problem = models.ForeignKey(PracticeProblem, on_delete=models.CASCADE, related_name='progress')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NOT_ATTEMPTED')
+    attempt_count = models.PositiveIntegerField(default=0)
+    last_submission = models.ForeignKey(
+        'PracticeSubmission',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='latest_progress'
+    )
+    code_drafts = models.JSONField(default=dict, blank=True)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+    solved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'problem'),
+                name='unique_practice_progress'
+            )
+        ]
+
+
+class PracticeSubmission(models.Model):
+
+    STATUS_CHOICES = [
+        ('ACCEPTED', 'Accepted'),
+        ('WRONG_ANSWER', 'Wrong answer'),
+        ('COMPILATION_ERROR', 'Compilation error'),
+        ('RUNTIME_ERROR', 'Runtime error'),
+        ('TIME_LIMIT_EXCEEDED', 'Time limit exceeded'),
+        ('INTERNAL_ERROR', 'Internal error'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='practice_submissions')
+    problem = models.ForeignKey(PracticeProblem, on_delete=models.CASCADE, related_name='submissions')
+    language = models.CharField(max_length=30)
+    source_code = models.TextField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    passed_test_cases = models.PositiveIntegerField(default=0)
+    total_test_cases = models.PositiveIntegerField(default=0)
+    execution_time = models.PositiveIntegerField(null=True, blank=True)
+    memory_used = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    result_data = models.JSONField(default=dict, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']

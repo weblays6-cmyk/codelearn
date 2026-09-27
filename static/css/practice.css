@@ -983,7 +983,7 @@
 
 /* FINAL READABILITY FIX */
 .practice-page .page-header p { font-size:15px !important; line-height:1.65 !important; }
-.practice-page .eyebrow { font-size:11px !important; } 
+.practice-page .eyebrow { font-size:11px !important; }
 .practice-page .motivation { font-size:14px !important; line-height:1.55 !important; }
 .practice-page .motivation strong { font-size:14px !important; }
 .practice-page .stat-change { font-size:12px !important; }
@@ -1008,3 +1008,61 @@
 .practice-page .tool-card h3 { font-size:16px !important; }
 .practice-page .tool-card p { font-size:14px !important; line-height:1.6 !important; }
 .practice-page .tool-btn { font-size:13px !important; }
+
+/* =========================================================
+   EXTRA FILTERS (difficulty / topic / status)
+   Added for LeetCode-style practice workflow.
+   Reuses existing .filters / .filter-btn / .problem-search look.
+   ========================================================= */
+
+.filters-row2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 16px;
+}
+
+.filters-row2 select {
+    padding: 7px 10px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, .04);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.filters-row2 select:hover {
+    border-color: rgba(139, 92, 246, .35);
+}
+
+.filters-row2 .filters-clear {
+    padding: 7px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filters-row2 .filters-clear:hover {
+    color: white;
+}
+
+/* status glyphs used inside the problem list badge */
+.problem-status.attempted-status {
+    background: rgba(59, 130, 246, .13);
+    color: #60a5fa;
+}
+
+.no-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 13px;
+}

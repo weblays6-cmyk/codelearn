@@ -7,15 +7,9 @@
 
     <title>{{ lesson.title }} | CodeLearn Hub</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         * {
@@ -28,16 +22,12 @@
             font-family: Inter, Arial, sans-serif;
 
             background:
-                radial-gradient(
-                    circle at top left,
+                radial-gradient(circle at top left,
                     rgba(99, 102, 241, 0.13),
-                    transparent 30%
-                ),
-                radial-gradient(
-                    circle at bottom right,
+                    transparent 30%),
+                radial-gradient(circle at bottom right,
                     rgba(139, 92, 246, 0.10),
-                    transparent 30%
-                ),
+                    transparent 30%),
                 #080b14;
 
             color: #f8fafc;
@@ -78,11 +68,9 @@
 
             border-radius: 11px;
 
-            background: linear-gradient(
-                135deg,
-                #6366f1,
-                #8b5cf6
-            );
+            background: linear-gradient(135deg,
+                    #6366f1,
+                    #8b5cf6);
         }
 
         .back-link {
@@ -133,13 +121,11 @@
             padding: 35px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     rgba(99, 102, 241, 0.15),
-                    rgba(139, 92, 246, 0.06)
-                );
+                    rgba(139, 92, 246, 0.06));
 
-            border-bottom: 1px solid rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         }
 
         .lesson-badge {
@@ -151,11 +137,11 @@
 
             margin-bottom: 18px;
 
-            border: 1px solid rgba(129,140,248,0.25);
+            border: 1px solid rgba(129, 140, 248, 0.25);
 
             border-radius: 20px;
 
-            background: rgba(99,102,241,0.12);
+            background: rgba(99, 102, 241, 0.12);
 
             color: #a5b4fc;
 
@@ -214,11 +200,11 @@
             margin-top: 35px;
             padding: 25px;
 
-            border: 1px solid rgba(255,255,255,0.07);
+            border: 1px solid rgba(255, 255, 255, 0.07);
 
             border-radius: 16px;
 
-            background: rgba(15,23,42,0.70);
+            background: rgba(15, 23, 42, 0.70);
         }
 
         .video-title {
@@ -274,7 +260,7 @@
             background: #ef4444;
 
             box-shadow:
-                0 10px 25px rgba(220,38,38,0.20);
+                0 10px 25px rgba(220, 38, 38, 0.20);
         }
 
         /* FOOTER ACTION */
@@ -282,9 +268,9 @@
         .lesson-footer {
             padding: 25px 35px;
 
-            border-top: 1px solid rgba(255,255,255,0.07);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
 
-            background: rgba(8,11,20,0.35);
+            background: rgba(8, 11, 20, 0.35);
         }
 
         .course-btn {
@@ -368,146 +354,24 @@
 
 <body>
 
-<div class="page-wrapper">
+    <div class="page-wrapper">
 
-    <!-- TOP BAR -->
+        <!-- TOP BAR -->
 
-    <div class="top-bar">
+        <div class="top-bar">
 
-        <a
-            href="{% url 'blog:dashboard' %}"
-            class="brand"
-        >
+            <a href="{% url 'blog:dashboard' %}" class="brand">
 
-            <div class="brand-icon">
-                <i class="bi bi-code-slash"></i>
-            </div>
-
-            <span>CodeLearn Hub</span>
-
-        </a>
-
-
-        <a
-            href="{% url 'blog:post_detail' course.pk %}"
-            class="back-link"
-        >
-
-            <i class="bi bi-arrow-left"></i>
-
-            Back to Course
-
-        </a>
-
-    </div>
-
-
-    <!-- COURSE -->
-
-    <div class="course-name">
-
-        <i class="bi bi-book"></i>
-
-        {{ course.title }}
-
-    </div>
-
-
-    <!-- LESSON CARD -->
-
-    <div class="lesson-card">
-
-        <!-- HEADER -->
-
-        <div class="lesson-header">
-
-            <div class="lesson-badge">
-
-                <i class="bi bi-play-circle"></i>
-
-                Lesson {{ lesson.order }}
-
-            </div>
-
-
-            <h1>
-                {{ lesson.title }}
-            </h1>
-
-        </div>
-
-
-        <!-- CONTENT -->
-
-        <div class="lesson-content">
-
-            <div class="content-label">
-
-                <i class="bi bi-journal-text"></i>
-
-                Lesson Content
-
-            </div>
-
-
-            <div class="lesson-text">
-
-                {{ lesson.content }}
-
-            </div>
-
-
-            <!-- VIDEO -->
-
-            {% if lesson.video_url %}
-
-            <div class="video-section">
-
-                <div class="video-title">
-
-                    <i class="bi bi-play-btn-fill"></i>
-
-                    Lesson Video
-
+                <div class="brand-icon">
+                    <i class="bi bi-code-slash"></i>
                 </div>
 
+                <span>CodeLearn Hub</span>
 
-                <div class="video-description">
-
-                    Watch the lesson video to understand
-                    the concepts visually.
-
-                </div>
+            </a>
 
 
-                <a
-                    href="{{ lesson.video_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="video-btn"
-                >
-
-                    <i class="bi bi-play-fill"></i>
-
-                    Watch Video
-
-                </a>
-
-            </div>
-
-            {% endif %}
-
-        </div>
-
-
-        <!-- FOOTER -->
-
-        <div class="lesson-footer">
-
-            <a
-                href="{% url 'blog:post_detail' course.pk %}"
-                class="course-btn"
-            >
+            <a href="{% url 'blog:post_detail' course.pk %}" class="back-link">
 
                 <i class="bi bi-arrow-left"></i>
 
@@ -517,23 +381,160 @@
 
         </div>
 
+
+        <!-- COURSE -->
+
+        <div class="course-name">
+
+            <i class="bi bi-book"></i>
+
+            {{ course.title }}
+
+        </div>
+
+
+        <!-- LESSON CARD -->
+
+        <div class="lesson-card">
+
+            <!-- HEADER -->
+
+            <div class="lesson-header">
+
+                <div class="lesson-badge">
+
+                    <i class="bi bi-play-circle"></i>
+
+                    Lesson {{ lesson.order }}
+
+                </div>
+
+
+                <h1>
+                    {{ lesson.title }}
+                </h1>
+
+            </div>
+
+
+            <!-- CONTENT -->
+
+            <div class="lesson-content">
+
+                <div class="content-label">
+
+                    <i class="bi bi-journal-text"></i>
+
+                    Lesson Content
+
+                </div>
+
+
+                <div class="lesson-text">
+
+                    {{ lesson.content }}
+
+                </div>
+
+
+                <!-- VIDEO -->
+
+                {% if lesson.video_url %}
+
+                <div class="video-section">
+
+                    <div class="video-title">
+
+                        <i class="bi bi-play-btn-fill"></i>
+
+                        Lesson Video
+
+                    </div>
+
+
+                    <div class="video-description">
+
+                        Watch the lesson video to understand
+                        the concepts visually.
+
+                    </div>
+
+
+                    <a href="{{ lesson.video_url }}" target="_blank" rel="noopener noreferrer" class="video-btn">
+
+                        <i class="bi bi-play-fill"></i>
+
+                        Watch Video
+
+                    </a>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            {% if enrolled %}
+            <div class="lesson-content" style="border-top:1px solid rgba(255,255,255,.07);">
+                <div class="content-label">
+                    <i class="bi bi-clipboard-check"></i>
+                    Assignments
+                </div>
+
+                {% for assignment in lesson_assignments %}
+                <div class="video-section" style="margin-top:16px;">
+                    <div class="video-title">
+                        <i class="bi bi-file-code"></i>
+                        {{ assignment.title }}
+                    </div>
+                    <div class="video-description">
+                        {{ assignment.description }}<br>
+                        {{ assignment.max_score }} marks · ~{{ assignment.estimated_duration }} min
+                    </div>
+                    <a href="{% url 'blog:assignment_attempt' assignment.pk %}" class="video-btn"
+                        style="background:#635bff;">
+                        Start Assignment
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="video-description">No assignment for this lesson.</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+
+            <!-- FOOTER -->
+
+            <div class="lesson-footer">
+
+                <a href="{% url 'blog:post_detail' course.pk %}" class="course-btn">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Back to Course
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- PAGE FOOTER -->
+
+        <div class="page-footer">
+
+            CodeLearn Hub • Learn. Build. Grow.
+
+        </div>
+
     </div>
 
 
-    <!-- PAGE FOOTER -->
-
-    <div class="page-footer">
-
-        CodeLearn Hub • Learn. Build. Grow.
-
-    </div>
-
-</div>
-
-
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
 
 </body>
 

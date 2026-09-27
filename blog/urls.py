@@ -190,9 +190,27 @@ urlpatterns = [
     ),
 
     path(
+        "practice/save-draft/",
+        views.practice_save_draft,
+        name="practice_save_draft"
+    ),
+
+    path(
+        "practice/record/",
+        views.practice_record,
+        name="practice_record"
+    ),
+
+    path(
         "assignments/",
         views.assignments,
         name="assignments"
+    ),
+
+    path(
+        "assignments/<int:pk>/",
+        views.assignment_attempt,
+        name="assignment_attempt"
     ),
 
     # =========================================================

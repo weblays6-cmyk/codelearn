@@ -1,10 +1,11 @@
 import os
 import secrets
+import json
 
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from google import genai
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -12,6 +13,7 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Avg
 from django.db.models import Q
+from django.utils import timezone
 from django.urls import reverse
 from .models import MessageAttachment
 
@@ -37,6 +39,13 @@ from .models import (
     ProjectView,
     Conversation,
     Message,
+    Assignment,
+    AssignmentAudience,
+    AssignmentAttempt,
+    UserAssignmentProgress,
+    PracticeProblem,
+    PracticeProgress,
+    PracticeSubmission,
 )
 
 from .forms import (
@@ -48,7 +57,7 @@ from .forms import (
 
 
 # =========================================================
-# COURSE / BLOG LIST
+# COURSE / BLOG LIST uyhnyuyu
 # =========================================================
 
 def blog(request):
@@ -283,6 +292,54 @@ def post_detail(request, pk):
 # LESSON DETAIL
 # =========================================================
 
+def _assignment_course(assignment):
+    return assignment.course or (assignment.lesson.course if assignment.lesson else None)
+
+
+def _eligible_assignments(user):
+    enrolled_courses = Enrollment.objects.filter(
+        student=user
+    ).values('course_id')
+
+    standalone = Q(
+        assignment_source='STANDALONE',
+        audiences__audience_type='ALL_USERS'
+    ) | Q(
+        assignment_source='STANDALONE',
+        audiences__audience_type='SELECTED_USER',
+        audiences__user=user
+    )
+    course = Q(
+        assignment_source='COURSE',
+        course_id__in=enrolled_courses
+    ) | Q(
+        assignment_source='COURSE',
+        course_id__isnull=True,
+        lesson__course_id__in=enrolled_courses
+    )
+    return Assignment.objects.filter(
+        Q(standalone) | Q(course),
+        status='PUBLISHED'
+    ).filter(
+        Q(release_date__isnull=True) | Q(release_date__lte=timezone.now())
+    ).distinct().select_related('course', 'lesson', 'lesson__course')
+
+
+def _can_access_assignment(user, assignment):
+    if not assignment or assignment.status != 'PUBLISHED':
+        return False
+    if assignment.release_date and assignment.release_date > timezone.now():
+        return False
+    if assignment.assignment_source == 'STANDALONE':
+        return assignment.audiences.filter(
+            audience_type='ALL_USERS'
+        ).exists() or assignment.audiences.filter(
+            audience_type='SELECTED_USER', user=user
+        ).exists()
+    course = _assignment_course(assignment)
+    return bool(course and Enrollment.objects.filter(student=user, course=course).exists())
+
+
 def lesson_detail(request, pk):
 
     lesson = get_object_or_404(
@@ -290,9 +347,35 @@ def lesson_detail(request, pk):
         pk=pk
     )
 
+    if not request.user.is_authenticated:
+        return redirect('blog:login')
+
+    enrolled = Enrollment.objects.filter(
+        student=request.user,
+        course=lesson.course
+    ).exists()
+    assignments = Assignment.objects.filter(
+        assignment_source='COURSE',
+        status='PUBLISHED',
+        lesson=lesson
+    ).filter(
+        Q(release_date__isnull=True) | Q(release_date__lte=timezone.now())
+    ) if enrolled else Assignment.objects.none()
+
+    progress = {
+        item.assignment_id: item
+        for item in UserAssignmentProgress.objects.filter(
+            user=request.user,
+            assignment__in=assignments
+        )
+    }
+
     context = {
         'lesson': lesson,
         'course': lesson.course,
+        'lesson_assignments': assignments,
+        'assignment_progress': progress,
+        'enrolled': enrolled,
     }
 
     return render(
@@ -769,54 +852,45 @@ def reset_password(request):
 # EMAIL LOGIN
 # =========================================================
 
-# =========================================================
-# LOGIN
-# =========================================================
-
 def login_view(request):
 
     if request.method == "POST":
 
-        username = request.POST.get(
-            "username",
+        email = request.POST.get(
+            "email",
             ""
-        ).strip()
+        ).strip().lower()
 
         password = request.POST.get(
             "password",
             ""
         )
 
-        if not username or not password:
+        try:
 
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Please enter username and password."
-                }
+            user = User.objects.get(
+                email__iexact=email
             )
 
-        authenticated_user = authenticate(
-            request,
-            username=username,
-            password=password
-        )
-
-        if authenticated_user is not None:
-
-            login(
+            authenticated_user = authenticate(
                 request,
-                authenticated_user
+                username=user.username,
+                password=password
             )
 
-            # Login successful email
-            try:
+            if authenticated_user is not None:
 
-                send_gmail(
-                    authenticated_user.email,
-                    "CodeLearn Hub - Login Successful",
-                    """Hi,
+                login(
+                    request,
+                    authenticated_user
+                )
+
+                try:
+
+                    send_gmail(
+                        authenticated_user.email,
+                        "CodeLearn Hub - Login Successful",
+                        """Hi,
 
 You have successfully logged in to your CodeLearn Hub account.
 
@@ -825,31 +899,43 @@ If this was not you, please secure your account immediately.
 Regards,
 CodeLearn Hub Team
 """
+                    )
+
+                except Exception as error:
+
+                    print(
+                        "Login email failed:",
+                        error
+                    )
+
+                return redirect(
+                    "blog:dashboard"
                 )
 
-            except Exception as error:
-
-                print(
-                    "Login email failed:",
-                    error
-                )
-
-            return redirect(
-                "blog:dashboard"
+            return render(
+                request,
+                "blog/login.html",
+                {
+                    "error": "Invalid email or password."
+                }
             )
 
-        return render(
-            request,
-            "blog/login.html",
-            {
-                "error": "Invalid username or password."
-            }
-        )
+        except User.DoesNotExist:
+
+            return render(
+                request,
+                "blog/login.html",
+                {
+                    "error": "Invalid email or password."
+                }
+            )
 
     return render(
         request,
         "blog/login.html"
     )
+
+
 # =========================================================
 # DELETE COMMENT
 # =========================================================
@@ -1172,13 +1258,118 @@ def ai_tutor(request):
 @login_required
 def practice(request):
 
+    progress = {
+        item.problem.slug: {
+            'status': item.status,
+            'attemptCount': item.attempt_count,
+            'lastAttemptAt': item.last_attempt_at.isoformat() if item.last_attempt_at else None,
+            'solvedAt': item.solved_at.isoformat() if item.solved_at else None,
+        }
+        for item in PracticeProgress.objects.filter(user=request.user).select_related('problem')
+    }
+    submissions = [
+        {
+            'submissionId': item.id,
+            'problemId': item.problem.slug,
+            'language': item.language,
+            'status': item.status,
+            'passedTestCases': item.passed_test_cases,
+            'totalTestCases': item.total_test_cases,
+            'executionTime': item.execution_time,
+            'memoryUsed': float(item.memory_used) if item.memory_used is not None else None,
+            'submittedAt': item.submitted_at.isoformat(),
+        }
+        for item in PracticeSubmission.objects.filter(user=request.user).select_related('problem')[:100]
+    ]
+
     return render(
         request,
         'blog/practice.html',
         {
-            'username': request.user.username
+            'username': request.user.username,
+            'practice_state': json.dumps({
+                'progress': progress,
+                'submissions': submissions,
+            }),
         }
     )
+
+
+def _practice_problem(slug):
+    return PracticeProblem.objects.get_or_create(
+        slug=slug,
+        defaults={
+            'title': slug.replace('-', ' ').title(),
+            'description': '',
+            'difficulty': 'EASY',
+            'function_name': slug.replace('-', '_'),
+        }
+    )[0]
+
+
+@login_required
+def practice_save_draft(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    payload = json.loads(request.body or '{}')
+    problem = _practice_problem(payload.get('problemId', ''))
+    progress, _ = PracticeProgress.objects.get_or_create(
+        user=request.user,
+        problem=problem,
+    )
+    drafts = progress.code_drafts or {}
+    drafts[payload.get('language', 'python')] = payload.get('sourceCode', '')
+    progress.code_drafts = drafts
+    progress.save(update_fields=['code_drafts'])
+    return JsonResponse({'saved': True})
+
+
+@login_required
+def practice_record(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    payload = json.loads(request.body or '{}')
+    problem = _practice_problem(payload.get('problemId', ''))
+    is_submission = payload.get('kind') == 'submit'
+    status = payload.get('status', 'INTERNAL_ERROR')
+    progress, _ = PracticeProgress.objects.get_or_create(
+        user=request.user,
+        problem=problem,
+    )
+    progress.attempt_count += 1
+    progress.last_attempt_at = timezone.now()
+    if is_submission and status == 'ACCEPTED':
+        progress.status = 'SOLVED'
+        progress.solved_at = progress.solved_at or timezone.now()
+    elif progress.status != 'SOLVED':
+        progress.status = 'ATTEMPTED'
+    progress.save()
+
+    submission = None
+    if is_submission:
+        submission = PracticeSubmission.objects.create(
+            user=request.user,
+            problem=problem,
+            language=payload.get('language', ''),
+            source_code=payload.get('sourceCode', ''),
+            status=status,
+            passed_test_cases=payload.get('passed', 0) or 0,
+            total_test_cases=payload.get('total', 0) or 0,
+            execution_time=payload.get('runtime'),
+            memory_used=payload.get('memory'),
+            result_data={
+                'status': status,
+                'passed': payload.get('passed', 0),
+                'total': payload.get('total', 0),
+            },
+        )
+        progress.last_submission = submission
+        progress.save(update_fields=['last_submission'])
+    return JsonResponse({
+        'saved': True,
+        'status': progress.status,
+        'submissionId': submission.id if submission else None,
+    })
 
 
 # =========================================================
@@ -1187,14 +1378,130 @@ def practice(request):
 
 @login_required
 def assignments(request):
+    assignments_qs = _eligible_assignments(request.user)
+    status_filter = request.GET.get('status', 'all').upper()
+    source_filter = request.GET.get('source', 'all').upper()
+    search = request.GET.get('search', '').strip()
+    if source_filter in ('STANDALONE', 'COURSE'):
+        assignments_qs = assignments_qs.filter(assignment_source=source_filter)
+    if search:
+        assignments_qs = assignments_qs.filter(title__icontains=search)
 
+    progress_records = {
+        item.assignment_id: item
+        for item in UserAssignmentProgress.objects.filter(
+            user=request.user,
+            assignment__in=assignments_qs
+        )
+    }
+    visible = []
+    for item in assignments_qs:
+        item.user_progress = progress_records.get(item.id)
+        item.display_status = item.user_progress.status if item.user_progress else 'PENDING'
+        if status_filter == 'PENDING' and item.user_progress and item.user_progress.status not in ('NOT_STARTED', 'IN_PROGRESS'):
+            continue
+        if status_filter == 'SUBMITTED' and (not item.user_progress or item.user_progress.status != 'SUBMITTED'):
+            continue
+        if status_filter == 'EVALUATED' and (not item.user_progress or item.user_progress.status not in ('EVALUATED', 'PASSED', 'FAILED')):
+            continue
+        if status_filter == 'OVERDUE' and (not item.due_date or item.due_date >= timezone.now()):
+            continue
+        visible.append(item)
+
+    completed = sum(item.display_status in ('EVALUATED', 'PASSED') for item in visible)
+    pending = sum(item.display_status in ('PENDING', 'NOT_STARTED', 'IN_PROGRESS') for item in visible)
+    submitted = sum(item.display_status == 'SUBMITTED' for item in visible)
+    deadlines = [item for item in visible if item.due_date and item.due_date >= timezone.now()]
+    next_deadline = min(deadlines, key=lambda item: item.due_date) if deadlines else None
     return render(
         request,
         'blog/assignments.html',
         {
-            'username': request.user.username
+            'username': request.user.username,
+            'assignments': visible,
+            'total_assignments': len(visible),
+            'pending_count': pending,
+            'submitted_count': submitted,
+            'completed_count': completed,
+            'next_deadline': next_deadline,
+            'status_filter': status_filter.lower(),
+            'source_filter': source_filter.lower(),
+            'search': search,
         }
     )
+
+
+@login_required
+def assignment_attempt(request, pk):
+    assignment = get_object_or_404(Assignment.objects.select_related('course', 'lesson__course'), pk=pk)
+    if not _can_access_assignment(request.user, assignment):
+        return HttpResponseForbidden('You do not have access to this assignment.')
+
+    progress, _ = UserAssignmentProgress.objects.get_or_create(
+        user=request.user,
+        assignment=assignment
+    )
+    attempt = progress.latest_attempt
+    if not attempt or attempt.status != 'IN_PROGRESS':
+        if progress.attempts_used >= assignment.max_attempts:
+            return HttpResponseForbidden('No attempts remaining.')
+        attempt = AssignmentAttempt.objects.create(
+            assignment=assignment,
+            user=request.user,
+            attempt_number=progress.attempts_used + 1,
+            max_score=assignment.max_score,
+        )
+        progress.latest_attempt = attempt
+        progress.attempts_used += 1
+        progress.status = 'IN_PROGRESS'
+        progress.started_at = progress.started_at or timezone.now()
+        progress.save()
+
+    if request.method == 'POST':
+        if request.POST.get('action') == 'save':
+            attempt.answer_data = json.loads(request.POST.get('answer_data', '{}'))
+            attempt.source_code = request.POST.get('source_code', '')
+            attempt.language = request.POST.get('language', '')
+            attempt.save()
+            return JsonResponse({'saved': True})
+
+        if attempt.status != 'IN_PROGRESS':
+            return JsonResponse({'error': 'This attempt was already submitted.'}, status=409)
+        attempt.answer_data = json.loads(request.POST.get('answer_data', '{}'))
+        attempt.source_code = request.POST.get('source_code', '')
+        attempt.status = 'SUBMITTED'
+        attempt.submitted_at = timezone.now()
+        if assignment.assignment_type == 'QUIZ':
+            score = 0
+            for question in assignment.questions.prefetch_related('options'):
+                selected = attempt.answer_data.get(str(question.id), [])
+                if not isinstance(selected, list):
+                    selected = [selected]
+                correct = list(question.options.filter(is_correct=True).values_list('id', flat=True))
+                if sorted(map(int, selected)) == sorted(correct):
+                    score += question.marks
+            attempt.score = score
+            attempt.max_score = sum(q.marks for q in assignment.questions.all()) or assignment.max_score
+            attempt.percentage = round(score * 100 / attempt.max_score) if attempt.max_score else 0
+            attempt.passed = score >= assignment.passing_marks
+            attempt.status = 'EVALUATED'
+            attempt.evaluated_at = timezone.now()
+            progress.status = 'PASSED' if attempt.passed else 'FAILED'
+            progress.completed_at = timezone.now() if attempt.passed else None
+            progress.evaluated_at = timezone.now()
+            progress.best_score = max(progress.best_score or 0, score)
+        else:
+            progress.status = 'SUBMITTED'
+        progress.submitted_at = timezone.now()
+        progress.save()
+        attempt.save()
+        return redirect('blog:assignment_attempt', pk=assignment.pk)
+
+    return render(request, 'blog/assignment_attempt.html', {
+        'assignment': assignment,
+        'attempt': attempt,
+        'questions': assignment.questions.prefetch_related('options').all(),
+    })
 
 
 # =========================================================

@@ -1,0 +1,581 @@
+/* =========================================================
+   PROBLEM SOLVER VIEW (LeetCode-style split layout)
+   Load AFTER practice.css
+   ========================================================= */
+
+.solver[hidden],
+#listView[hidden] {
+    display: none !important;
+}
+
+.solver {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ---------- TOP BAR ---------- */
+
+.solver-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+}
+
+.solver-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.solver-back:hover {
+    color: white;
+    border-color: rgba(139, 92, 246, .35);
+}
+
+.solver-title {
+    flex: 1;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.solver-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-run,
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-run {
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, .04);
+    color: #cbd5e1;
+}
+
+.btn-run:hover {
+    color: white;
+    background: rgba(255, 255, 255, .08);
+}
+
+.btn-submit {
+    border: 1px solid rgba(34, 197, 94, .4);
+    background: rgba(34, 197, 94, .12);
+    color: #4ade80;
+}
+
+.btn-submit:hover {
+    background: rgba(34, 197, 94, .22);
+    transform: translateY(-1px);
+}
+
+.btn-run:disabled,
+.btn-submit:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---------- SPLIT BODY ---------- */
+
+.solver-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    min-height: 640px;
+}
+
+.solver-left,
+.solver-right {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.solver-right {
+    gap: 12px;
+}
+
+.solver-panel {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- DESCRIPTION ---------- */
+
+.desc-tabs {
+    display: flex;
+    gap: 18px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+    color: var(--dim);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.desc-tabs .active {
+    color: white;
+    border-bottom: 2px solid #8b5cf6;
+    padding-bottom: 10px;
+    margin-bottom: -12px;
+}
+
+.desc-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.desc-body h2 {
+    color: white;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.desc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 16px;
+}
+
+.desc-body code,
+.example code {
+    background: rgba(255, 255, 255, .07);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+.example {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-left: 3px solid #8b5cf6;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .03);
+}
+
+.example p {
+    margin-top: 4px;
+}
+
+/* ---------- EDITOR ---------- */
+
+.editor-panel {
+    flex: 1;
+    min-height: 330px;
+}
+
+.editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.editor-lang {
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+.editor-saved {
+    color: var(--dim);
+    font-size: 12px;
+}
+
+#codeEditor {
+    flex: 1;
+    width: 100%;
+    min-height: 280px;
+    padding: 14px 16px;
+    border: none;
+    outline: none;
+    resize: vertical;
+    background: transparent;
+    color: #e2e8f0;
+    font-family: "Fira Code", Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+/* ---------- TESTCASE / RESULT ---------- */
+
+.testcase-panel {
+    min-height: 220px;
+}
+
+.tc-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+
+.tc-tab {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dim);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tc-tab.active {
+    background: rgba(255, 255, 255, .07);
+    color: white;
+}
+
+.tc-pane {
+    padding: 14px 16px;
+    overflow-y: auto;
+}
+
+.tc-case-btns {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tc-case-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.tc-case-btn.active {
+    color: white;
+    border-color: rgba(139, 92, 246, .5);
+}
+
+.tc-field {
+    margin-bottom: 10px;
+}
+
+.tc-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tc-field pre {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .04);
+    color: #e2e8f0;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.result-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.result-line.pass {
+    background: rgba(34, 197, 94, .08);
+    color: #4ade80;
+}
+
+.result-line.fail {
+    background: rgba(244, 63, 94, .08);
+    color: #fb7185;
+}
+
+.result-line small {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.verdict {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.verdict.accepted {
+    color: #4ade80;
+}
+
+.verdict.wrong {
+    color: #fb7185;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 1100px) {
+    .solver-body {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .solver-left .desc-body {
+        max-height: 420px;
+    }
+}
+
+@media (max-width: 600px) {
+    .solver-topbar {
+        flex-wrap: wrap;
+    }
+
+    .solver-title {
+        order: -1;
+        width: 100%;
+    }
+}
+/* =========================================================
+   EXTENSIONS: language select, monaco host, fullscreen,
+   submissions tab, loading/verdict states.
+   Appended — original rules above are untouched.
+   ========================================================= */
+
+.editor-toolbar-left,
+.editor-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.editor-lang-select {
+    padding: 5px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, .04);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+}
+
+.editor-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    font-size: 12px;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.editor-tool-btn:hover {
+    color: white;
+    border-color: rgba(139, 92, 246, .35);
+}
+
+/* Monaco host replaces the textarea visually; textarea kept as
+   an automatic fallback when Monaco can't load (e.g. offline). */
+#monacoHost {
+    flex: 1;
+    min-height: 280px;
+    width: 100%;
+}
+
+#monacoHost[hidden] {
+    display: none;
+}
+
+.solver.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    padding: 14px;
+    background: var(--bg, #060813);
+    overflow: auto;
+}
+
+.solver.is-fullscreen .solver-body {
+    min-height: calc(100vh - 90px);
+}
+
+/* ---------- description / submissions tabs ---------- */
+
+.desc-tabs button {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.desc-tabs .desc-tab-btn {
+    color: var(--dim);
+    padding-bottom: 10px;
+}
+
+.desc-tabs .desc-tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #8b5cf6;
+    margin-bottom: -12px;
+}
+
+.constraints-list {
+    margin-top: 6px;
+    padding-left: 18px;
+    color: #cbd5e1;
+}
+
+.constraints-list li {
+    margin-bottom: 4px;
+    font-family: "Fira Code", Consolas, monospace;
+    font-size: 12.5px;
+}
+
+/* ---------- submissions list ---------- */
+
+.submission-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, .02);
+    font-size: 13px;
+}
+
+.submission-row .sub-status {
+    font-weight: 700;
+}
+
+.submission-row .sub-status.accepted { color: #4ade80; }
+.submission-row .sub-status.wrong { color: #fb7185; }
+.submission-row .sub-status.error { color: #fbbf24; }
+
+.submission-row .sub-meta {
+    display: flex;
+    gap: 10px;
+    color: var(--dim);
+    font-size: 12px;
+}
+
+.submission-empty {
+    padding: 24px 10px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 13px;
+}
+
+/* ---------- run/submit loading + verdict states ---------- */
+
+.tc-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .2);
+    border-top-color: #8b5cf6;
+    animation: spin .7s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.verdict.error {
+    color: #fbbf24;
+}
+
+.verdict-sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+
+.verdict-sub b {
+    color: #e2e8f0;
+}
+
+.console-block {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(244, 63, 94, .07);
+    color: #fda4af;
+    font-family: "Fira Code", Consolas, monospace;
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    margin-top: 8px;
+}
+
+.hidden-note {
+    margin-top: 10px;
+    color: var(--dim);
+    font-size: 12px;
+}
+
+.btn-run i.spin, .btn-submit i.spin {
+    animation: spin .8s linear infinite;
+}

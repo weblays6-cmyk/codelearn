@@ -1,0 +1,91 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{{ assignment.title }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="assignments-page">
+    <section class="page-header">
+        <div>
+            <div class="eyebrow"><i class="bi bi-clipboard-check"></i> Assignment</div>
+            <h1>{{ assignment.title }}</h1>
+            <p>{{ assignment.instructions|default:assignment.description }}</p>
+        </div>
+    </section>
+
+    <form method="post" id="attemptForm" class="content">
+        {% csrf_token %}
+        <input type="hidden" name="answer_data" id="answerData">
+        <input type="hidden" name="source_code" id="sourceCode">
+        <input type="hidden" name="action" value="submit">
+
+        {% if questions %}
+        {% for question in questions %}
+        <article class="assignment" style="margin-bottom:16px;">
+            <h3>{{ forloop.counter }}. {{ question.question }}</h3>
+            {% for option in question.options.all %}
+            <label style="display:block;margin:12px 0;color:#cbd5e1;">
+                <input type="{% if question.question_type == 'MULTIPLE' %}checkbox{% else %}radio{% endif %}"
+                    name="question_{{ question.id }}" value="{{ option.id }}">
+                {{ option.option_text }}
+            </label>
+            {% endfor %}
+        </article>
+        {% endfor %}
+        {% else %}
+        <article class="assignment">
+            <label for="response" class="assignment-desc">Your response</label>
+            <textarea id="response" rows="12"
+                style="width:100%;margin-top:14px;background:#0f1422;color:#f8fafc;border:1px solid #30364d;border-radius:10px;padding:14px;">{{ attempt.answer_data.response }}</textarea>
+        </article>
+        {% endif %}
+
+        <div style="display:flex;gap:12px;margin-top:18px;">
+            <button type="button" class="assignment-btn" id="saveButton">Save Draft</button>
+            <button type="submit" class="assignment-btn">Submit Assignment <i class="bi bi-arrow-right"></i></button>
+        </div>
+        <div id="saveState" class="assignment-desc" style="margin-top:10px;"></div>
+    </form>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('attemptForm');
+        const answerData = document.getElementById('answerData');
+        const sourceCode = document.getElementById('sourceCode');
+        const saveState = document.getElementById('saveState');
+        const csrf = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        function collectAnswers() {
+            const values = {};
+            form.querySelectorAll('[name^="question_"]').forEach(function (input) {
+                if (!input.checked) return;
+                const key = input.name.replace('question_', '');
+                values[key] = values[key] || [];
+                values[key].push(input.value);
+            });
+            const response = document.getElementById('response');
+            if (response) values.response = response.value;
+            answerData.value = JSON.stringify(values);
+            sourceCode.value = '';
+            return answerData.value;
+        }
+
+        async function save() {
+            saveState.textContent = 'Saving...';
+            const body = new URLSearchParams({
+                csrfmiddlewaretoken: csrf,
+                action: 'save',
+                answer_data: collectAnswers(),
+                source_code: sourceCode.value
+            });
+            const response = await fetch(window.location.href, { method: 'POST', body: body });
+            saveState.textContent = response.ok ? 'Saved' : 'Unable to save';
+        }
+
+        document.getElementById('saveButton').addEventListener('click', save);
+        setInterval(save, 15000);
+        form.addEventListener('submit', collectAnswers);
+    })();
+</script>
+{% endblock %}
