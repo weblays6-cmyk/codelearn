@@ -151,11 +151,42 @@ urlpatterns = [
     name="user_profile"
     ),  
 
+        path(
+        "profile/<int:user_id>/follow/",
+        views.send_follow_request,
+        name="send_follow_request"
+    ),
+
+    path(
+        "profile/<int:user_id>/follow/cancel/",
+        views.cancel_follow_request,
+        name="cancel_follow_request"
+    ),
+
+    path(
+        "follow-request/<int:request_id>/accept/",
+        views.accept_follow_request,
+        name="accept_follow_request"
+    ),
+
+    path(
+        "follow-request/<int:request_id>/reject/",
+        views.reject_follow_request,
+        name="reject_follow_request"
+    ),
+
+    path(
+        "profile/<int:user_id>/unfollow/",
+        views.unfollow_user,
+        name="unfollow_user"
+    ),
+
     path(
     "profile/<int:user_id>/connect/",
     views.start_personal_chat,
     name="start_personal_chat"
     ),
+
 
     path(
         "settings/",
