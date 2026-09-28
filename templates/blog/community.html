@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    Community | {{ SITE_NAME }}
+Community | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
@@ -38,37 +38,39 @@
         </div>
 
         {% if projects %}
-            {% for project in projects %}
-                <article class="community-post">
-                    <div class="post-header">
-                        <div class="mini-avatar" style="background: linear-gradient(135deg, #8b5cf6, #2563eb);">{{ project.owner.username|first|upper }}</div>
-                        <div class="post-user">
-                            <strong>{{ project.owner.username }}</strong>
-                            <span>{{ project.category }} • {{ project.created_at|timesince }} ago</span>
-                        </div>
-                        <i class="bi bi-three-dots more"></i>
-                    </div>
-                    <h3 class="post-title">{{ project.title }}</h3>
-                    <p class="post-content">{{ project.short_description }}</p>
-                    <span class="post-tag">#{{ project.category|cut:" " }}</span>
-                    <div class="post-footer">
-                        <span class="post-action"><i class="bi bi-heart"></i> {{ project.like_count }} Likes</span>
-                        <span class="post-action"><i class="bi bi-chat"></i> {{ project.comment_count }} Comments</span>
-                        <span class="post-action"><i class="bi bi-share"></i> Share</span>
-                    </div>
-                </article>
-            {% endfor %}
-        {% else %}
-            <article class="community-post">
-                <div class="post-header">
-                    <div class="mini-avatar">N</div>
-                    <div class="post-user">
-                        <strong>No posts yet</strong>
-                        <span>Be the first to publish a project update.</span>
-                    </div>
+        {% for project in projects %}
+        <article class="community-post">
+            <div class="post-header">
+                <div class="mini-avatar" style="background: linear-gradient(135deg, #8b5cf6, #2563eb);">{{
+                    project.owner.username|first|upper }}</div>
+                <div class="post-user">
+                    <strong>{{ project.owner.username }}</strong>
+                    <span>{{ project.category }} • {{ project.created_at|timesince }} ago</span>
                 </div>
-                <p class="post-content">The community feed is empty right now. Share your latest project or learning milestone to get started.</p>
-            </article>
+                <i class="bi bi-three-dots more"></i>
+            </div>
+            <h3 class="post-title">{{ project.title }}</h3>
+            <p class="post-content">{{ project.short_description }}</p>
+            <span class="post-tag">#{{ project.category|cut:" " }}</span>
+            <div class="post-footer">
+                <span class="post-action"><i class="bi bi-heart"></i> {{ project.like_count }} Likes</span>
+                <span class="post-action"><i class="bi bi-chat"></i> {{ project.comment_count }} Comments</span>
+                <span class="post-action"><i class="bi bi-share"></i> Share</span>
+            </div>
+        </article>
+        {% endfor %}
+        {% else %}
+        <article class="community-post">
+            <div class="post-header">
+                <div class="mini-avatar">N</div>
+                <div class="post-user">
+                    <strong>No posts yet</strong>
+                    <span>Be the first to publish a project update.</span>
+                </div>
+            </div>
+            <p class="post-content">The community feed is empty right now. Share your latest project or learning
+                milestone to get started.</p>
+        </article>
         {% endif %}
     </div>
 
@@ -98,18 +100,18 @@
                 <span>THIS WEEK</span>
             </div>
             {% for project in projects|slice:':3' %}
-                <div class="member">
-                    <div class="member-avatar">{{ project.owner.username|first|upper }}</div>
-                    <div>
-                        <strong>{{ project.owner.username }}</strong>
-                        <span>{{ project.title }}</span>
-                    </div>
+            <div class="member">
+                <div class="member-avatar">{{ project.owner.username|first|upper }}</div>
+                <div>
+                    <strong>{{ project.owner.username }}</strong>
+                    <span>{{ project.title }}</span>
                 </div>
+            </div>
             {% empty %}
-                <div class="member">
-                    <div class="member-avatar">C</div>
-                    <div><strong>Community</strong><span>Your first project is waiting.</span></div>
-                </div>
+            <div class="member">
+                <div class="member-avatar">C</div>
+                <div><strong>Community</strong><span>Your first project is waiting.</span></div>
+            </div>
             {% endfor %}
         </div>
     </aside>

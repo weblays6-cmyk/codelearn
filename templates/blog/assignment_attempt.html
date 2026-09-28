@@ -96,9 +96,10 @@
         <article class="assignment-response-card">
             <label for="languageSelect" class="assignment-field-label">Programming language</label>
             <select id="languageSelect">
-                <option value="python" {% if attempt.language == "python" %}selected{% endif %}>Python</option>
-                <option value="javascript" {% if attempt.language == "javascript" %}selected{% endif %}>JavaScript</option>
-                <option value="java" {% if attempt.language == "java" %}selected{% endif %}>Java</option>
+                <option value="python" {% if attempt.language=="python" %}selected{% endif %}>Python</option>
+                <option value="javascript" {% if attempt.language=="javascript" %}selected{% endif %}>JavaScript
+                </option>
+                <option value="java" {% if attempt.language=="java" %}selected{% endif %}>Java</option>
             </select>
             <label for="codeResponse" class="assignment-field-label">Your code</label>
             <textarea id="codeResponse" rows="16">{{ attempt.source_code }}</textarea>

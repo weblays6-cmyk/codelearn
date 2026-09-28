@@ -4,7 +4,52 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <style>
-.practice-subpage{max-width:1000px;margin:0 auto;padding:28px 0 40px}.test-panel{background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:26px}.test-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:22px 0}.fact{padding:14px;border:1px solid rgba(148,163,184,.14);border-radius:12px}.fact span{display:block;color:#94a3b8;font-size:.76rem}.fact strong{display:block;margin-top:6px;font-size:1.25rem}.tool-btn{text-decoration:none}.instructions{color:#cbd5e1;line-height:1.8}
+  .practice-subpage {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 28px 0 40px
+  }
+
+  .test-panel {
+    background: rgba(15, 23, 42, .76);
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 16px;
+    padding: 26px
+  }
+
+  .test-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 22px 0
+  }
+
+  .fact {
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, .14);
+    border-radius: 12px
+  }
+
+  .fact span {
+    display: block;
+    color: #94a3b8;
+    font-size: .76rem
+  }
+
+  .fact strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 1.25rem
+  }
+
+  .tool-btn {
+    text-decoration: none
+  }
+
+  .instructions {
+    color: #cbd5e1;
+    line-height: 1.8
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -27,14 +72,15 @@
       <li>Final submission locks this attempt.</li>
     </ul>
     {% if latest_attempt and latest_attempt.status == 'IN_PROGRESS' %}
-      <a class="tool-btn" href="{% url 'blog:practice_mock_test_attempt' latest_attempt.pk %}">Continue attempt</a>
+    <a class="tool-btn" href="{% url 'blog:practice_mock_test_attempt' latest_attempt.pk %}">Continue attempt</a>
     {% elif can_start %}
-      <form method="post" action="{% url 'blog:practice_mock_test_start' mock_test.pk %}">{% csrf_token %}<button class="tool-btn" type="submit">Start Test</button></form>
+    <form method="post" action="{% url 'blog:practice_mock_test_start' mock_test.pk %}">{% csrf_token %}<button
+        class="tool-btn" type="submit">Start Test</button></form>
     {% elif latest_attempt %}
-      <p>This test does not allow another attempt.</p>
-      <a class="tool-btn" href="{% url 'blog:practice_mock_test_result' latest_attempt.pk %}">View Result</a>
+    <p>This test does not allow another attempt.</p>
+    <a class="tool-btn" href="{% url 'blog:practice_mock_test_result' latest_attempt.pk %}">View Result</a>
     {% else %}
-      <p>This test is not ready to start.</p>
+    <p>This test is not ready to start.</p>
     {% endif %}
     <a class="tool-btn" href="{% url 'blog:practice_mock_tests' %}">Back to Mock Tests</a>
   </section>

@@ -4,51 +4,177 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <style>
-.problem-workspace{max-width:1400px;margin:0 auto;padding:22px 0 40px}.problem-head,.problem-description,.editor-card,.history-card{background:rgba(15,23,42,.78);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:18px}.problem-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}.workspace-grid{display:grid;grid-template-columns:minmax(280px,.82fr) minmax(0,1.18fr);gap:14px}.problem-description{line-height:1.7}.problem-description pre{white-space:pre-wrap;background:rgba(2,6,23,.7);padding:12px;border-radius:8px}.editor-card textarea{width:100%;min-height:420px;resize:vertical;background:#080d19;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:14px;font:14px/1.55 Consolas,monospace}.editor-controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.tool-btn{text-decoration:none}.test-output{white-space:pre-wrap;overflow-wrap:anywhere;background:#080d19;padding:14px;min-height:90px;border-radius:10px}.history-card{margin-top:14px}.history-row{display:flex;justify-content:space-between;gap:12px;border-top:1px solid rgba(148,163,184,.14);padding:12px 0}.status-message{min-height:1.4em;color:#94a3b8}.status-message[data-kind=error]{color:#fca5a5}.status-message[data-kind=success]{color:#86efac}
-@media(max-width:900px){.workspace-grid{grid-template-columns:1fr}.problem-head{align-items:flex-start;flex-direction:column}}
+  .problem-workspace {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 22px 0 40px
+  }
+
+  .problem-head,
+  .problem-description,
+  .editor-card,
+  .history-card {
+    background: rgba(15, 23, 42, .78);
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 14px;
+    padding: 18px
+  }
+
+  .problem-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px
+  }
+
+  .workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, .82fr) minmax(0, 1.18fr);
+    gap: 14px
+  }
+
+  .problem-description {
+    line-height: 1.7
+  }
+
+  .problem-description pre {
+    white-space: pre-wrap;
+    background: rgba(2, 6, 23, .7);
+    padding: 12px;
+    border-radius: 8px
+  }
+
+  .editor-card textarea {
+    width: 100%;
+    min-height: 420px;
+    resize: vertical;
+    background: #080d19;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px;
+    font: 14px/1.55 Consolas, monospace
+  }
+
+  .editor-controls {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    align-items: center
+  }
+
+  .tool-btn {
+    text-decoration: none
+  }
+
+  .test-output {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: #080d19;
+    padding: 14px;
+    min-height: 90px;
+    border-radius: 10px
+  }
+
+  .history-card {
+    margin-top: 14px
+  }
+
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(148, 163, 184, .14);
+    padding: 12px 0
+  }
+
+  .status-message {
+    min-height: 1.4em;
+    color: #94a3b8
+  }
+
+  .status-message[data-kind=error] {
+    color: #fca5a5
+  }
+
+  .status-message[data-kind=success] {
+    color: #86efac
+  }
+
+  @media(max-width:900px) {
+    .workspace-grid {
+      grid-template-columns: 1fr
+    }
+
+    .problem-head {
+      align-items: flex-start;
+      flex-direction: column
+    }
+  }
 </style>
 {% endblock %}
 {% block content %}
 <div class="problem-workspace" data-practice-editor data-problem-id="{{ problem.slug }}"
-     data-run-url="{% url 'blog:practice_problem_run' problem.slug %}"
-     data-submit-url="{% url 'blog:practice_problem_submit' problem.slug %}"
-      data-save-url="{% url 'blog:practice_save_draft' %}">
+  data-run-url="{% url 'blog:practice_problem_run' problem.slug %}"
+  data-submit-url="{% url 'blog:practice_problem_submit' problem.slug %}"
+  data-save-url="{% url 'blog:practice_save_draft' %}">
   {% csrf_token %}
   {{ starter_codes|json_script:'practice-starter-codes' }}
   <header class="problem-head">
-    <div><div class="eyebrow">Problem {{ problem.pk }} · {{ problem.get_difficulty_display|upper }}</div><h1 style="margin:8px 0">{{ problem.title }}</h1><span>{{ problem.category|title }}{% for tag in problem.tags %} · {{ tag }}{% endfor %}</span></div>
-    <div><strong>{% if progress.status == 'SOLVED' %}✓ Solved{% elif progress.status == 'ATTEMPTED' %}◐ Attempted{% else %}○ Not started{% endif %}</strong><p><a href="{% url 'blog:practice' %}">Back to Practice</a></p></div>
+    <div>
+      <div class="eyebrow">Problem {{ problem.pk }} · {{ problem.get_difficulty_display|upper }}</div>
+      <h1 style="margin:8px 0">{{ problem.title }}</h1><span>{{ problem.category|title }}{% for tag in problem.tags %} ·
+        {{ tag }}{% endfor %}</span>
+    </div>
+    <div><strong>{% if progress.status == 'SOLVED' %}✓ Solved{% elif progress.status == 'ATTEMPTED' %}◐ Attempted{% else
+        %}○ Not started{% endif %}</strong>
+      <p><a href="{% url 'blog:practice' %}">Back to Practice</a></p>
+    </div>
   </header>
   <div class="workspace-grid">
     <section class="problem-description">
       <h2>Description</h2>
       <div>{{ problem.description|linebreaksbr }}</div>
-      {% if problem.example %}<h3>Examples</h3>{% for key,value in problem.example.items %}<pre>{{ key|title }}: {{ value }}</pre>{% endfor %}{% endif %}
-      {% if problem.constraints %}<h3>Constraints</h3><ul>{% for constraint in problem.constraints %}<li>{{ constraint }}</li>{% endfor %}</ul>{% endif %}
-      {% if problem.public_tests %}<h3>Sample cases</h3>{% for test in problem.public_tests %}<pre>{{ test }}</pre>{% endfor %}{% endif %}
+      {% if problem.example %}<h3>Examples</h3>{% for key,value in problem.example.items %}
+      <pre>{{ key|title }}: {{ value }}</pre>{% endfor %}{% endif %}
+      {% if problem.constraints %}<h3>Constraints</h3>
+      <ul>{% for constraint in problem.constraints %}<li>{{ constraint }}</li>{% endfor %}</ul>{% endif %}
+      {% if problem.public_tests %}<h3>Sample cases</h3>{% for test in problem.public_tests %}
+      <pre>{{ test }}</pre>{% endfor %}{% endif %}
     </section>
     <section class="editor-card">
       <div class="editor-controls">
-        {% if languages %}<label>Language <select data-language>{% for item in languages %}<option value="{{ item }}" {% if item == language %}selected{% endif %}>{{ item|title }}</option>{% endfor %}</select></label>{% endif %}
-        <button type="button" class="tool-btn" data-action="run" {% if not languages %}disabled{% endif %}>Run Samples</button>
-        <button type="button" class="tool-btn" data-action="submit" {% if not languages %}disabled{% endif %}>Submit Solution</button>
+        {% if languages %}<label>Language <select data-language>{% for item in languages %}<option value="{{ item }}" {%
+              if item==language %}selected{% endif %}>{{ item|title }}</option>{% endfor %}</select></label>{% endif %}
+        <button type="button" class="tool-btn" data-action="run" {% if not languages %}disabled{% endif %}>Run
+          Samples</button>
+        <button type="button" class="tool-btn" data-action="submit" {% if not languages %}disabled{% endif %}>Submit
+          Solution</button>
         <button type="button" class="tool-btn" data-action="save">Save Draft</button>
         <button type="button" class="tool-btn" data-action="reset">Reset</button>
       </div>
-      {% if not languages %}<p class="status-message" data-kind="error">Execution is disabled until a secure runner and a supported starter language are configured.</p>{% endif %}
+      {% if not languages %}<p class="status-message" data-kind="error">Execution is disabled until a secure runner and
+        a supported starter language are configured.</p>{% endif %}
       <p class="status-message" data-run-status aria-live="polite"></p>
-      <div data-monaco-host style="height:430px;margin:12px 0;border:1px solid rgba(148,163,184,.18);border-radius:10px;overflow:hidden" hidden></div>
+      <div data-monaco-host
+        style="height:430px;margin:12px 0;border:1px solid rgba(148,163,184,.18);border-radius:10px;overflow:hidden"
+        hidden></div>
       <textarea data-code-input spellcheck="false" aria-label="Solution code">{{ starter_code }}</textarea>
       <h3>Run and submission result</h3>
-      <pre class="test-output" data-run-output aria-live="polite">Run the visible examples or submit your solution.</pre>
+      <pre class="test-output" data-run-output
+        aria-live="polite">Run the visible examples or submit your solution.</pre>
     </section>
   </div>
   <section class="history-card">
     <h2>My Submissions</h2>
     {% for submission in history %}
-    <div class="history-row"><span>{{ submission.get_status_display }} · {{ submission.language|title }}</span><span>{{ submission.passed_test_cases }}/{{ submission.total_test_cases }} tests · {{ submission.submitted_at|date:'M d, Y H:i' }}</span></div>
+    <div class="history-row"><span>{{ submission.get_status_display }} · {{ submission.language|title }}</span><span>{{
+        submission.passed_test_cases }}/{{ submission.total_test_cases }} tests · {{ submission.submitted_at|date:'M d,
+        Y H:i' }}</span></div>
     {% empty %}<p>You haven't submitted a solution yet.</p>{% endfor %}
-    {% if history.has_previous %}<a href="?page={{ history.previous_page_number }}">Previous</a>{% endif %} {% if history.has_next %}<a href="?page={{ history.next_page_number }}">Next</a>{% endif %}
+    {% if history.has_previous %}<a href="?page={{ history.previous_page_number }}">Previous</a>{% endif %} {% if
+    history.has_next %}<a href="?page={{ history.next_page_number }}">Next</a>{% endif %}
   </section>
 </div>
 {% endblock %}

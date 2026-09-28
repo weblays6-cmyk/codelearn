@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block title %}
-    Dashboard | {{ SITE_NAME }}
+Dashboard | {{ SITE_NAME }}
 {% endblock %}
 
 
@@ -43,18 +43,12 @@
 
         <div class="hero-buttons">
 
-            <a
-                href="{% url 'blog:blogpage' %}"
-                class="primary-btn"
-            >
+            <a href="{% url 'blog:blogpage' %}" class="primary-btn">
                 <i class="bi bi-compass"></i>
                 Explore Courses
             </a>
 
-            <a
-                href="#mission"
-                class="secondary-btn"
-            >
+            <a href="#mission" class="secondary-btn">
                 <i class="bi bi-lightning"></i>
                 Today's Mission
             </a>
@@ -86,57 +80,54 @@
 
             {% if user_profile.goal == "job" %}
 
-                <h2>Get a Job</h2>
+            <h2>Get a Job</h2>
 
-                <p>
-                    Become job-ready with practical
-                    skills, projects and career preparation.
-                </p>
+            <p>
+                Become job-ready with practical
+                skills, projects and career preparation.
+            </p>
 
             {% elif user_profile.goal == "skill" %}
 
-                <h2>Learn New Skills</h2>
+            <h2>Learn New Skills</h2>
 
-                <p>
-                    Build strong programming skills
-                    through structured learning.
-                </p>
+            <p>
+                Build strong programming skills
+                through structured learning.
+            </p>
 
             {% elif user_profile.goal == "projects" %}
 
-                <h2>Build Projects</h2>
+            <h2>Build Projects</h2>
 
-                <p>
-                    Build real-world applications
-                    and strengthen your portfolio.
-                </p>
+            <p>
+                Build real-world applications
+                and strengthen your portfolio.
+            </p>
 
             {% elif user_profile.goal == "interview" %}
 
-                <h2>Prepare for Interviews</h2>
+            <h2>Prepare for Interviews</h2>
 
-                <p>
-                    Practice technical, HR and mock
-                    interviews and become interview-ready.
-                </p>
+            <p>
+                Practice technical, HR and mock
+                interviews and become interview-ready.
+            </p>
 
             {% else %}
 
-                <h2>Choose Your Goal</h2>
+            <h2>Choose Your Goal</h2>
 
-                <p>
-                    Select your primary goal to
-                    personalize your CodeLearn journey.
-                </p>
+            <p>
+                Select your primary goal to
+                personalize your CodeLearn journey.
+            </p>
 
             {% endif %}
 
         </div>
 
-        <a
-            href="{% url 'blog:choose_goal' %}"
-            class="change-goal-btn"
-        >
+        <a href="{% url 'blog:choose_goal' %}" class="change-goal-btn">
             Change Goal
         </a>
 
@@ -273,10 +264,7 @@
 
         </div>
 
-        <a
-            href="{% url 'blog:my_learning' %}"
-            class="view-all"
-        >
+        <a href="{% url 'blog:my_learning' %}" class="view-all">
             My Learning →
         </a>
 
@@ -287,121 +275,112 @@
 
         {% for enrollment in my_enrollments %}
 
-            {% with post=enrollment.course %}
+        {% with post=enrollment.course %}
 
-            <a
-                href="{% url 'blog:post_detail' post.pk %}"
-                class="course-card"
-            >
+        <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
 
-                <div class="course-icon">
+            <div class="course-icon">
 
-                    {% if post.category == "Python" %}
+                {% if post.category == "Python" %}
 
-                        🐍
+                🐍
 
-                    {% elif post.category == "Django" %}
+                {% elif post.category == "Django" %}
 
-                        ⚡
+                ⚡
 
-                    {% elif post.category == "AI" %}
+                {% elif post.category == "AI" %}
 
-                        🤖
+                🤖
 
-                    {% elif post.category == "JavaScript" %}
+                {% elif post.category == "JavaScript" %}
 
-                        JS
+                JS
 
-                    {% else %}
+                {% else %}
 
-                        <i class="bi bi-code-square"></i>
+                <i class="bi bi-code-square"></i>
 
-                    {% endif %}
+                {% endif %}
 
-                </div>
+            </div>
 
 
-                <h4>
-                    {{ post.title }}
-                </h4>
+            <h4>
+                {{ post.title }}
+            </h4>
 
 
-                <p>
-                    {{ post.category }}
-                    ·
-                    {{ post.difficulty }}
-                </p>
+            <p>
+                {{ post.category }}
+                ·
+                {{ post.difficulty }}
+            </p>
 
 
-                <div class="progress-wrap">
+            <div class="progress-wrap">
 
-                    <div class="progress-bg">
+                <div class="progress-bg">
 
-                        <div
-                            class="progress-fill"
-                            style="width: {{ enrollment.progress }}%;"
-                        ></div>
-
-                    </div>
-
-
-                    <div class="progress-info">
-
-                        <span>
-
-                            {% if enrollment.progress == 0 %}
-
-                                Not started
-
-                            {% else %}
-
-                                Continue learning
-
-                            {% endif %}
-
-                        </span>
-
-                        <span>
-                            {{ enrollment.progress }}%
-                        </span>
-
-                    </div>
+                    <div class="progress-fill" style="width: {{ enrollment.progress }}%;"></div>
 
                 </div>
 
-            </a>
 
-            {% endwith %}
+                <div class="progress-info">
 
-        {% empty %}
+                    <span>
 
-            <a
-                href="{% url 'blog:blogpage' %}"
-                class="course-card"
-            >
+                        {% if enrollment.progress == 0 %}
 
-                <div class="course-icon">
-                    <i class="bi bi-rocket-takeoff"></i>
-                </div>
+                        Not started
 
-                <h4>
-                    Start Your First Course
-                </h4>
+                        {% else %}
 
-                <p>
-                    Explore courses and start
-                    your learning journey.
-                </p>
+                        Continue learning
 
-                <div class="progress-wrap">
+                        {% endif %}
 
-                    <span class="view-all">
-                        Explore Courses →
+                    </span>
+
+                    <span>
+                        {{ enrollment.progress }}%
                     </span>
 
                 </div>
 
-            </a>
+            </div>
+
+        </a>
+
+        {% endwith %}
+
+        {% empty %}
+
+        <a href="{% url 'blog:blogpage' %}" class="course-card">
+
+            <div class="course-icon">
+                <i class="bi bi-rocket-takeoff"></i>
+            </div>
+
+            <h4>
+                Start Your First Course
+            </h4>
+
+            <p>
+                Explore courses and start
+                your learning journey.
+            </p>
+
+            <div class="progress-wrap">
+
+                <span class="view-all">
+                    Explore Courses →
+                </span>
+
+            </div>
+
+        </a>
 
         {% endfor %}
 
@@ -414,10 +393,7 @@
      TODAY'S MISSION + AI
 ===================================================== -->
 
-<section
-    class="section"
-    id="mission"
->
+<section class="section" id="mission">
 
     <div class="two-column">
 
@@ -448,344 +424,341 @@
             {% if user_profile.goal == "job" %}
 
 
-                <div class="mission">
+            <div class="mission">
 
-                    <div class="mission-icon purple">
-                        🎓
-                    </div>
+                <div class="mission-icon purple">
+                    🎓
+                </div>
 
-                    <div class="mission-info">
+                <div class="mission-info">
 
-                        <h5>
-                            Complete one learning lesson
-                        </h5>
+                    <h5>
+                        Complete one learning lesson
+                    </h5>
 
-                        <p>
-                            Build skills for your target role.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Learn
-                    </span>
+                    <p>
+                        Build skills for your target role.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Learn
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon blue">
-                        💻
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Solve 2 coding problems
-                        </h5>
+                <div class="mission-icon blue">
+                    💻
+                </div>
 
-                        <p>
-                            Improve your problem-solving skills.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Solve 2 coding problems
+                    </h5>
 
-                    <span class="mission-btn">
-                        Practice
-                    </span>
+                    <p>
+                        Improve your problem-solving skills.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Practice
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon green">
-                        🚀
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Work on one project task
-                        </h5>
+                <div class="mission-icon green">
+                    🚀
+                </div>
 
-                        <p>
-                            Build something for your portfolio.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Work on one project task
+                    </h5>
 
-                    <span class="mission-btn">
-                        Build
-                    </span>
+                    <p>
+                        Build something for your portfolio.
+                    </p>
 
                 </div>
+
+                <span class="mission-btn">
+                    Build
+                </span>
+
+            </div>
 
 
             {% elif user_profile.goal == "skill" %}
 
 
-                <div class="mission">
+            <div class="mission">
 
-                    <div class="mission-icon purple">
-                        📚
-                    </div>
+                <div class="mission-icon purple">
+                    📚
+                </div>
 
-                    <div class="mission-info">
+                <div class="mission-info">
 
-                        <h5>
-                            Complete today's lesson
-                        </h5>
+                    <h5>
+                        Complete today's lesson
+                    </h5>
 
-                        <p>
-                            Continue your learning journey.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Learn
-                    </span>
+                    <p>
+                        Continue your learning journey.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Learn
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon blue">
-                        🧠
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Take a concept quiz
-                        </h5>
+                <div class="mission-icon blue">
+                    🧠
+                </div>
 
-                        <p>
-                            Test your understanding.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Take a concept quiz
+                    </h5>
 
-                    <span class="mission-btn">
-                        Quiz
-                    </span>
+                    <p>
+                        Test your understanding.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Quiz
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon green">
-                        ✨
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Practice a new concept
-                        </h5>
+                <div class="mission-icon green">
+                    ✨
+                </div>
 
-                        <p>
-                            Turn learning into practical skill.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Practice a new concept
+                    </h5>
 
-                    <span class="mission-btn">
-                        Practice
-                    </span>
+                    <p>
+                        Turn learning into practical skill.
+                    </p>
 
                 </div>
+
+                <span class="mission-btn">
+                    Practice
+                </span>
+
+            </div>
 
 
             {% elif user_profile.goal == "projects" %}
 
 
-                <div class="mission">
+            <div class="mission">
 
-                    <div class="mission-icon purple">
-                        🚀
-                    </div>
+                <div class="mission-icon purple">
+                    🚀
+                </div>
 
-                    <div class="mission-info">
+                <div class="mission-info">
 
-                        <h5>
-                            Complete one project task
-                        </h5>
+                    <h5>
+                        Complete one project task
+                    </h5>
 
-                        <p>
-                            Move your project forward.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Build
-                    </span>
+                    <p>
+                        Move your project forward.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Build
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon blue">
-                        🗄️
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Improve your database design
-                        </h5>
+                <div class="mission-icon blue">
+                    🗄️
+                </div>
 
-                        <p>
-                            Strengthen your project foundation.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Improve your database design
+                    </h5>
 
-                    <span class="mission-btn">
-                        Work
-                    </span>
+                    <p>
+                        Strengthen your project foundation.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Work
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon green">
-                        🐙
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Update your GitHub project
-                        </h5>
+                <div class="mission-icon green">
+                    🐙
+                </div>
 
-                        <p>
-                            Keep your portfolio ready.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Update your GitHub project
+                    </h5>
 
-                    <span class="mission-btn">
-                        GitHub
-                    </span>
+                    <p>
+                        Keep your portfolio ready.
+                    </p>
 
                 </div>
+
+                <span class="mission-btn">
+                    GitHub
+                </span>
+
+            </div>
 
 
             {% elif user_profile.goal == "interview" %}
 
 
-                <div class="mission">
+            <div class="mission">
 
-                    <div class="mission-icon purple">
-                        🎤
-                    </div>
+                <div class="mission-icon purple">
+                    🎤
+                </div>
 
-                    <div class="mission-info">
+                <div class="mission-info">
 
-                        <h5>
-                            Practice 5 interview questions
-                        </h5>
+                    <h5>
+                        Practice 5 interview questions
+                    </h5>
 
-                        <p>
-                            Strengthen your technical knowledge.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Start
-                    </span>
+                    <p>
+                        Strengthen your technical knowledge.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Start
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon blue">
-                        🧑‍💻
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Take a mock interview
-                        </h5>
+                <div class="mission-icon blue">
+                    🧑‍💻
+                </div>
 
-                        <p>
-                            Practice answering naturally.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Take a mock interview
+                    </h5>
 
-                    <span class="mission-btn">
-                        Mock
-                    </span>
+                    <p>
+                        Practice answering naturally.
+                    </p>
 
                 </div>
 
+                <span class="mission-btn">
+                    Mock
+                </span>
 
-                <div class="mission">
+            </div>
 
-                    <div class="mission-icon green">
-                        📄
-                    </div>
 
-                    <div class="mission-info">
+            <div class="mission">
 
-                        <h5>
-                            Practice project explanation
-                        </h5>
+                <div class="mission-icon green">
+                    📄
+                </div>
 
-                        <p>
-                            Prepare to explain your work clearly.
-                        </p>
+                <div class="mission-info">
 
-                    </div>
+                    <h5>
+                        Practice project explanation
+                    </h5>
 
-                    <span class="mission-btn">
-                        Review
-                    </span>
+                    <p>
+                        Prepare to explain your work clearly.
+                    </p>
 
                 </div>
+
+                <span class="mission-btn">
+                    Review
+                </span>
+
+            </div>
 
 
             {% else %}
 
 
-                <div class="mission">
+            <div class="mission">
 
-                    <div class="mission-icon purple">
-                        🎯
-                    </div>
+                <div class="mission-icon purple">
+                    🎯
+                </div>
 
-                    <div class="mission-info">
+                <div class="mission-info">
 
-                        <h5>
-                            Choose your learning goal
-                        </h5>
+                    <h5>
+                        Choose your learning goal
+                    </h5>
 
-                        <p>
-                            Personalize your CodeLearn journey.
-                        </p>
-
-                    </div>
-
-                    <a
-                        href="{% url 'blog:choose_goal' %}"
-                        class="mission-btn"
-                    >
-                        Choose
-                    </a>
+                    <p>
+                        Personalize your CodeLearn journey.
+                    </p>
 
                 </div>
+
+                <a href="{% url 'blog:choose_goal' %}" class="mission-btn">
+                    Choose
+                </a>
+
+            </div>
 
 
             {% endif %}
@@ -827,43 +800,40 @@
 
                 {% if user_profile.goal == "job" %}
 
-                    Your goal is to get a job.
-                    Focus on learning,
-                    coding practice,
-                    projects and interview preparation.
+                Your goal is to get a job.
+                Focus on learning,
+                coding practice,
+                projects and interview preparation.
 
                 {% elif user_profile.goal == "skill" %}
 
-                    Your goal is to learn new skills.
-                    Keep learning consistently
-                    and practice every concept.
+                Your goal is to learn new skills.
+                Keep learning consistently
+                and practice every concept.
 
                 {% elif user_profile.goal == "projects" %}
 
-                    Your goal is to build projects.
-                    Focus on practical implementation,
-                    quality and portfolio building.
+                Your goal is to build projects.
+                Focus on practical implementation,
+                quality and portfolio building.
 
                 {% elif user_profile.goal == "interview" %}
 
-                    Your goal is interview preparation.
-                    Practice technical questions,
-                    mock interviews and project explanations.
+                Your goal is interview preparation.
+                Practice technical questions,
+                mock interviews and project explanations.
 
                 {% else %}
 
-                    Choose a goal and {{ SITE_NAME }}
-                    will personalize your learning journey.
+                Choose a goal and {{ SITE_NAME }}
+                will personalize your learning journey.
 
                 {% endif %}
 
             </div>
 
 
-            <a
-                href="{% url 'blog:ai_tutor' %}"
-                class="ai-action"
-            >
+            <a href="{% url 'blog:ai_tutor' %}" class="ai-action">
 
                 Ask AI Tutor
 
@@ -898,10 +868,7 @@
 
         </div>
 
-        <a
-            href="{% url 'blog:blogpage' %}"
-            class="view-all"
-        >
+        <a href="{% url 'blog:blogpage' %}" class="view-all">
             Explore →
         </a>
 
@@ -911,10 +878,7 @@
     <div class="recommend-grid">
 
 
-        <a
-            href="{% url 'blog:blogpage' %}?search=Python"
-            class="recommend"
-        >
+        <a href="{% url 'blog:blogpage' %}?search=Python" class="recommend">
 
             <div class="recommend-icon">
                 🐍
@@ -931,10 +895,7 @@
         </a>
 
 
-        <a
-            href="{% url 'blog:blogpage' %}?search=Django"
-            class="recommend"
-        >
+        <a href="{% url 'blog:blogpage' %}?search=Django" class="recommend">
 
             <div class="recommend-icon">
                 ⚡

@@ -4,31 +4,130 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <style>
-.practice-subpage{max-width:1050px;margin:0 auto;padding:24px 0 40px}.attempt-head,.question-card,.navigator{background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:20px}.attempt-head{display:flex;justify-content:space-between;align-items:center;gap:16px;position:sticky;top:10px;z-index:2}.timer{font-variant-numeric:tabular-nums;font-size:1.6rem;font-weight:800;color:#fcd34d}.question-card{margin-top:16px;scroll-margin-top:100px}.answer-option{display:flex;gap:12px;align-items:flex-start;padding:12px;margin-top:8px;border:1px solid rgba(148,163,184,.15);border-radius:10px}.answer-option input{margin-top:4px}.navigator{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.nav-question{width:40px;height:40px;background:#111827;color:#e2e8f0;border:1px solid #334155;border-radius:8px}.nav-question[data-answered="true"]{border-color:#22c55e;color:#bbf7d0}.tool-btn{text-decoration:none}.save-note{min-height:1.3em;color:#94a3b8}
-@media(max-width:620px){.attempt-head{align-items:flex-start;flex-direction:column}.timer{font-size:1.3rem}}
+  .practice-subpage {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 24px 0 40px
+  }
+
+  .attempt-head,
+  .question-card,
+  .navigator {
+    background: rgba(15, 23, 42, .76);
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 14px;
+    padding: 20px
+  }
+
+  .attempt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 10px;
+    z-index: 2
+  }
+
+  .timer {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fcd34d
+  }
+
+  .question-card {
+    margin-top: 16px;
+    scroll-margin-top: 100px
+  }
+
+  .answer-option {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    margin-top: 8px;
+    border: 1px solid rgba(148, 163, 184, .15);
+    border-radius: 10px
+  }
+
+  .answer-option input {
+    margin-top: 4px
+  }
+
+  .navigator {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0
+  }
+
+  .nav-question {
+    width: 40px;
+    height: 40px;
+    background: #111827;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 8px
+  }
+
+  .nav-question[data-answered="true"] {
+    border-color: #22c55e;
+    color: #bbf7d0
+  }
+
+  .tool-btn {
+    text-decoration: none
+  }
+
+  .save-note {
+    min-height: 1.3em;
+    color: #94a3b8
+  }
+
+  @media(max-width:620px) {
+    .attempt-head {
+      align-items: flex-start;
+      flex-direction: column
+    }
+
+    .timer {
+      font-size: 1.3rem
+    }
+  }
 </style>
 {% endblock %}
 {% block content %}
-<div class="practice-subpage" data-attempt-root data-answer-url="{% url 'blog:practice_mock_test_answer' attempt.pk %}" data-seconds="{{ remaining_seconds }}">
+<div class="practice-subpage" data-attempt-root data-answer-url="{% url 'blog:practice_mock_test_answer' attempt.pk %}"
+  data-seconds="{{ remaining_seconds }}">
   {% csrf_token %}
   <header class="attempt-head">
-    <div><div class="eyebrow">Timed assessment</div><h1 style="margin:8px 0 0">{{ attempt.test.title }}</h1></div>
-    <div><span style="display:block;color:#94a3b8;font-size:.78rem">Time left</span><strong class="timer" data-timer>--:--</strong></div>
+    <div>
+      <div class="eyebrow">Timed assessment</div>
+      <h1 style="margin:8px 0 0">{{ attempt.test.title }}</h1>
+    </div>
+    <div><span style="display:block;color:#94a3b8;font-size:.78rem">Time left</span><strong class="timer"
+        data-timer>--:--</strong></div>
   </header>
   <div class="save-note" data-save-note aria-live="polite"></div>
   <nav class="navigator" aria-label="Question navigator">
-    {% for item in questions %}<button class="nav-question" type="button" data-nav-question="{{ item.question.id }}" data-answered="{% if item.answer %}true{% else %}false{% endif %}">{{ forloop.counter }}</button>{% endfor %}
+    {% for item in questions %}<button class="nav-question" type="button" data-nav-question="{{ item.question.id }}"
+      data-answered="{% if item.answer %}true{% else %}false{% endif %}">{{ forloop.counter }}</button>{% endfor %}
   </nav>
   {% for item in questions %}
-  <section class="question-card" id="question-{{ item.question.id }}" data-question-card data-question-id="{{ item.question.id }}">
-    <div class="eyebrow">Question {{ forloop.counter }} of {{ questions|length }} · {{ item.question.points }} point{{ item.question.points|pluralize }}</div>
+  <section class="question-card" id="question-{{ item.question.id }}" data-question-card
+    data-question-id="{{ item.question.id }}">
+    <div class="eyebrow">Question {{ forloop.counter }} of {{ questions|length }} · {{ item.question.points }} point{{
+      item.question.points|pluralize }}</div>
     <h2>{{ item.question.prompt }}</h2>
     {% for option in item.question.options %}
-    <label class="answer-option"><input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {% if item.answer == option.id|stringformat:'s' %}checked{% endif %}><span>{{ option.text }}</span></label>
+    <label class="answer-option"><input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {%
+        if item.answer==option.id|stringformat:'s' %}checked{% endif %}><span>{{ option.text }}</span></label>
     {% empty %}<p>This question has no configured answer options.</p>{% endfor %}
   </section>
   {% endfor %}
-  <form method="post" action="{% url 'blog:practice_mock_test_submit' attempt.pk %}" data-submit-form style="margin-top:18px;">
+  <form method="post" action="{% url 'blog:practice_mock_test_submit' attempt.pk %}" data-submit-form
+    style="margin-top:18px;">
     {% csrf_token %}
     <button type="submit" class="tool-btn">Submit Test</button>
   </form>
@@ -36,51 +135,51 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-(() => {
-  const root = document.querySelector('[data-attempt-root]');
-  if (!root) return;
-  const token = root.querySelector('input[name="csrfmiddlewaretoken"]').value;
-  const note = root.querySelector('[data-save-note]');
-  const nav = new Map([...root.querySelectorAll('[data-nav-question]')].map((button) => [button.dataset.navQuestion, button]));
-  const pendingSaves = new Set();
-  const save = async (questionId, answer) => {
-    note.textContent = 'Saving answer...';
-    try {
-      const response = await fetch(root.dataset.answerUrl, {method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':token},body:JSON.stringify({questionId,answer})});
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unable to save answer.');
-      nav.get(questionId).dataset.answered = answer ? 'true' : 'false';
-      note.textContent = 'Saved';
-      return true;
-    } catch (error) { note.textContent = error.message; return false; }
-  };
-  root.querySelectorAll('[data-question-card] input[type="radio"]').forEach((input) => input.addEventListener('change', () => {
-    const request = save(input.closest('[data-question-card]').dataset.questionId, input.value);
-    pendingSaves.add(request);
-    request.finally(() => pendingSaves.delete(request));
-  }));
-  root.querySelectorAll('[data-nav-question]').forEach((button) => button.addEventListener('click', () => document.getElementById(`question-${button.dataset.navQuestion}`).scrollIntoView({behavior:'smooth',block:'start'})));
-  let seconds = Number(root.dataset.seconds || 0);
-  const timer = root.querySelector('[data-timer]');
-  const render = () => { timer.textContent = `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`; };
-  render();
-  const form = root.querySelector('[data-submit-form]');
-  const interval = window.setInterval(() => { seconds = Math.max(0, seconds - 1); render(); if (!seconds) { window.clearInterval(interval); form.dataset.expired = 'true'; form.submit(); } }, 1000);
-  form.addEventListener('submit', async (event) => {
-    if (form.dataset.confirmed === 'true') return;
-    event.preventDefault();
-    const answered = new Set([...root.querySelectorAll('[data-question-card] input:checked')].map((input) => input.closest('[data-question-card]').dataset.questionId)).size;
-    const total = root.querySelectorAll('[data-question-card]').length;
-    if (!window.confirm(`Submit Test?\nAnswered: ${answered} / ${total}\nUnanswered: ${total - answered}`)) return;
-    form.dataset.confirmed = 'true';
-    const saved = await Promise.all([...pendingSaves]);
-    if (saved.some((result) => result === false)) {
-      form.dataset.confirmed = 'false';
-      note.textContent = 'An answer could not be saved. Check the connection and submit again.';
-      return;
-    }
-    form.submit();
-  });
-})();
+  (() => {
+    const root = document.querySelector('[data-attempt-root]');
+    if (!root) return;
+    const token = root.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const note = root.querySelector('[data-save-note]');
+    const nav = new Map([...root.querySelectorAll('[data-nav-question]')].map((button) => [button.dataset.navQuestion, button]));
+    const pendingSaves = new Set();
+    const save = async (questionId, answer) => {
+      note.textContent = 'Saving answer...';
+      try {
+        const response = await fetch(root.dataset.answerUrl, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token }, body: JSON.stringify({ questionId, answer }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unable to save answer.');
+        nav.get(questionId).dataset.answered = answer ? 'true' : 'false';
+        note.textContent = 'Saved';
+        return true;
+      } catch (error) { note.textContent = error.message; return false; }
+    };
+    root.querySelectorAll('[data-question-card] input[type="radio"]').forEach((input) => input.addEventListener('change', () => {
+      const request = save(input.closest('[data-question-card]').dataset.questionId, input.value);
+      pendingSaves.add(request);
+      request.finally(() => pendingSaves.delete(request));
+    }));
+    root.querySelectorAll('[data-nav-question]').forEach((button) => button.addEventListener('click', () => document.getElementById(`question-${button.dataset.navQuestion}`).scrollIntoView({ behavior: 'smooth', block: 'start' })));
+    let seconds = Number(root.dataset.seconds || 0);
+    const timer = root.querySelector('[data-timer]');
+    const render = () => { timer.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`; };
+    render();
+    const form = root.querySelector('[data-submit-form]');
+    const interval = window.setInterval(() => { seconds = Math.max(0, seconds - 1); render(); if (!seconds) { window.clearInterval(interval); form.dataset.expired = 'true'; form.submit(); } }, 1000);
+    form.addEventListener('submit', async (event) => {
+      if (form.dataset.confirmed === 'true') return;
+      event.preventDefault();
+      const answered = new Set([...root.querySelectorAll('[data-question-card] input:checked')].map((input) => input.closest('[data-question-card]').dataset.questionId)).size;
+      const total = root.querySelectorAll('[data-question-card]').length;
+      if (!window.confirm(`Submit Test?\nAnswered: ${answered} / ${total}\nUnanswered: ${total - answered}`)) return;
+      form.dataset.confirmed = 'true';
+      const saved = await Promise.all([...pendingSaves]);
+      if (saved.some((result) => result === false)) {
+        form.dataset.confirmed = 'false';
+        note.textContent = 'An answer could not be saved. Check the connection and submit again.';
+        return;
+      }
+      form.submit();
+    });
+  })();
 </script>
 {% endblock %}
