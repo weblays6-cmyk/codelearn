@@ -1,0 +1,36 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}Test Result | {{ SITE_NAME }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<style>
+.practice-subpage{max-width:1050px;margin:0 auto;padding:28px 0 40px}.result-panel,.review-card{background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.18);border-radius:15px;padding:20px;margin-bottom:14px}.score{font-size:3rem;font-weight:850}.review-card h3{margin-top:0}.answer-state{padding:7px 10px;border-radius:999px;display:inline-block;background:rgba(34,197,94,.14);color:#bbf7d0}.incorrect{background:rgba(239,68,68,.13);color:#fecaca}.tool-btn{text-decoration:none}
+</style>
+{% endblock %}
+{% block content %}
+<div class="practice-subpage">
+  <section class="result-panel">
+    <div class="eyebrow">{% if attempt.status == 'EXPIRED' %}Time expired · Final result{% else %}Test completed{% endif %}</div>
+    <h1>{{ attempt.test.title }}</h1>
+    <div class="score">{{ attempt.score }} <span style="color:#94a3b8;font-size:1.2rem">/ {{ attempt.total_score }} points</span></div>
+    <p>{{ question_rows|length }} questions · Correct {{ correct_count }} · Incorrect {{ incorrect_count }} · Unanswered {{ unanswered_count }} · Time {{ elapsed_minutes }}m {{ elapsed_remainder }}s</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;">
+      <a class="tool-btn" href="?review=1">Review Answers</a>
+      <a class="tool-btn" href="{% url 'blog:practice_mock_tests' %}">Back to Mock Tests</a>
+      {% if attempt.test.allow_retakes %}<a class="tool-btn" href="{% url 'blog:practice_mock_test_detail' attempt.test.pk %}">Try Again</a>{% endif %}
+    </div>
+  </section>
+  {% if review_mode %}
+    {% for row in question_rows %}
+    <article class="review-card">
+      <div class="eyebrow">Question {{ forloop.counter }}</div>
+      <h3>{{ row.question.prompt }}</h3>
+      {% if row.selected_option %}<p>Your answer: {{ row.selected_option.text }}</p>{% else %}<p>Your answer: Unanswered</p>{% endif %}
+      {% if row.correct_option %}<p>Correct answer: {{ row.correct_option.text }}</p>{% endif %}
+      <span class="answer-state {% if not row.correct %}incorrect{% endif %}">{% if row.correct %}Correct{% else %}Incorrect{% endif %}</span>
+      {% if row.question.explanation %}<p>{{ row.question.explanation }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

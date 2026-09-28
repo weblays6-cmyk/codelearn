@@ -276,6 +276,48 @@
     },
   };
 
+  (window.PRACTICE_DATABASE_PROBLEMS || []).forEach((storedProblem, index) => {
+    if (PROBLEMS[storedProblem.slug]) return;
+    const starterCode = storedProblem.starter_code || {};
+    const visibleTests = (storedProblem.public_tests || []).map((testCase) => ({
+      ...testCase,
+      expected: testCase.expected !== undefined ? testCase.expected : testCase.output,
+    }));
+    const hiddenTests = (storedProblem.hidden_tests || []).map((testCase) => ({
+      ...testCase,
+      expected: testCase.expected !== undefined ? testCase.expected : testCase.output,
+    }));
+    const example = storedProblem.example || {};
+    PROBLEMS[storedProblem.slug] = {
+      number: index + 1,
+      title: `${index + 1}. ${storedProblem.title}`,
+      difficulty: ({ EASY: "Easy", MEDIUM: "Medium", HARD: "Hard" })[storedProblem.difficulty] || "Easy",
+      tags: Array.isArray(storedProblem.tags) ? storedProblem.tags : [],
+      fn: storedProblem.function_name,
+      description: storedProblem.description || "Solve the coding challenge.",
+      example: {
+        input: example.input !== undefined ? String(example.input) : "Use the sample test cases below.",
+        output: example.output !== undefined ? String(example.output) : "",
+      },
+      constraints: Array.isArray(storedProblem.constraints) ? storedProblem.constraints : [],
+      starters: {
+        python: starterCode.python || `def ${storedProblem.function_name}():\n    pass\n`,
+        javascript: starterCode.javascript || `function ${storedProblem.function_name}() {\n}\n`,
+        java: starterCode.java || "",
+      },
+      args: (testCase) => {
+        if (Array.isArray(testCase.args)) return testCase.args;
+        return Object.entries(testCase)
+          .filter(([key]) => !["expected", "output", "hidden"].includes(key))
+          .map(([, value]) => value);
+      },
+      visibleTests,
+      hiddenTests,
+      fromDatabase: true,
+      category: storedProblem.category,
+    };
+  });
+
   /* ===========================================================
      2. PERSISTED STATE (stands in for the UserProblemProgress /
      Submission tables — see the header note on swapping this for
@@ -714,6 +756,62 @@ def __build_tree(arr):
     let monacoReady = false;
     let submitInFlight = false;
 
+    function ensureBundledProblemCards() {
+      const categories = {
+        "longest-substring": "javascript",
+        "valid-bst": "django",
+        "valid-parentheses": "django",
+      };
+      const existingIds = new Set([...problemsContainer.querySelectorAll(".problem")].map((card) => card.dataset.id));
+      Object.entries(PROBLEMS).forEach(([id, problem]) => {
+        if (existingIds.has(id)) return;
+        const card = document.createElement("div");
+        card.className = "problem";
+        card.dataset.id = id;
+        card.dataset.category = categories[id] || problem.category || "python";
+        card.dataset.name = problem.title.replace(/^\d+\.\s*/, "").toLowerCase();
+
+        const icon = document.createElement("div");
+        icon.className = "problem-status pending-status";
+        icon.innerHTML = '<i class="bi bi-circle"></i>';
+        const info = document.createElement("div");
+        info.className = "problem-info";
+        const title = document.createElement("h3");
+        title.textContent = problem.title;
+        const description = document.createElement("p");
+        description.textContent = problem.description.replace(/<[^>]*>/g, "");
+        const tags = document.createElement("div");
+        tags.className = "tags";
+        problem.tags.forEach((tag) => {
+          const tagElement = document.createElement("span");
+          tagElement.className = "tag";
+          tagElement.textContent = tag;
+          tags.appendChild(tagElement);
+        });
+        info.append(title, description, tags);
+
+        const meta = document.createElement("div");
+        meta.className = "problem-meta";
+        const difficulty = document.createElement("span");
+        difficulty.className = `difficulty ${problem.difficulty.toLowerCase()}`;
+        difficulty.textContent = problem.difficulty.toUpperCase();
+        const progress = document.createElement("div");
+        progress.className = "solve-rate";
+        progress.textContent = "Not started";
+        meta.append(difficulty, progress);
+
+        const solveButton = document.createElement("button");
+        solveButton.className = "solve-btn";
+        solveButton.type = "button";
+        solveButton.textContent = "Solve";
+        card.append(icon, info, meta, solveButton);
+        problemsContainer.appendChild(card);
+      });
+      problemsContainer.querySelector(".empty-state")?.remove();
+    }
+
+    ensureBundledProblemCards();
+
     /* -------- topic filter options, built from PROBLEMS -------- */
     const allTopics = new Set();
     Object.values(PROBLEMS).forEach((p) => p.tags.forEach((t) => allTopics.add(t)));
@@ -973,19 +1071,24 @@ def __build_tree(arr):
 
       solverTitle.textContent = problem.title;
 
-      const tagsHtml = problem.tags.map((t) => `<span class="tag">${t}</span>`).join("");
-      const constraintsHtml = problem.constraints.map((c) => `<li>${c}</li>`).join("");
+      const tagsHtml = problem.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+      const constraintsHtml = problem.constraints.map((c) => `<li>${escapeHtml(c)}</li>`).join("");
+      const descriptionHtml = problem.fromDatabase
+        ? escapeHtml(problem.description).replace(/\n/g, "<br>")
+        : problem.description;
+      const exampleInput = problem.fromDatabase ? escapeHtml(problem.example.input) : problem.example.input;
+      const exampleOutput = problem.fromDatabase ? escapeHtml(problem.example.output) : problem.example.output;
       descBody.innerHTML = `
         <h2>${problem.title}</h2>
         <div class="desc-meta">
             <span class="difficulty ${problem.difficulty.toLowerCase()}">${problem.difficulty.toUpperCase()}</span>
             ${tagsHtml}
         </div>
-        <p>${problem.description}</p>
+        <p>${descriptionHtml}</p>
         <div class="example">
             <strong>Example</strong>
-            <p><b>Input:</b> <code>${problem.example.input}</code></p>
-            <p><b>Output:</b> <code>${problem.example.output}</code></p>
+          <p><b>Input:</b> <code>${exampleInput}</code></p>
+          <p><b>Output:</b> <code>${exampleOutput}</code></p>
         </div>
         <p style="margin-top:14px;"><strong>Constraints</strong></p>
         <ul class="constraints-list">${constraintsHtml}</ul>`;
@@ -1294,7 +1397,12 @@ def __build_tree(arr):
     /* -------- list events -------- */
 
     document.querySelectorAll(".solve-btn").forEach((btn) => {
-      btn.addEventListener("click", () => openProblem(btn.closest(".problem").dataset.id));
+      btn.addEventListener("click", (event) => {
+        const id = btn.closest(".problem").dataset.id;
+        if (!PROBLEMS[id]) return;
+        event.preventDefault();
+        openProblem(id);
+      });
     });
     backBtn.addEventListener("click", closeProblem);
 
@@ -1323,5 +1431,7 @@ def __build_tree(arr):
     applyStatusToList();
     applyAllFilters();
     refreshDashboard();
+    const requestedProblem = new URLSearchParams(window.location.search).get("problem");
+    if (requestedProblem && PROBLEMS[requestedProblem]) openProblem(requestedProblem);
   });
 })();

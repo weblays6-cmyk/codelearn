@@ -1,0 +1,42 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}{{ mock_test.title }} | Mock Tests{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<style>
+.practice-subpage{max-width:1000px;margin:0 auto;padding:28px 0 40px}.test-panel{background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:26px}.test-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:22px 0}.fact{padding:14px;border:1px solid rgba(148,163,184,.14);border-radius:12px}.fact span{display:block;color:#94a3b8;font-size:.76rem}.fact strong{display:block;margin-top:6px;font-size:1.25rem}.tool-btn{text-decoration:none}.instructions{color:#cbd5e1;line-height:1.8}
+</style>
+{% endblock %}
+{% block content %}
+<div class="practice-subpage">
+  <div class="eyebrow"><i class="bi bi-stopwatch"></i> Assessment instructions</div>
+  <section class="test-panel">
+    <h1>{{ mock_test.title }}</h1>
+    <p style="color:#cbd5e1">{{ mock_test.description }}</p>
+    <div class="test-facts">
+      <div class="fact"><span>Difficulty</span><strong>{{ mock_test.get_difficulty_display }}</strong></div>
+      <div class="fact"><span>Questions</span><strong>{{ question_count }}</strong></div>
+      <div class="fact"><span>Duration</span><strong>{{ mock_test.duration_minutes }} min</strong></div>
+      <div class="fact"><span>Total points</span><strong>{{ total_points }}</strong></div>
+    </div>
+    <h2>Before you start</h2>
+    <ul class="instructions">
+      <li>The timer begins only after you start the attempt.</li>
+      <li>Your answers are saved as you select them.</li>
+      <li>The server maintains the deadline across refreshes.</li>
+      <li>Final submission locks this attempt.</li>
+    </ul>
+    {% if latest_attempt and latest_attempt.status == 'IN_PROGRESS' %}
+      <a class="tool-btn" href="{% url 'blog:practice_mock_test_attempt' latest_attempt.pk %}">Continue attempt</a>
+    {% elif can_start %}
+      <form method="post" action="{% url 'blog:practice_mock_test_start' mock_test.pk %}">{% csrf_token %}<button class="tool-btn" type="submit">Start Test</button></form>
+    {% elif latest_attempt %}
+      <p>This test does not allow another attempt.</p>
+      <a class="tool-btn" href="{% url 'blog:practice_mock_test_result' latest_attempt.pk %}">View Result</a>
+    {% else %}
+      <p>This test is not ready to start.</p>
+    {% endif %}
+    <a class="tool-btn" href="{% url 'blog:practice_mock_tests' %}">Back to Mock Tests</a>
+  </section>
+</div>
+{% endblock %}

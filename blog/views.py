@@ -1,6 +1,7 @@
 import os
 import secrets
 import json
+from datetime import timedelta
 
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
@@ -12,7 +13,9 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Avg
+from django.db import transaction
+from django.db.models import Avg, Count, Max
+from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from django.urls import reverse
@@ -47,8 +50,13 @@ from .models import (
     UserAssignmentProgress,
     LessonProgress,
     PracticeProblem,
+    PracticeProblemSet,
     PracticeProgress,
     PracticeSubmission,
+    PlaygroundSession,
+    MockTest,
+    MockTestQuestion,
+    MockTestAttempt,
     FollowRequest,
     Notification,
 )
@@ -59,6 +67,14 @@ from .services.course_progress import (
     refresh_progress_for_assignment,
     start_lesson,
 )
+from .services.code_execution import (
+    CodeExecutionError,
+    CodeRunnerUnavailable,
+    run_code,
+    runner_is_configured,
+    supported_languages,
+)
+from .services.leaderboard import leaderboard_rows
 
 from .forms import (
     PostForm,
@@ -135,6 +151,8 @@ def dashboard(request):
         'recent_posts': recent_posts,
         'user_profile': profile,
         'my_enrollments': my_enrollments,
+        'dashboard_practice_stats': _practice_stats_for_user(request.user),
+        'owned_project_count': Project.objects.filter(owner=request.user).count(),
     }
 
     return render(
@@ -379,6 +397,32 @@ def _can_access_assignment(user, assignment):
         ).exists()
     course = _assignment_course(assignment)
     return bool(course and Enrollment.objects.filter(student=user, course=course).exists())
+
+
+@login_required
+def start_lesson_view(request, course_pk, lesson_pk):
+    course = get_object_or_404(
+        Post,
+        pk=course_pk,
+        status='PUBLISHED',
+    )
+    lesson = get_object_or_404(
+        Lesson,
+        pk=lesson_pk,
+        course=course,
+        course__status='PUBLISHED',
+    )
+
+    Enrollment.objects.get_or_create(
+        student=request.user,
+        course=course,
+    )
+
+    if not can_access_lesson(request.user, lesson):
+        return HttpResponseForbidden('Complete the earlier lessons first.')
+
+    start_lesson(request.user, lesson)
+    return redirect('blog:lesson_detail', pk=lesson.pk)
 
 
 def lesson_detail(request, pk):
@@ -1641,9 +1685,24 @@ def settings_view(request):
 @login_required
 def notifications(request):
 
+    notifications = Notification.objects.filter(
+        recipient=request.user
+    ).select_related(
+        'sender'
+    ).order_by('-created_at')
+
+    if request.method == 'POST' and request.POST.get('mark_all_read') == '1':
+        notifications.filter(is_read=False).update(is_read=True)
+        return redirect('blog:notifications')
+
     return render(
         request,
-        'blog/notifications.html'
+        'blog/notifications.html',
+        {
+            'notifications': notifications,
+            'unread_count': notifications.filter(is_read=False).count(),
+            'username': request.user.username,
+        }
     )
 
 
@@ -1717,10 +1776,37 @@ def ai_tutor(request):
 @login_required
 def practice(request):
 
-    progress = {
+    stats = _practice_stats_for_user(request.user)
+    problems = PracticeProblem.objects.filter(active=True).order_by('id')
+    problem_rows = [
+        {
+            'problem': problem,
+            'status': stats['user_progress'].get(problem.id, 'NOT_ATTEMPTED'),
+        }
+        for problem in problems
+    ]
+    database_problems = [
+        {
+            'slug': problem.slug,
+            'title': problem.title,
+            'description': problem.description,
+            'difficulty': problem.difficulty,
+            'category': problem.category,
+            'tags': problem.tags,
+            'function_name': problem.function_name,
+            'starter_code': problem.starter_code,
+            'example': problem.example,
+            'constraints': problem.constraints,
+            'public_tests': problem.public_tests,
+            'hidden_tests': problem.hidden_tests,
+        }
+        for problem in problems
+    ]
+    progress_state = {
         item.problem.slug: {
             'status': item.status,
             'attemptCount': item.attempt_count,
+            'lastSubmissionId': item.last_submission_id,
             'lastAttemptAt': item.last_attempt_at.isoformat() if item.last_attempt_at else None,
             'solvedAt': item.solved_at.isoformat() if item.solved_at else None,
         }
@@ -1736,7 +1822,7 @@ def practice(request):
             'totalTestCases': item.total_test_cases,
             'executionTime': item.execution_time,
             'memoryUsed': float(item.memory_used) if item.memory_used is not None else None,
-            'submittedAt': item.submitted_at.isoformat(),
+            'submittedAt': int(item.submitted_at.timestamp() * 1000),
         }
         for item in PracticeSubmission.objects.filter(user=request.user).select_related('problem')[:100]
     ]
@@ -1746,38 +1832,694 @@ def practice(request):
         'blog/practice.html',
         {
             'username': request.user.username,
-            'practice_state': json.dumps({
-                'progress': progress,
-                'submissions': submissions,
-            }),
+            'problems': problem_rows,
+            'database_problems': database_problems,
+            'practice_stats': stats,
+            'practice_state': json.dumps({'progress': progress_state, 'submissions': submissions}),
         }
     )
 
 
 def _practice_problem(slug):
+    problem = PracticeProblem.objects.filter(slug=slug, active=True).first()
+    if problem:
+        return problem
+
+    bundled_slugs = {
+        'two-sum', 'reverse-a-string', 'palindrome-check', 'fizzbuzz',
+        'valid-parentheses', 'merge-two-sorted-lists', 'longest-substring', 'valid-bst',
+    }
+    if slug not in bundled_slugs:
+        return get_object_or_404(PracticeProblem, slug=slug, active=True)
+
+    function_name = slug.replace('-', '_')
     return PracticeProblem.objects.get_or_create(
         slug=slug,
         defaults={
             'title': slug.replace('-', ' ').title(),
-            'description': '',
+            'description': 'Bundled coding practice problem.',
             'difficulty': 'EASY',
-            'function_name': slug.replace('-', '_'),
-        }
+            'category': 'python',
+            'function_name': function_name,
+            'starter_code': {
+                'python': f'def {function_name}():\n    pass\n',
+                'javascript': f'function {function_name}() {{\n}}\n',
+                'java': '',
+            },
+            'public_tests': [],
+            'hidden_tests': [],
+        },
     )[0]
+
+
+def _practice_stats_for_user(user):
+    problem_count = PracticeProblem.objects.filter(active=True).count()
+    user_progress = {
+        item.problem_id: item.status
+        for item in PracticeProgress.objects.filter(user=user).select_related('problem')
+    }
+    solved = sum(1 for value in user_progress.values() if value == 'SOLVED')
+    attempted = sum(1 for value in user_progress.values() if value == 'ATTEMPTED')
+    pending = max(problem_count - solved - attempted, 0)
+
+    completed_tests = MockTestAttempt.objects.filter(
+        user=user,
+        status__in=('COMPLETED', 'EXPIRED'),
+    )
+    test_scores = list(completed_tests.values_list('score', 'total_score'))
+    score_percentages = [round(score * 100 / total, 1) for score, total in test_scores if total]
+    average_test_score = round(sum(score_percentages) / len(score_percentages), 1) if score_percentages else 0
+    best_test_score = max(score_percentages, default=0)
+    solved_difficulty = {
+        row['problem__difficulty'].lower(): row['total']
+        for row in PracticeProgress.objects.filter(user=user, status='SOLVED')
+        .values('problem__difficulty')
+        .annotate(total=Count('id'))
+    }
+    activity_days = set(
+        PracticeSubmission.objects.filter(user=user).dates('submitted_at', 'day', order='DESC')
+    )
+    activity_days.update(
+        completed_tests.exclude(submitted_at__isnull=True).dates('submitted_at', 'day', order='DESC')
+    )
+    today = timezone.localdate()
+    streak = 0
+    streak_day = today if today in activity_days else today - timedelta(days=1)
+    while streak_day in activity_days:
+        streak += 1
+        streak_day -= timedelta(days=1)
+
+    recent_activity = [
+        {
+            'title': f'{submission.get_status_display()}: {submission.problem.title}',
+            'status': submission.status,
+            'created_at': submission.submitted_at,
+        }
+        for submission in PracticeSubmission.objects.filter(user=user).select_related('problem')[:10]
+    ]
+    recent_activity.extend(
+        {
+            'title': f'Completed test: {attempt.test.title}',
+            'status': 'COMPLETED',
+            'created_at': attempt.submitted_at,
+        }
+        for attempt in completed_tests.select_related('test').exclude(submitted_at__isnull=True)[:10]
+    )
+    recent_activity.sort(key=lambda activity: activity['created_at'], reverse=True)
+
+    return {
+        'total_problems': problem_count,
+        'solved': solved,
+        'attempted': attempted,
+        'pending': pending,
+        'accuracy': round((solved / problem_count) * 100, 1) if problem_count else 0,
+        'mock_tests_completed': completed_tests.count(),
+        'average_mock_score': average_test_score,
+        'best_mock_score': best_test_score,
+        'easy_solved': solved_difficulty.get('easy', 0),
+        'medium_solved': solved_difficulty.get('medium', 0),
+        'hard_solved': solved_difficulty.get('hard', 0),
+        'mock_test_minutes': round(sum(
+            max(0, (attempt.submitted_at - attempt.started_at).total_seconds()) / 60
+            for attempt in completed_tests.exclude(submitted_at__isnull=True)
+        )),
+        'streak': streak,
+        'recent_activity': recent_activity[:5],
+        'user_progress': user_progress,
+    }
+
+
+@login_required
+def practice_details(request):
+    stats = _practice_stats_for_user(request.user)
+    return render(
+        request,
+        'blog/practice_details.html',
+        {
+            'username': request.user.username,
+            'stats': stats,
+            'recent_activity': stats['recent_activity'],
+        },
+    )
+
+
+@login_required
+def practice_all(request):
+    problems = PracticeProblem.objects.filter(active=True).order_by('id')
+    search = request.GET.get('search', '').strip()[:100]
+    category = request.GET.get('category', '').strip()[:40]
+    difficulty = request.GET.get('difficulty', '').strip().upper()
+    status_filter = request.GET.get('status', '').strip().upper()
+    if search:
+        problems = problems.filter(Q(title__icontains=search) | Q(description__icontains=search))
+    if category:
+        problems = problems.filter(Q(category__iexact=category) | Q(tags__icontains=category))
+    if difficulty in ('EASY', 'MEDIUM', 'HARD'):
+        problems = problems.filter(difficulty=difficulty)
+    stats = _practice_stats_for_user(request.user)
+    problem_rows = []
+    for problem in problems:
+        status = stats['user_progress'].get(problem.id, 'NOT_ATTEMPTED')
+        if status_filter and status_filter != status:
+            continue
+        problem_rows.append({
+            'problem': problem,
+            'status': status,
+        })
+    categories = PracticeProblem.objects.filter(active=True).values_list('category', flat=True).distinct()
+    problem_page = Paginator(problem_rows, 20).get_page(request.GET.get('page'))
+    return render(
+        request,
+        'blog/practice_all.html',
+        {
+            'username': request.user.username,
+            'problems': problem_page,
+            'stats': stats,
+            'progress_map': stats['user_progress'],
+            'search': search,
+            'selected_category': category,
+            'selected_difficulty': difficulty,
+            'selected_status': status_filter,
+            'categories': categories,
+        },
+    )
+
+
+@login_required
+def practice_playground(request):
+    session = None
+    session_id = request.GET.get('session')
+    if session_id:
+        session = get_object_or_404(PlaygroundSession, pk=session_id, user=request.user)
+    languages = supported_languages() if runner_is_configured() else ()
+    return render(
+        request,
+        'blog/practice_playground.html',
+        {
+            'username': request.user.username,
+            'session': session,
+            'languages': languages,
+            'selected_language': session.language if session else (languages[0] if languages else ''),
+            'sessions': PlaygroundSession.objects.filter(user=request.user)[:10],
+            'runner_configured': runner_is_configured(),
+        },
+    )
+
+
+@login_required
+def practice_mock_tests(request):
+    tests = MockTest.objects.filter(active=True).annotate(question_count=Count('questions'))
+    attempts = MockTestAttempt.objects.filter(user=request.user).select_related('test')
+    latest_by_test = {}
+    for attempt in attempts:
+        latest_by_test.setdefault(attempt.test_id, attempt)
+    test_rows = [
+        {'test': mock_test, 'attempt': latest_by_test.get(mock_test.id)}
+        for mock_test in tests
+    ]
+    return render(
+        request,
+        'blog/practice_mock_tests.html',
+        {
+            'username': request.user.username,
+            'tests': test_rows,
+            'stats': _practice_stats_for_user(request.user),
+        },
+    )
+
+
+@login_required
+def practice_problem_sets(request):
+    sets = PracticeProblemSet.objects.filter(active=True).prefetch_related('problems')
+    set_rows = []
+    for problem_set in sets:
+        set_problems = problem_set.problems.filter(active=True)
+        problem_ids = list(set_problems.values_list('id', flat=True))
+        solved = PracticeProgress.objects.filter(
+            user=request.user,
+            problem_id__in=problem_ids,
+            status='SOLVED',
+        ).count()
+        set_rows.append({
+            'set': problem_set,
+            'count': len(problem_ids),
+            'solved': solved,
+            'percent': round(solved * 100 / len(problem_ids)) if problem_ids else 0,
+        })
+
+    return render(
+        request,
+        'blog/practice_problem_sets.html',
+        {
+            'username': request.user.username,
+            'sets': set_rows,
+            'stats': _practice_stats_for_user(request.user),
+        },
+    )
+
+
+@login_required
+def practice_leaderboard(request):
+    period = request.GET.get('period', 'all').lower()
+    leaderboard, period = leaderboard_rows(period)
+    current_rank = next(
+        (rank for rank, row in enumerate(leaderboard, start=1) if row['user'].id == request.user.id),
+        None,
+    )
+    leaderboard_page = Paginator(leaderboard, 25).get_page(request.GET.get('page'))
+
+    return render(
+        request,
+        'blog/practice_leaderboard.html',
+        {
+            'username': request.user.username,
+            'leaderboard': leaderboard_page,
+            'podium': leaderboard[:3],
+            'period': period,
+            'current_rank': current_rank,
+            'stats': _practice_stats_for_user(request.user),
+        },
+    )
+
+
+def _practice_json_payload(request):
+    if len(request.body) > 30_000:
+        return None
+    try:
+        payload = json.loads(request.body or b'{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _practice_rate_limited(user):
+    cache_key = f'practice-run:{user.pk}'
+    if cache.add(cache_key, 1, timeout=60):
+        return False
+    try:
+        return cache.incr(cache_key) > 20
+    except ValueError:
+        cache.set(cache_key, 1, timeout=60)
+        return False
+
+
+@login_required
+def playground_save(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid or oversized request.'}, status=400)
+    language = str(payload.get('language') or 'text').strip().lower()
+    source_code = payload.get('sourceCode', '')
+    stdin = payload.get('stdin', '')
+    if not isinstance(source_code, str) or len(source_code.encode('utf-8')) > 20_000:
+        return JsonResponse({'error': 'Code is larger than the allowed limit.'}, status=400)
+    if not isinstance(stdin, str) or len(stdin.encode('utf-8')) > 4_000:
+        return JsonResponse({'error': 'Input is larger than the allowed limit.'}, status=400)
+    if language not in {'python', 'javascript', 'java', 'text'}:
+        return JsonResponse({'error': 'Unsupported session language.'}, status=400)
+
+    session_id = payload.get('sessionId')
+    session = None
+    if session_id:
+        session = get_object_or_404(PlaygroundSession, pk=session_id, user=request.user)
+    title = str(payload.get('title') or 'Untitled session').strip()[:120] or 'Untitled session'
+    if session:
+        session.title = title
+        session.language = language
+        session.source_code = source_code
+        session.stdin = stdin
+        session.save(update_fields=['title', 'language', 'source_code', 'stdin', 'updated_at'])
+    else:
+        session = PlaygroundSession.objects.create(
+            user=request.user,
+            title=title,
+            language=language,
+            source_code=source_code,
+            stdin=stdin,
+        )
+    return JsonResponse({'saved': True, 'sessionId': session.id})
+
+
+@login_required
+def playground_run(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid or oversized request.'}, status=400)
+    if _practice_rate_limited(request.user):
+        return JsonResponse({'error': 'Execution limit reached. Try again shortly.'}, status=429)
+    try:
+        result = run_code(
+            source_code=payload.get('sourceCode'),
+            language=payload.get('language'),
+            stdin=payload.get('stdin', ''),
+        )
+    except CodeRunnerUnavailable as error:
+        return JsonResponse({'error': str(error)}, status=503)
+    except CodeExecutionError as error:
+        return JsonResponse({'error': str(error)}, status=400)
+    return JsonResponse(result)
+
+
+@login_required
+def practice_problem_detail(request, slug):
+    problem = get_object_or_404(PracticeProblem, slug=slug, active=True)
+    progress = PracticeProgress.objects.filter(user=request.user, problem=problem).first()
+    history = Paginator(
+        PracticeSubmission.objects.filter(user=request.user, problem=problem),
+        10,
+    ).get_page(request.GET.get('page'))
+    language = next(iter(problem.starter_code or {}), '')
+    draft = (progress.code_drafts or {}).get(language, '') if progress else ''
+    return render(request, 'blog/practice_problem_detail.html', {
+        'problem': problem,
+        'progress': progress,
+        'history': history,
+        'language': language,
+        'starter_code': draft or (problem.starter_code or {}).get(language, ''),
+        'starter_codes': problem.starter_code or {},
+        'languages': [item for item in supported_languages() if item in (problem.starter_code or {})] if runner_is_configured() else [],
+    })
+
+
+def _execute_problem_request(request, slug, submit):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    problem = get_object_or_404(PracticeProblem, slug=slug, active=True)
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid or oversized request.'}, status=400)
+    if _practice_rate_limited(request.user):
+        return JsonResponse({'error': 'Execution limit reached. Try again shortly.'}, status=429)
+    source_code = payload.get('sourceCode')
+    language = str(payload.get('language', '')).strip().lower()
+    if language not in supported_languages() or language not in (problem.starter_code or {}):
+        return JsonResponse({'error': 'This language is not enabled for this problem.'}, status=400)
+    visible_cases = problem.public_tests or []
+    hidden_cases = problem.hidden_tests or [] if submit else []
+    if any(not isinstance(test_case, dict) for test_case in visible_cases + hidden_cases):
+        return JsonResponse({'error': 'This problem has invalid test configuration.'}, status=409)
+    cases = [dict(test_case, hidden=False) for test_case in visible_cases]
+    cases.extend(dict(test_case, hidden=True) for test_case in hidden_cases)
+    if not cases:
+        return JsonResponse({'error': 'This problem has no configured test cases.'}, status=409)
+    try:
+        result = run_code(
+            source_code=source_code,
+            language=language,
+            function_name=problem.function_name,
+            test_cases=cases,
+            submit=submit,
+        )
+    except CodeRunnerUnavailable as error:
+        return JsonResponse({'error': str(error)}, status=503)
+    except CodeExecutionError as error:
+        return JsonResponse({'error': str(error)}, status=400)
+
+    test_results = result['test_results'][:len(cases)]
+    passed = sum(1 for test_result in test_results if test_result['passed'])
+    is_accepted = submit and result['status'] in ('SUCCESS', 'ACCEPTED') and len(test_results) == len(cases) and passed == len(cases)
+    status = 'ACCEPTED' if is_accepted else result['status']
+    if submit and not is_accepted and status in ('SUCCESS', 'ACCEPTED'):
+        status = 'WRONG_ANSWER'
+
+    with transaction.atomic():
+        progress, _ = PracticeProgress.objects.select_for_update().get_or_create(
+            user=request.user,
+            problem=problem,
+        )
+        progress.attempt_count += 1
+        progress.last_attempt_at = timezone.now()
+        if is_accepted:
+            progress.status = 'SOLVED'
+            progress.solved_at = progress.solved_at or timezone.now()
+        elif progress.status != 'SOLVED':
+            progress.status = 'ATTEMPTED'
+        progress.save()
+
+        submission = None
+        if submit:
+            visible_results = [item for item in test_results if not item.get('hidden')]
+            submission = PracticeSubmission.objects.create(
+                user=request.user,
+                problem=problem,
+                language=language,
+                source_code=source_code,
+                status=status,
+                passed_test_cases=passed,
+                total_test_cases=len(cases),
+                execution_time=result.get('execution_time_ms'),
+                memory_used=result.get('memory_kb'),
+                result_data={
+                    'status': status,
+                    'visible_test_results': visible_results,
+                },
+            )
+            progress.last_submission = submission
+            progress.save(update_fields=['last_submission'])
+
+    return JsonResponse({
+        'status': status,
+        'passed': passed,
+        'total': len(cases),
+        'testResults': [item for item in test_results if not item.get('hidden')],
+        'stdout': result['stdout'],
+        'stderr': result['stderr'],
+        'executionTime': result.get('execution_time_ms'),
+        'submissionId': submission.id if submission else None,
+    })
+
+
+@login_required
+def practice_problem_run(request, slug):
+    return _execute_problem_request(request, slug, submit=False)
+
+
+@login_required
+def practice_problem_submit(request, slug):
+    return _execute_problem_request(request, slug, submit=True)
+
+
+@login_required
+def practice_problem_set_detail(request, slug):
+    problem_set = get_object_or_404(PracticeProblemSet, slug=slug, active=True)
+    problems = problem_set.problems.filter(active=True).order_by('id')
+    progress = {
+        item.problem_id: item.status
+        for item in PracticeProgress.objects.filter(user=request.user, problem__in=problems)
+    }
+    rows = [{'problem': problem, 'status': progress.get(problem.id, 'NOT_ATTEMPTED')} for problem in problems]
+    return render(request, 'blog/practice_problem_set_detail.html', {
+        'problem_set': problem_set,
+        'problems': rows,
+        'solved_count': sum(1 for row in rows if row['status'] == 'SOLVED'),
+    })
+
+
+@login_required
+def practice_mock_test_detail(request, pk):
+    mock_test = get_object_or_404(MockTest, pk=pk, active=True)
+    questions = mock_test.questions.all()
+    question_count = questions.count()
+    total_points = sum(questions.values_list('points', flat=True))
+    attempts = MockTestAttempt.objects.filter(user=request.user, test=mock_test)
+    latest_attempt = attempts.first()
+    return render(request, 'blog/practice_mock_test_detail.html', {
+        'mock_test': mock_test,
+        'question_count': question_count,
+        'total_points': total_points,
+        'latest_attempt': latest_attempt,
+        'can_start': bool(question_count) and (mock_test.allow_retakes or not attempts.filter(status__in=('COMPLETED', 'EXPIRED')).exists()),
+    })
+
+
+@login_required
+def practice_mock_test_start(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    mock_test = get_object_or_404(MockTest, pk=pk, active=True)
+    if not mock_test.questions.exists():
+        return JsonResponse({'error': 'This test has no questions yet.'}, status=409)
+    attempts = MockTestAttempt.objects.filter(user=request.user, test=mock_test)
+    active_attempt = attempts.filter(status='IN_PROGRESS').first()
+    if active_attempt:
+        return redirect('blog:practice_mock_test_attempt', pk=active_attempt.pk)
+    if not mock_test.allow_retakes and attempts.filter(status__in=('COMPLETED', 'EXPIRED')).exists():
+        latest = attempts.filter(status__in=('COMPLETED', 'EXPIRED')).first()
+        return redirect('blog:practice_mock_test_result', pk=latest.pk)
+    attempt = MockTestAttempt.objects.create(
+        user=request.user,
+        test=mock_test,
+        expires_at=timezone.now() + timedelta(minutes=mock_test.duration_minutes),
+        total_score=sum(mock_test.questions.values_list('points', flat=True)),
+    )
+    return redirect('blog:practice_mock_test_attempt', pk=attempt.pk)
+
+
+def _finalize_mock_attempt(attempt, expired=False):
+    if attempt.status != 'IN_PROGRESS':
+        return attempt
+    questions = attempt.test.questions.all()
+    total_score = sum(question.points for question in questions)
+    score = 0
+    for question in questions:
+        answer = attempt.answers.get(str(question.id))
+        if answer is not None and str(answer) == str(question.correct_answer):
+            score += question.points
+    attempt.score = score
+    attempt.total_score = total_score
+    attempt.submitted_at = timezone.now()
+    attempt.status = 'EXPIRED' if expired else 'COMPLETED'
+    attempt.save(update_fields=['score', 'total_score', 'submitted_at', 'status'])
+    return attempt
+
+
+@login_required
+def practice_mock_test_attempt(request, pk):
+    attempt = get_object_or_404(
+        MockTestAttempt.objects.select_related('test'),
+        pk=pk,
+        user=request.user,
+    )
+    if attempt.status != 'IN_PROGRESS':
+        return redirect('blog:practice_mock_test_result', pk=attempt.pk)
+    with transaction.atomic():
+        attempt = MockTestAttempt.objects.select_for_update().get(pk=attempt.pk, user=request.user)
+        if timezone.now() >= attempt.expires_at:
+            _finalize_mock_attempt(attempt, expired=True)
+    if attempt.status != 'IN_PROGRESS':
+        return redirect('blog:practice_mock_test_result', pk=attempt.pk)
+    questions = [
+        {
+            'question': question,
+            'answer': attempt.answers.get(str(question.id), ''),
+        }
+        for question in attempt.test.questions.all()
+    ]
+    return render(request, 'blog/practice_mock_test_attempt.html', {
+        'attempt': attempt,
+        'questions': questions,
+        'remaining_seconds': max(0, int((attempt.expires_at - timezone.now()).total_seconds())),
+    })
+
+
+@login_required
+def practice_mock_test_answer(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid request.'}, status=400)
+    with transaction.atomic():
+        attempt = get_object_or_404(
+            MockTestAttempt.objects.select_for_update().select_related('test'),
+            pk=pk,
+            user=request.user,
+        )
+        if attempt.status != 'IN_PROGRESS':
+            return JsonResponse({'error': 'This test attempt is already closed.'}, status=409)
+        if timezone.now() >= attempt.expires_at:
+            _finalize_mock_attempt(attempt, expired=True)
+            return JsonResponse({'error': 'Time expired. The test was finalized.'}, status=409)
+        question = get_object_or_404(MockTestQuestion, pk=payload.get('questionId'), test=attempt.test)
+        answer = str(payload.get('answer', ''))[:500]
+        option_ids = {str(option.get('id', '')) for option in question.options if isinstance(option, dict)}
+        if answer and answer not in option_ids:
+            return JsonResponse({'error': 'Choose a valid answer.'}, status=400)
+        answers = dict(attempt.answers or {})
+        if answer:
+            answers[str(question.id)] = answer
+        else:
+            answers.pop(str(question.id), None)
+        attempt.answers = answers
+        attempt.save(update_fields=['answers'])
+    return JsonResponse({'saved': True})
+
+
+@login_required
+def practice_mock_test_submit(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    with transaction.atomic():
+        attempt = get_object_or_404(
+            MockTestAttempt.objects.select_for_update(),
+            pk=pk,
+            user=request.user,
+        )
+        if attempt.status != 'IN_PROGRESS':
+            return JsonResponse({'error': 'This test has already been submitted.'}, status=409)
+        _finalize_mock_attempt(attempt, expired=timezone.now() >= attempt.expires_at)
+    return redirect('blog:practice_mock_test_result', pk=attempt.pk)
+
+
+@login_required
+def practice_mock_test_result(request, pk):
+    attempt = get_object_or_404(
+        MockTestAttempt.objects.select_related('test'),
+        pk=pk,
+        user=request.user,
+    )
+    if attempt.status == 'IN_PROGRESS':
+        return redirect('blog:practice_mock_test_attempt', pk=attempt.pk)
+    question_rows = []
+    for question in attempt.test.questions.all():
+        answer = attempt.answers.get(str(question.id))
+        correct = answer is not None and str(answer) == str(question.correct_answer)
+        correct_option = next(
+            (option for option in question.options if isinstance(option, dict) and str(option.get('id')) == str(question.correct_answer)),
+            None,
+        )
+        selected_option = next(
+            (option for option in question.options if isinstance(option, dict) and str(option.get('id')) == str(answer)),
+            None,
+        )
+        question_rows.append({
+            'question': question,
+            'answer': answer,
+            'correct': correct,
+            'selected_option': selected_option,
+            'correct_option': correct_option,
+        })
+    elapsed_seconds = max(0, int(((attempt.submitted_at or timezone.now()) - attempt.started_at).total_seconds()))
+    answered_count = sum(1 for row in question_rows if row['answer'] is not None)
+    correct_count = sum(1 for row in question_rows if row['correct'])
+    return render(request, 'blog/practice_mock_test_result.html', {
+        'attempt': attempt,
+        'question_rows': question_rows,
+        'answered_count': answered_count,
+        'correct_count': correct_count,
+        'incorrect_count': answered_count - correct_count,
+        'unanswered_count': len(question_rows) - answered_count,
+        'elapsed_seconds': elapsed_seconds,
+        'elapsed_minutes': elapsed_seconds // 60,
+        'elapsed_remainder': elapsed_seconds % 60,
+        'review_mode': request.GET.get('review') == '1',
+    })
 
 
 @login_required
 def practice_save_draft(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    payload = json.loads(request.body or '{}')
-    problem = _practice_problem(payload.get('problemId', ''))
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid or oversized request.'}, status=400)
+    problem = _practice_problem(str(payload.get('problemId', '')))
+    language = str(payload.get('language', '')).strip().lower()
+    source_code = payload.get('sourceCode', '')
+    if language not in {'python', 'javascript', 'java'} or not isinstance(source_code, str):
+        return JsonResponse({'error': 'Invalid language or source code.'}, status=400)
+    if len(source_code.encode('utf-8')) > 20_000:
+        return JsonResponse({'error': 'Code is larger than the allowed limit.'}, status=400)
     progress, _ = PracticeProgress.objects.get_or_create(
         user=request.user,
         problem=problem,
     )
     drafts = progress.code_drafts or {}
-    drafts[payload.get('language', 'python')] = payload.get('sourceCode', '')
+    drafts[language] = source_code
     progress.code_drafts = drafts
     progress.save(update_fields=['code_drafts'])
     return JsonResponse({'saved': True})
@@ -1787,43 +2529,63 @@ def practice_save_draft(request):
 def practice_record(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    payload = json.loads(request.body or '{}')
-    problem = _practice_problem(payload.get('problemId', ''))
-    is_submission = payload.get('kind') == 'submit'
-    status = payload.get('status', 'INTERNAL_ERROR')
-    progress, _ = PracticeProgress.objects.get_or_create(
-        user=request.user,
-        problem=problem,
-    )
-    progress.attempt_count += 1
-    progress.last_attempt_at = timezone.now()
-    if is_submission and status == 'ACCEPTED':
-        progress.status = 'SOLVED'
-        progress.solved_at = progress.solved_at or timezone.now()
-    elif progress.status != 'SOLVED':
-        progress.status = 'ATTEMPTED'
-    progress.save()
+    payload = _practice_json_payload(request)
+    if payload is None:
+        return JsonResponse({'error': 'Invalid or oversized request.'}, status=400)
+    kind = payload.get('kind')
+    if kind not in {'run', 'submit'}:
+        return JsonResponse({'error': 'Invalid practice action.'}, status=400)
 
-    submission = None
-    if is_submission:
-        submission = PracticeSubmission.objects.create(
+    problem = _practice_problem(str(payload.get('problemId', '')))
+    language = str(payload.get('language', '')).strip().lower()
+    source_code = payload.get('sourceCode', '')
+    if language not in {'python', 'javascript', 'java'}:
+        return JsonResponse({'error': 'Unsupported language.'}, status=400)
+    if not isinstance(source_code, str) or len(source_code.encode('utf-8')) > 20_000:
+        return JsonResponse({'error': 'Code is larger than the allowed limit.'}, status=400)
+
+    allowed_statuses = {choice[0] for choice in PracticeSubmission.STATUS_CHOICES}
+    status = str(payload.get('status', 'INTERNAL_ERROR')).upper()
+    if status not in allowed_statuses:
+        status = 'INTERNAL_ERROR'
+    try:
+        passed = min(max(int(payload.get('passed') or 0), 0), 100)
+        total = min(max(int(payload.get('total') or 0), 0), 100)
+        runtime = max(int(payload['runtime']), 0) if payload.get('runtime') is not None else None
+    except (TypeError, ValueError, OverflowError):
+        return JsonResponse({'error': 'Invalid result data.'}, status=400)
+
+    with transaction.atomic():
+        progress, _ = PracticeProgress.objects.select_for_update().get_or_create(
             user=request.user,
             problem=problem,
-            language=payload.get('language', ''),
-            source_code=payload.get('sourceCode', ''),
-            status=status,
-            passed_test_cases=payload.get('passed', 0) or 0,
-            total_test_cases=payload.get('total', 0) or 0,
-            execution_time=payload.get('runtime'),
-            memory_used=payload.get('memory'),
-            result_data={
-                'status': status,
-                'passed': payload.get('passed', 0),
-                'total': payload.get('total', 0),
-            },
         )
-        progress.last_submission = submission
-        progress.save(update_fields=['last_submission'])
+        progress.attempt_count += 1
+        progress.last_attempt_at = timezone.now()
+        if kind == 'submit' and status == 'ACCEPTED':
+            progress.status = 'SOLVED'
+            progress.solved_at = progress.solved_at or timezone.now()
+        elif progress.status != 'SOLVED':
+            progress.status = 'ATTEMPTED'
+        progress.save()
+
+        submission = None
+        if kind == 'submit':
+            submission = PracticeSubmission.objects.create(
+                user=request.user,
+                problem=problem,
+                language=language,
+                source_code=source_code,
+                status=status,
+                passed_test_cases=passed,
+                total_test_cases=total,
+                execution_time=runtime,
+                memory_used=payload.get('memory'),
+                result_data={'status': status, 'passed': passed, 'total': total},
+            )
+            progress.last_submission = submission
+            progress.save(update_fields=['last_submission'])
+
     return JsonResponse({
         'saved': True,
         'status': progress.status,
@@ -1956,6 +2718,8 @@ def assignment_attempt(request, pk):
         progress.started_at = progress.started_at or timezone.now()
         progress.save()
 
+    questions = assignment.questions.select_related('assignment').prefetch_related('options').order_by('order', 'id')
+
     if request.method == 'POST':
         if attempt.status != 'IN_PROGRESS':
             return JsonResponse({'error': 'This attempt was already submitted.'}, status=409)
@@ -2037,7 +2801,7 @@ def assignment_attempt(request, pk):
     return render(request, 'blog/assignment_attempt.html', {
         'assignment': assignment,
         'attempt': attempt,
-        'questions': assignment.questions.prefetch_related('options').all(),
+        'questions': questions,
         'submission': AssignmentSubmission.objects.filter(
             assignment=assignment,
             student=request.user,
@@ -3058,10 +3822,29 @@ def project_share(request, pk):
 @login_required
 def community(request):
 
+    projects = Project.objects.select_related(
+        'owner'
+    ).prefetch_related(
+        'likes',
+        'comments',
+    ).order_by('-created_at')[:12]
+
+    for project in projects:
+        project.like_count = project.likes.count()
+        project.comment_count = project.comments.count()
+
+    context = {
+        'username': request.user.username,
+        'projects': projects,
+        'member_count': User.objects.count(),
+        'project_count': Project.objects.count(),
+        'active_today': User.objects.filter(
+            last_login__isnull=False
+        ).count(),
+    }
+
     return render(
         request,
         'blog/community.html',
-        {
-            'username': request.user.username
-        }
+        context
     )

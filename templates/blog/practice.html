@@ -6,9 +6,6 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <link rel="stylesheet" href="{% static 'css/practice_solver.css' %}">
-<!-- Monaco Editor (loaded here so it's ready before practice.js runs; practice.js
-         falls back to the plain textarea automatically if this fails to load, e.g. offline) -->
-</head>
 {% endblock %}
 
 {% block content %}
@@ -48,7 +45,7 @@
                 <div class="motivation">
                     “Small progress every day
                     becomes a big skill tomorrow.”
-                    <strong>Keep your streak alive 🔥</strong>
+                    <strong>{{ practice_stats.streak }} day streak</strong>
                 </div>
             </section>
 
@@ -60,9 +57,9 @@
                         <div class="stat-icon green">
                             <i class="bi bi-check2-circle"></i>
                         </div>
-                        <span class="stat-change">+3 this week</span>
+                        <span class="stat-change">Current total</span>
                     </div>
-                    <div class="stat-value" id="statSolved">24</div>
+                    <div class="stat-value" id="statSolved">{{ practice_stats.solved }}</div>
                     <div class="stat-label">Problems Solved</div>
                 </div>
 
@@ -73,7 +70,7 @@
                         </div>
                         <span class="stat-change">Active</span>
                     </div>
-                    <div class="stat-value" id="statProgress">12</div>
+                    <div class="stat-value" id="statProgress">{{ practice_stats.attempted }}</div>
                     <div class="stat-label">In Progress</div>
                 </div>
 
@@ -82,9 +79,9 @@
                         <div class="stat-icon orange">
                             <i class="bi bi-clock"></i>
                         </div>
-                        <span class="stat-change" id="pendingNote">8 remaining</span>
+                        <span class="stat-change" id="pendingNote">{{ practice_stats.pending }} remaining</span>
                     </div>
-                    <div class="stat-value" id="statPending">8</div>
+                    <div class="stat-value" id="statPending">{{ practice_stats.pending }}</div>
                     <div class="stat-label">Pending Problems</div>
                 </div>
 
@@ -93,9 +90,9 @@
                         <div class="stat-icon purple">
                             <i class="bi bi-bar-chart"></i>
                         </div>
-                        <span class="stat-change">+8%</span>
+                        <span class="stat-change">From solved problems</span>
                     </div>
-                    <div class="stat-value" id="statAccuracy">68%</div>
+                    <div class="stat-value" id="statAccuracy">{{ practice_stats.accuracy|floatformat:1 }}%</div>
                     <div class="stat-label">Overall Accuracy</div>
                 </div>
 
@@ -112,7 +109,7 @@
                             <h2>Coding Challenges</h2>
                             <span>Improve your problem-solving skills</span>
                         </div>
-                        <span>44 Problems</span>
+                        <span>{{ practice_stats.total_problems }} Problems</span>
                     </div>
 
                     <div class="filters">
@@ -152,6 +149,32 @@
                     </div>
 
                     <div class="problems">
+
+                        {% for row in problems %}
+                        {% with problem=row.problem status=row.status %}
+                        <div class="problem" data-id="{{ problem.slug }}" data-category="{{ problem.category|lower }}" data-name="{{ problem.title|lower }}" data-difficulty="{{ problem.difficulty|lower }}" data-status="{{ row.status|lower }}" data-tags="{% for tag in problem.tags %}{{ tag|lower }}|{% endfor %}">
+                            <div class="problem-status {% if status == 'SOLVED' %}solved-status{% elif status == 'ATTEMPTED' %}progress-status{% else %}pending-status{% endif %}">
+                                {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>{% elif status == 'ATTEMPTED' %}<i class="bi bi-play-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                            </div>
+                            <div class="problem-info">
+                                <h3>{{ forloop.counter }}. {{ problem.title }}</h3>
+                                <p>{{ problem.description|truncatewords:24 }}</p>
+                                <div class="tags">
+                                    {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% empty %}<span class="tag">{{ problem.category|title }}</span>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="problem-meta">
+                                <span class="difficulty {{ problem.difficulty|lower }}">{{ problem.get_difficulty_display|upper }}</span>
+                                <div class="solve-rate">{{ status|title|default:'Not started' }}</div>
+                            </div>
+                            <a class="solve-btn" href="{% url 'blog:practice' %}?problem={{ problem.slug }}">{% if status == 'SOLVED' %}Review{% elif status == 'ATTEMPTED' %}Continue{% else %}Solve{% endif %}</a>
+                        </div>
+                        {% endwith %}
+                        {% empty %}
+                        <p class="empty-state">No problems are available yet.</p>
+                        {% endfor %}
+
+                        {% comment %}
 
                         <!-- PROBLEM 1 -->
                         <div class="problem" data-id="two-sum" data-category="python" data-name="two sum">
@@ -326,6 +349,8 @@
                             <button class="solve-btn">Solve</button>
                         </div>
 
+                        {% endcomment %}
+
                     </div>
                 </div>
 
@@ -336,13 +361,13 @@
                     <div class="panel progress-panel">
                         <div class="progress-header">
                             <h3>Your Progress</h3>
-                            <a href="#" class="details-link">See Details →</a>
+                            <a href="{% url 'blog:practice_details' %}" class="details-link">See Details →</a>
                         </div>
 
                         <div class="progress-body">
                             <div class="circle" id="progressCircle">
                                 <div class="circle-content">
-                                    <strong id="circlePct">68%</strong>
+                                    <strong id="circlePct">{{ practice_stats.accuracy|floatformat:1 }}%</strong>
                                     <span>Overall</span>
                                 </div>
                             </div>
@@ -350,19 +375,19 @@
                             <div class="legend">
                                 <div class="legend-item">
                                     <span class="legend-dot" style="background:#22c55e"></span>
-                                    Solved <strong id="legendSolved">24</strong>
+                                    Solved <strong id="legendSolved">{{ practice_stats.solved }}</strong>
                                 </div>
                                 <div class="legend-item">
                                     <span class="legend-dot" style="background:#3b82f6"></span>
-                                    In Progress <strong id="legendProgress">12</strong>
+                                    In Progress <strong id="legendProgress">{{ practice_stats.attempted }}</strong>
                                 </div>
                                 <div class="legend-item">
                                     <span class="legend-dot" style="background:#f59e0b"></span>
-                                    Pending <strong id="legendPending">8</strong>
+                                    Pending <strong id="legendPending">{{ practice_stats.pending }}</strong>
                                 </div>
                                 <div class="legend-item">
                                     <span class="legend-dot" style="background:#475569"></span>
-                                    Total <strong id="legendTotal">44</strong>
+                                    Total <strong id="legendTotal">{{ practice_stats.total_problems }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -372,90 +397,29 @@
                     <div class="panel streak-panel">
                         <div class="streak-header">
                             <h3>🔥 Practice Streak</h3>
-                            <span class="streak-count">7 days</span>
+                            <span class="streak-count">{{ practice_stats.streak }} days</span>
                         </div>
 
-                        <div class="week-labels">
-                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-                            <span>Fri</span><span>Sat</span><span>Sun</span>
-                        </div>
-
-                        <div class="heatmap">
-                            <span class="heat"></span>
-                            <span class="heat one"></span>
-                            <span class="heat two"></span>
-                            <span class="heat three"></span>
-                            <span class="heat one"></span>
-                            <span class="heat"></span>
-                            <span class="heat two"></span>
-
-                            <span class="heat two"></span>
-                            <span class="heat three"></span>
-                            <span class="heat"></span>
-                            <span class="heat four"></span>
-                            <span class="heat three"></span>
-                            <span class="heat two"></span>
-                            <span class="heat four"></span>
-
-                            <span class="heat three"></span>
-                            <span class="heat two"></span>
-                            <span class="heat four"></span>
-                            <span class="heat three"></span>
-                            <span class="heat"></span>
-                            <span class="heat two"></span>
-                            <span class="heat three"></span>
-
-                            <span class="heat"></span>
-                            <span class="heat one"></span>
-                            <span class="heat two"></span>
-                            <span class="heat four"></span>
-                            <span class="heat three"></span>
-                            <span class="heat two"></span>
-                            <span class="heat four"></span>
-                        </div>
-
-                        <p class="streak-message">Great job! Keep your streak alive.</p>
+                        <p class="streak-message">Streak days are based on recorded submissions and completed tests.</p>
                     </div>
 
                     <!-- RECENT ACTIVITY -->
                     <div class="panel activity-panel">
                         <div class="activity-header">
                             <h3>Recent Activity</h3>
-                            <a href="#" class="details-link">View All →</a>
+                            <a href="{% url 'blog:practice_all' %}" class="details-link">View All →</a>
                         </div>
 
                         <div id="activityList">
+                            {% for activity in practice_stats.recent_activity %}
                             <div class="activity-item">
-                                <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
+                                <div class="activity-icon {% if activity.status == 'ACCEPTED' %}green{% else %}blue{% endif %}"><i class="bi bi-{% if activity.status == 'ACCEPTED' %}check-lg{% else %}play-fill{% endif %}"></i></div>
                                 <div class="activity-info">
-                                    <strong>Solved Two Sum</strong>
-                                    <span>2 hours ago</span>
+                                    <strong>{{ activity.title }}</strong>
+                                    <span>{{ activity.created_at|timesince }} ago</span>
                                 </div>
                             </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon blue"><i class="bi bi-play-fill"></i></div>
-                                <div class="activity-info">
-                                    <strong>Attempted Valid Parentheses</strong>
-                                    <span>5 hours ago</span>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon green"><i class="bi bi-check-lg"></i></div>
-                                <div class="activity-info">
-                                    <strong>Solved Reverse a String</strong>
-                                    <span>Yesterday</span>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon purple"><i class="bi bi-play-fill"></i></div>
-                                <div class="activity-info">
-                                    <strong>Started Merge Two Lists</strong>
-                                    <span>Yesterday</span>
-                                </div>
-                            </div>
+                            {% empty %}<p>No practice activity yet.</p>{% endfor %}
                         </div>
                     </div>
 
@@ -470,21 +434,21 @@
                     <div class="tool-icon purple"><i class="bi bi-code-square"></i></div>
                     <h3>Code Playground</h3>
                     <p>Write, run and test your code with instant feedback.</p>
-                    <a href="#" class="tool-btn">Open Playground →</a>
+                    <a href="{% url 'blog:practice_playground' %}" class="tool-btn">Open Playground →</a>
                 </div>
 
                 <div class="tool-card">
                     <div class="tool-icon orange"><i class="bi bi-stopwatch"></i></div>
                     <h3>Mock Tests</h3>
                     <p>Take timed coding tests similar to real interviews.</p>
-                    <a href="#" class="tool-btn">Start Test →</a>
+                    <a href="{% url 'blog:practice_mock_tests' %}" class="tool-btn">Start Test →</a>
                 </div>
 
                 <div class="tool-card">
                     <div class="tool-icon blue"><i class="bi bi-grid-3x3-gap"></i></div>
                     <h3>Problem Sets</h3>
                     <p>Practice topic-wise curated coding problem sets.</p>
-                    <a href="#" class="tool-btn">Explore Sets →</a>
+                    <a href="{% url 'blog:practice_problem_sets' %}" class="tool-btn">Explore Sets →</a>
                 </div>
 
                 <div class="tool-card">
@@ -493,49 +457,32 @@
                     </div>
                     <h3>Leaderboard</h3>
                     <p>Compare your practice score and challenge your friends.</p>
-                    <a href="#" class="tool-btn">Coming Soon →</a>
+                    <a href="{% url 'blog:practice_leaderboard' %}" class="tool-btn">View Leaderboard →</a>
                 </div>
 
             </section>
 
         </div>
 
-        <!-- ===================== SOLVER VIEW ===================== -->
         <section id="solverView" class="solver" hidden>
-
             <header class="solver-topbar">
-                <button id="backBtn" class="solver-back">
-                    <i class="bi bi-arrow-left"></i> Back
-                </button>
-
+                <button id="backBtn" class="solver-back" type="button"><i class="bi bi-arrow-left"></i> Back</button>
                 <span id="solverTitle" class="solver-title"></span>
-
                 <div class="solver-actions">
-                    <button id="runBtn" class="btn-run">
-                        <i class="bi bi-play-fill"></i> <span class="btn-label">Run</span>
-                    </button>
-                    <button id="submitBtn" class="btn-submit">
-                        <i class="bi bi-cloud-upload"></i> <span class="btn-label">Submit</span>
-                    </button>
+                    <button id="runBtn" class="btn-run" type="button"><i class="bi bi-play-fill"></i> <span class="btn-label">Run</span></button>
+                    <button id="submitBtn" class="btn-submit" type="button"><i class="bi bi-cloud-upload"></i> <span class="btn-label">Submit</span></button>
                 </div>
             </header>
-
             <div class="solver-body">
-
-                <!-- LEFT: DESCRIPTION / SUBMISSIONS -->
                 <div class="solver-panel solver-left">
                     <div class="desc-tabs">
-                        <button class="desc-tab-btn active" data-desctab="description"
-                            type="button">Description</button>
+                        <button class="desc-tab-btn active" data-desctab="description" type="button">Description</button>
                         <button class="desc-tab-btn" data-desctab="submissions" type="button">Submissions</button>
                     </div>
                     <div class="desc-body" id="descBody"></div>
                     <div class="desc-body" id="submissionsBody" hidden></div>
                 </div>
-
-                <!-- RIGHT: EDITOR + TESTCASES -->
                 <div class="solver-right">
-
                     <div class="solver-panel editor-panel">
                         <div class="editor-toolbar">
                             <div class="editor-toolbar-left">
@@ -547,33 +494,21 @@
                                 <span class="editor-saved" id="saveStatus">Saved</span>
                             </div>
                             <div class="editor-toolbar-right">
-                                <button id="resetCodeBtn" class="editor-tool-btn" type="button"
-                                    title="Reset to starter code">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                </button>
-                                <button id="fullscreenBtn" class="editor-tool-btn" type="button"
-                                    title="Toggle fullscreen">
-                                    <i class="bi bi-arrows-fullscreen"></i>
-                                </button>
+                                <button id="resetCodeBtn" class="editor-tool-btn" type="button" title="Reset to starter code"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                                <button id="fullscreenBtn" class="editor-tool-btn" type="button" title="Toggle fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
                             </div>
                         </div>
                         <div id="monacoHost" hidden></div>
                         <textarea id="codeEditor" spellcheck="false"></textarea>
                     </div>
-
                     <div class="solver-panel testcase-panel">
                         <div class="tc-tabs">
-                            <button class="tc-tab active" data-tab="testcase">
-                                <i class="bi bi-check2-square"></i> Testcase
-                            </button>
-                            <button class="tc-tab" data-tab="result">
-                                <i class="bi bi-terminal"></i> Test Result
-                            </button>
+                            <button class="tc-tab active" data-tab="testcase" type="button"><i class="bi bi-check2-square"></i> Testcase</button>
+                            <button class="tc-tab" data-tab="result" type="button"><i class="bi bi-terminal"></i> Test Result</button>
                         </div>
                         <div class="tc-pane" id="testcasePane"></div>
                         <div class="tc-pane" id="resultPane" hidden></div>
                     </div>
-
                 </div>
             </div>
         </section>
@@ -585,14 +520,16 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ database_problems|json_script:'practice-database-problems' }}
+<meta name="csrf-token" content="{{ csrf_token }}">
 <script>
-    document.head.insertAdjacentHTML('beforeend', '<meta name="csrf-token" content="{{ csrf_token }}">');
-    window.PRACTICE_STATE = {{ practice_state | safe }};
+    window.PRACTICE_STATE = {{ practice_state|safe }};
+    window.PRACTICE_DATABASE_PROBLEMS = JSON.parse(document.getElementById('practice-database-problems').textContent);
     window.PRACTICE_ENDPOINTS = {
         saveDraft: "{% url 'blog:practice_save_draft' %}",
         record: "{% url 'blog:practice_record' %}"
     };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-<script src="{% static 'js/practice.js' %}?v=20260927-1"></script>
+<script src="{% static 'js/practice.js' %}"></script>
 {% endblock %}

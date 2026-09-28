@@ -15,8 +15,12 @@ from .models import (
     AssignmentSubmission,
     Comment,
     PracticeProblem,
+    PracticeProblemSet,
     PracticeProgress,
     PracticeSubmission,
+    MockTest,
+    MockTestQuestion,
+    MockTestAttempt,
     UserAssignmentProgress,
     UserProfile,
     Enrollment,
@@ -320,6 +324,36 @@ class PracticeSubmissionAdmin(admin.ModelAdmin):
     list_display = ('user', 'problem', 'language', 'status', 'submitted_at')
     list_filter = ('status', 'language')
     search_fields = ('user__username', 'problem__title')
+
+
+class MockTestQuestionInline(admin.TabularInline):
+    model = MockTestQuestion
+    extra = 1
+    ordering = ('order',)
+
+
+@admin.register(MockTest)
+class MockTestAdmin(admin.ModelAdmin):
+    list_display = ('title', 'difficulty', 'duration_minutes', 'active', 'allow_retakes')
+    list_filter = ('active', 'difficulty', 'allow_retakes')
+    search_fields = ('title', 'description')
+    inlines = [MockTestQuestionInline]
+
+
+@admin.register(PracticeProblemSet)
+class PracticeProblemSetAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'active', 'updated_at')
+    list_filter = ('active',)
+    search_fields = ('title', 'description', 'slug')
+    filter_horizontal = ('problems',)
+
+
+@admin.register(MockTestAttempt)
+class MockTestAttemptAdmin(admin.ModelAdmin):
+    list_display = ('user', 'test', 'status', 'score', 'total_score', 'started_at', 'submitted_at')
+    list_filter = ('status', 'test', 'submitted_at')
+    search_fields = ('user__username', 'test__title')
+    readonly_fields = ('user', 'test', 'started_at', 'expires_at', 'submitted_at', 'answers', 'score', 'total_score', 'status')
 
 
 class CommentAdmin(admin.ModelAdmin):

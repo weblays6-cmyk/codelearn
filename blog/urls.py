@@ -31,6 +31,12 @@ urlpatterns = [
     ),
 
     path(
+        "course/<int:course_pk>/lesson/<int:lesson_pk>/start/",
+        views.start_lesson_view,
+        name="start_lesson"
+    ),
+
+    path(
         "lesson/<int:pk>/",
         views.lesson_detail,
         name="lesson_detail"
@@ -224,6 +230,114 @@ urlpatterns = [
         "practice/",
         views.practice,
         name="practice"
+    ),
+
+    path(
+        "practice/details/",
+        views.practice_details,
+        name="practice_details"
+    ),
+
+    path(
+        "practice/problems/",
+        views.practice_all,
+        name="practice_all"
+    ),
+
+    path(
+        "practice/playground/",
+        views.practice_playground,
+        name="practice_playground"
+    ),
+
+    path(
+        "practice/playground/save/",
+        views.playground_save,
+        name="playground_save"
+    ),
+
+    path(
+        "practice/playground/run/",
+        views.playground_run,
+        name="playground_run"
+    ),
+
+    path(
+        "practice/mock-tests/",
+        views.practice_mock_tests,
+        name="practice_mock_tests"
+    ),
+
+    path(
+        "practice/problem-sets/",
+        views.practice_problem_sets,
+        name="practice_problem_sets"
+    ),
+
+    path(
+        "practice/problem-sets/<slug:slug>/",
+        views.practice_problem_set_detail,
+        name="practice_problem_set_detail"
+    ),
+
+    path(
+        "practice/problems/<slug:slug>/",
+        views.practice_problem_detail,
+        name="practice_problem_detail"
+    ),
+
+    path(
+        "practice/problems/<slug:slug>/run/",
+        views.practice_problem_run,
+        name="practice_problem_run"
+    ),
+
+    path(
+        "practice/problems/<slug:slug>/submit/",
+        views.practice_problem_submit,
+        name="practice_problem_submit"
+    ),
+
+    path(
+        "practice/mock-tests/<int:pk>/",
+        views.practice_mock_test_detail,
+        name="practice_mock_test_detail"
+    ),
+
+    path(
+        "practice/mock-tests/<int:pk>/start/",
+        views.practice_mock_test_start,
+        name="practice_mock_test_start"
+    ),
+
+    path(
+        "practice/mock-tests/attempt/<int:pk>/",
+        views.practice_mock_test_attempt,
+        name="practice_mock_test_attempt"
+    ),
+
+    path(
+        "practice/mock-tests/attempt/<int:pk>/answer/",
+        views.practice_mock_test_answer,
+        name="practice_mock_test_answer"
+    ),
+
+    path(
+        "practice/mock-tests/attempt/<int:pk>/submit/",
+        views.practice_mock_test_submit,
+        name="practice_mock_test_submit"
+    ),
+
+    path(
+        "practice/mock-tests/attempt/<int:pk>/result/",
+        views.practice_mock_test_result,
+        name="practice_mock_test_result"
+    ),
+
+    path(
+        "practice/leaderboard/",
+        views.practice_leaderboard,
+        name="practice_leaderboard"
     ),
 
     path(

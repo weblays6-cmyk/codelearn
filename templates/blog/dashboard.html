@@ -166,7 +166,7 @@
         </div>
 
         <div class="stat-value">
-            0
+            {{ my_enrollments|length }}
         </div>
 
         <div class="stat-label">
@@ -185,13 +185,13 @@
             </div>
 
             <span class="stat-change">
-                Practice
+                {{ dashboard_practice_stats.streak }} day streak
             </span>
 
         </div>
 
         <div class="stat-value">
-            0
+            {{ dashboard_practice_stats.solved }}
         </div>
 
         <div class="stat-label">
@@ -206,21 +206,21 @@
         <div class="stat-top">
 
             <div class="stat-icon">
-                <i class="bi bi-folder2-open"></i>
+                <i class="bi bi-stopwatch"></i>
             </div>
 
             <span class="stat-change">
-                Build
+                Assessment
             </span>
 
         </div>
 
         <div class="stat-value">
-            0
+            {{ dashboard_practice_stats.mock_tests_completed }}
         </div>
 
         <div class="stat-label">
-            Projects Built
+            Mock Tests Completed
         </div>
 
     </div>
@@ -231,21 +231,21 @@
         <div class="stat-top">
 
             <div class="stat-icon">
-                <i class="bi bi-fire"></i>
+                <i class="bi bi-bar-chart"></i>
             </div>
 
             <span class="stat-change">
-                Keep going
+                Average result
             </span>
 
         </div>
 
         <div class="stat-value">
-            0
+            {{ dashboard_practice_stats.average_mock_score|floatformat:0 }}%
         </div>
 
         <div class="stat-label">
-            Day Streak
+            Mock Test Score
         </div>
 
     </div>

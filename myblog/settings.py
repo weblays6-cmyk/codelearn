@@ -2,6 +2,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -15,13 +16,31 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$)y0d+(3-08#&a--m(9udghr_3ahf9#hh9ztetdwf&g@gm*s8='
+DEBUG = os.getenv('DJANGO_DEBUG', 'true').strip().lower() in {'1', 'true', 'yes'}
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is disabled.')
+    SECRET_KEY = 'django-insecure-development-only-key-change-before-deploying'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
+if not ALLOWED_HOSTS:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be set when DEBUG is disabled.')
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-ALLOWED_HOSTS = []
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', 'true').strip().lower() in {'1', 'true', 'yes'}
+    SECURE_HSTS_SECONDS = int(os.getenv('DJANGO_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('DJANGO_HSTS_INCLUDE_SUBDOMAINS', 'false').strip().lower() in {'1', 'true', 'yes'}
+    SECURE_HSTS_PRELOAD = os.getenv('DJANGO_HSTS_PRELOAD', 'false').strip().lower() in {'1', 'true', 'yes'}
 
 
 # Application definition
@@ -126,6 +145,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [STATIC_DIR]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -1,0 +1,26 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}{{ problem_set.title }} | Problem Sets{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<style>
+.practice-subpage{max-width:1100px;margin:0 auto;padding:28px 0 40px}.set-header,.problem-row{background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:18px;margin-bottom:12px}.problem-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center}.state{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:rgba(148,163,184,.12)}.tool-btn{text-decoration:none}.problem-row p{color:#94a3b8;margin:6px 0 0}@media(max-width:650px){.problem-row{grid-template-columns:36px 1fr}.problem-row>a{grid-column:2}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="practice-subpage">
+  <section class="set-header">
+    <div class="eyebrow">Curated problem set</div>
+    <h1>{{ problem_set.title }}</h1>
+    <p>{{ problem_set.description }}</p>
+    <p>Your progress: {{ solved_count }} / {{ problems|length }} solved</p>
+  </section>
+  {% for row in problems %}
+  <article class="problem-row">
+    <div class="state">{% if row.status == 'SOLVED' %}✓{% elif row.status == 'ATTEMPTED' %}◐{% else %}○{% endif %}</div>
+    <div><strong>{{ forloop.counter }}. {{ row.problem.title }}</strong><p>{{ row.problem.get_difficulty_display }} · {{ row.problem.category|title }}{% for tag in row.problem.tags %} · {{ tag }}{% endfor %}</p></div>
+    <a class="tool-btn" href="{% url 'blog:practice' %}?problem={{ row.problem.slug }}">{% if row.status == 'SOLVED' %}Review{% elif row.status == 'ATTEMPTED' %}Continue{% else %}Solve{% endif %}</a>
+  </article>
+  {% empty %}<p>No active problems are assigned to this set yet.</p>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}All Practice Problems | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<style>
+  .practice-subpage { max-width: 1200px; margin: 0 auto; padding: 28px 0 40px; }
+  .subpage-header { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 20px; }
+  .subpage-header h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.06em; }
+  .subpage-header p { margin: 10px 0 0; color: #94a3b8; }
+  .problem-list { display: grid; gap: 16px; }
+  .problem-card {
+    display: grid; grid-template-columns: 56px minmax(0, 1.6fr) minmax(220px, 0.8fr) auto; 
+    align-items: center; gap: 16px; padding: 18px 18px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 18px;
+  }
+  .problem-status { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; }
+  .status-solved { background: rgba(34, 197, 94, 0.14); color: #bbf7d0; }
+  .status-attempted { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; }
+  .status-open { background: rgba(148, 163, 184, 0.12); color: #e2e8f0; }
+  .problem-card h3 { margin: 0; font-size: 1.15rem; }
+  .problem-card p { margin: 8px 0 0; color: #cbd5e1; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .tag { background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.18); color: #ddd6fe; border-radius: 999px; padding: 6px 8px; font-size: 0.72rem; }
+  .difficulty-badge { display: inline-block; padding: 7px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+  .difficulty-easy { background: rgba(34,197,94,.14); color: #bbf7d0; }
+  .difficulty-medium { background: rgba(245,158,11,.12); color: #fcd34d; }
+  .difficulty-hard { background: rgba(239,68,68,.12); color: #fca5a5; }
+  .tool-btn { text-decoration: none; }
+  .problem-filters { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:0 0 18px; padding:16px; background:rgba(15,23,42,.58); border:1px solid rgba(148,163,184,.14); border-radius:14px; }
+  .problem-filters label { display:grid; gap:6px; color:#94a3b8; font-size:.78rem; }
+  .problem-filters input,.problem-filters select { min-height:40px; padding:8px 10px; color:#e2e8f0; background:#0b1220; border:1px solid #334155; border-radius:8px; }
+  @media (max-width: 840px) { .problem-card { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="practice-subpage">
+  <div class="subpage-header">
+    <div>
+      <div class="eyebrow"><i class="bi bi-list-check"></i> Practice Library</div>
+      <h1>All Practice Problems</h1>
+      <p>Browse and jump into focused coding challenges tailored to your learning goals.</p>
+    </div>
+    <a href="{% url 'blog:practice' %}" class="tool-btn">Back to Practice</a>
+  </div>
+
+  <form method="get" class="problem-filters">
+    <label>Search<input type="search" name="search" value="{{ search }}" placeholder="Search problems..."></label>
+    <label>Category<select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {% if selected_category|lower == category|lower %}selected{% endif %}>{{ category|title }}</option>{% endfor %}</select></label>
+    <label>Difficulty<select name="difficulty"><option value="">All difficulties</option><option value="EASY" {% if selected_difficulty == 'EASY' %}selected{% endif %}>Easy</option><option value="MEDIUM" {% if selected_difficulty == 'MEDIUM' %}selected{% endif %}>Medium</option><option value="HARD" {% if selected_difficulty == 'HARD' %}selected{% endif %}>Hard</option></select></label>
+    <label>Status<select name="status"><option value="">All statuses</option><option value="NOT_ATTEMPTED" {% if selected_status == 'NOT_ATTEMPTED' %}selected{% endif %}>Not Started</option><option value="ATTEMPTED" {% if selected_status == 'ATTEMPTED' %}selected{% endif %}>Attempted</option><option value="SOLVED" {% if selected_status == 'SOLVED' %}selected{% endif %}>Solved</option></select></label>
+    <button class="tool-btn" type="submit">Filter</button>
+    <a class="tool-btn" href="{% url 'blog:practice_all' %}">Clear</a>
+  </form>
+
+  <div class="problem-list">
+    {% for item in problems %}
+      {% with problem=item.problem status=item.status %}
+      <div class="problem-card">
+        <div class="problem-status {% if status == 'SOLVED' %}status-solved{% elif status == 'ATTEMPTED' %}status-attempted{% else %}status-open{% endif %}">
+          {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>
+          {% elif status == 'ATTEMPTED' %}<i class="bi bi-play-fill"></i>
+          {% else %}<i class="bi bi-circle"></i>{% endif %}
+        </div>
+        <div>
+          <h3>{{ problem.title }}</h3>
+          <p>{{ problem.description|truncatewords:18 }}</p>
+          <div class="tag-row">
+            {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% empty %}<span class="tag">{{ problem.category|title }}</span>{% endfor %}
+          </div>
+        </div>
+        <div>
+          <span class="difficulty-badge difficulty-{{ problem.difficulty|lower }}">{{ problem.difficulty }}</span>
+        </div>
+        <a href="{% url 'blog:practice' %}?problem={{ problem.slug }}" class="tool-btn">{% if status == 'SOLVED' %}Review{% elif status == 'ATTEMPTED' %}Continue{% else %}Solve{% endif %}</a>
+      </div>
+      {% endwith %}
+    {% empty %}
+      <div class="problem-card">
+        <div class="problem-status status-open"><i class="bi bi-collection"></i></div>
+        <div>
+          <h3>No problems are available yet</h3>
+          <p>New challenges will appear here once the admin publishes them.</p>
+        </div>
+        <div></div>
+        <a href="{% url 'blog:practice' %}" class="tool-btn">Return</a>
+      </div>
+    {% endfor %}
+  </div>
+  {% if problems.has_previous %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&page={{ problems.previous_page_number }}">Previous</a>{% endif %}
+  {% if problems.has_next %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&page={{ problems.next_page_number }}">Next</a>{% endif %}
+</div>
+{% endblock %}

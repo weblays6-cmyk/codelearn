@@ -337,6 +337,9 @@ class AssignmentQuestion(models.Model):
     marks = models.PositiveIntegerField(default=1)
     order = models.PositiveIntegerField(default=1)
 
+    class Meta:
+        ordering = ['order', 'id']
+
     def __str__(self):
         return f"{self.assignment.title} - Question {self.order}"
 
@@ -1279,6 +1282,107 @@ class PracticeSubmission(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+
+
+class PlaygroundSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='playground_sessions')
+    title = models.CharField(max_length=120, default='Untitled session')
+    language = models.CharField(max_length=30)
+    source_code = models.TextField(blank=True)
+    stdin = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        indexes = [models.Index(fields=['user', '-updated_at'])]
+
+    def __str__(self):
+        return f'{self.title} ({self.user})'
+
+
+class PracticeProblemSet(models.Model):
+    title = models.CharField(max_length=160)
+    slug = models.SlugField(max_length=180, unique=True)
+    description = models.TextField(blank=True)
+    problems = models.ManyToManyField(PracticeProblem, related_name='problem_sets', blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+
+class MockTest(models.Model):
+    DIFFICULTY_CHOICES = PracticeProblem.DIFFICULTY_CHOICES
+
+    title = models.CharField(max_length=160)
+    slug = models.SlugField(max_length=180, unique=True)
+    description = models.TextField(blank=True)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='EASY')
+    duration_minutes = models.PositiveSmallIntegerField(default=30)
+    allow_retakes = models.BooleanField(default=True)
+    active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['difficulty', 'title']
+
+    def __str__(self):
+        return self.title
+
+
+class MockTestQuestion(models.Model):
+    test = models.ForeignKey(MockTest, on_delete=models.CASCADE, related_name='questions')
+    prompt = models.TextField()
+    options = models.JSONField(default=list, blank=True)
+    correct_answer = models.JSONField()
+    explanation = models.TextField(blank=True)
+    topic = models.CharField(max_length=80, blank=True)
+    points = models.PositiveSmallIntegerField(default=1)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        indexes = [models.Index(fields=['test', 'order'])]
+
+    def __str__(self):
+        return f'{self.test}: question {self.order}'
+
+
+class MockTestAttempt(models.Model):
+    STATUS_CHOICES = [
+        ('IN_PROGRESS', 'In progress'),
+        ('SUBMITTED', 'Submitted'),
+        ('COMPLETED', 'Completed'),
+        ('EXPIRED', 'Expired'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mock_test_attempts')
+    test = models.ForeignKey(MockTest, on_delete=models.CASCADE, related_name='attempts')
+    started_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    answers = models.JSONField(default=dict, blank=True)
+    score = models.PositiveIntegerField(default=0)
+    total_score = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_PROGRESS')
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['test', 'status']),
+            models.Index(fields=['expires_at', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.user} - {self.test} ({self.status})'
 
 
 # =========================================================
