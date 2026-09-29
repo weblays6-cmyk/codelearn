@@ -21,6 +21,23 @@
       try { starterCodes = JSON.parse(starterNode.textContent); } catch (_error) { starterCodes = {}; }
     }
 
+    root.querySelectorAll("[data-playground-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tabList = button.closest('[role="tablist"]');
+        const paneContainer = tabList?.parentElement;
+        if (!tabList || !paneContainer) return;
+
+        tabList.querySelectorAll("[data-playground-tab]").forEach((tab) => {
+          const selected = tab === button;
+          tab.classList.toggle("active", selected);
+          tab.setAttribute("aria-selected", String(selected));
+        });
+        paneContainer.querySelectorAll("[data-playground-pane]").forEach((pane) => {
+          pane.hidden = pane.dataset.playgroundPane !== button.dataset.playgroundTab;
+        });
+      });
+    });
+
     const getCode = () => editor ? editor.getValue() : textarea.value;
     const setCode = (value) => {
       if (editor) editor.setValue(value);
@@ -30,6 +47,9 @@
       if (!status) return;
       status.textContent = message;
       status.dataset.kind = kind || "";
+    };
+    const activatePlaygroundTab = (name) => {
+      root.querySelector(`[data-playground-tab="${name}"]`)?.click();
     };
     const showResult = (result) => {
       if (!output) return;
@@ -58,9 +78,10 @@
     root.querySelectorAll("[data-action]").forEach((button) => {
       button.addEventListener("click", async () => {
         const action = button.dataset.action;
-        const oldLabel = button.textContent;
+        const actionLabel = button.querySelector("[data-action-label]") || button;
+        const oldLabel = actionLabel.textContent;
         button.disabled = true;
-        button.textContent = action === "run" ? "Running..." : action === "submit" ? "Evaluating..." : "Saving...";
+        actionLabel.textContent = action === "run" ? "Running..." : action === "submit" ? "Evaluating..." : action === "reset" ? "Resetting..." : "Saving...";
         try {
           const payload = {
             language: language?.value || "",
@@ -73,6 +94,7 @@
           if (action === "run" || action === "submit") {
             const result = await postJSON(action === "submit" ? submitUrl : sourceUrl, payload);
             showResult(result);
+            activatePlaygroundTab("output");
           } else if (action === "save") {
             const result = await postJSON(saveUrl, payload);
             sessionId = String(result.sessionId || sessionId);
@@ -88,7 +110,7 @@
           if (output) output.textContent = error.message || "Unable to complete the request.";
         } finally {
           button.disabled = false;
-          button.textContent = oldLabel;
+          actionLabel.textContent = oldLabel;
         }
       });
     });

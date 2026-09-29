@@ -1,0 +1,232 @@
+.playground-page {
+    --playground-line: rgba(255, 255, 255, .07);
+    width: 100%;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 8px 0 20px;
+}
+
+.playground-topbar {
+    min-height: 48px;
+}
+
+.playground-page .desc-tabs button {
+    margin: 0;
+    padding: 0 0 10px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.playground-title {
+    display: flex;
+    justify-content: center;
+}
+
+.playground-title input {
+    width: min(280px, 100%);
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: #f8fafc;
+    text-align: center;
+    font-weight: 750;
+}
+
+.playground-title input:focus {
+    border-color: rgba(139, 92, 246, .5);
+    outline: none;
+    background: rgba(255, 255, 255, .04);
+}
+
+.playground-actions,
+.playground-language,
+.playground-editor-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.playground-page .solver-body {
+    min-height: min(640px, calc(100vh - 190px));
+}
+
+.playground-left,
+.playground-right {
+    min-height: 0;
+}
+
+.playground-left .solver-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+.playground-description {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.playground-description h2 {
+    margin: 2px 0 14px;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+.playground-description p {
+    color: #aeb8cb;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.playground-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.playground-meta span {
+    padding: 5px 9px;
+    border: 1px solid var(--playground-line);
+    border-radius: 7px;
+    color: #aeb8cb;
+    font-size: 12px;
+}
+
+.playground-sessions {
+    display: grid;
+    gap: 8px;
+}
+
+.playground-session {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+    border: 1px solid var(--playground-line);
+    border-radius: 8px;
+    color: #dbe2ee;
+    text-decoration: none;
+}
+
+.playground-session:hover {
+    border-color: rgba(139, 92, 246, .5);
+    background: rgba(255, 255, 255, .035);
+}
+
+.playground-session small {
+    display: block;
+    margin-top: 3px;
+    color: #78849a;
+}
+
+.playground-right {
+    gap: 10px;
+}
+
+.playground-editor {
+    flex: 1;
+    min-height: 360px;
+}
+
+.playground-monaco {
+    flex: 1;
+    width: 100%;
+    min-height: 320px;
+}
+
+.playground-code {
+    flex: 1;
+    width: 100%;
+    min-height: 320px;
+    padding: 14px 16px;
+    border: 0;
+    outline: 0;
+    resize: vertical;
+    background: #14151b;
+    color: #e2e8f0;
+    font: 14px/1.6 Consolas, monospace;
+    tab-size: 4;
+}
+
+.playground-console {
+    flex: 0 0 225px;
+    min-height: 210px;
+}
+
+.playground-console .tc-pane {
+    flex: 1;
+    min-height: 0;
+}
+
+.playground-stdin,
+.playground-output {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 130px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--playground-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .035);
+    color: #dbe2ee;
+    font: 13px/1.55 Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.playground-stdin {
+    resize: vertical;
+}
+
+.playground-empty {
+    color: #78849a;
+    font-size: 13px;
+}
+
+[data-playground-pane][hidden] {
+    display: none !important;
+}
+
+@media (max-width: 1100px) {
+    .playground-page .solver-body {
+        min-height: 0;
+    }
+
+    .playground-left .solver-panel {
+        min-height: 280px;
+    }
+
+    .playground-right {
+        min-height: 720px;
+    }
+}
+
+@media (max-width: 600px) {
+    .playground-page {
+        padding-top: 4px;
+    }
+
+    .playground-title {
+        order: -1;
+        width: 100%;
+    }
+
+    .playground-title input {
+        text-align: left;
+    }
+
+    .playground-actions .btn-run,
+    .playground-actions .btn-submit {
+        padding: 7px 9px;
+    }
+
+    .playground-right {
+        min-height: 680px;
+    }
+}

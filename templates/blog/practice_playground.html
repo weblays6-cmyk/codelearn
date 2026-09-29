@@ -5,174 +5,226 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<link rel="stylesheet" href="{% static 'css/practice_solver.css' %}">
+<link rel="stylesheet" href="{% static 'css/practice_playground.css' %}">
 <style>
-  .practice-subpage {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 28px 0 40px;
-  }
-
-  .subpage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 18px;
-    margin-bottom: 24px;
-  }
-
-  .subpage-header h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: -0.06em;
-  }
-
-  .playground-shell {
-    display: grid;
-    grid-template-columns: 360px minmax(0, 1fr);
-    gap: 18px;
-  }
-
-  .panel {
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 18px;
-    padding: 20px;
-  }
-
-  .problem-list {
-    display: grid;
-    gap: 12px;
-  }
-
-  .problem-item {
-    padding: 14px 16px;
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 12px;
-    background: rgba(15, 23, 42, 0.32);
-  }
-
-  .problem-item h4 {
-    margin: 0 0 6px;
-  }
-
-  .problem-item p {
-    margin: 0;
-    color: #cbd5e1;
-    font-size: 0.9rem;
-  }
-
-  .code-panel {
-    padding: 20px;
-  }
-
-  .editor-box {
-    margin-top: 18px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 14px;
-    background: rgba(2, 6, 23, 0.8);
-    min-height: 380px;
-    padding: 18px;
-    font-family: "SFMono-Regular", Consolas, monospace;
-    white-space: pre-wrap;
-  }
-
-  .tool-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-  }
-
-  .meta-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-
-  .chip {
-    display: inline-flex;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: rgba(59, 130, 246, .12);
-    border: 1px solid rgba(96, 165, 250, .18);
-    color: #bfdbfe;
-    font-size: 0.72rem;
-  }
-
-  @media (max-width: 900px) {
-    .playground-shell {
-      grid-template-columns: 1fr;
+    .practice-subpage {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 0 40px;
     }
-  }
+
+    .subpage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .subpage-header h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 42px);
+        letter-spacing: -0.06em;
+    }
+
+    .playground-shell {
+        display: grid;
+        grid-template-columns: minmax(260px, .72fr) minmax(0, 1.65fr);
+        gap: 18px;
+    }
+
+    .panel {
+        min-width: 0;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 20px;
+    }
+
+    .problem-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .problem-item {
+        padding: 14px 16px;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.32);
+    }
+
+    .problem-item h4 {
+        margin: 0 0 6px;
+    }
+
+    .problem-item p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.9rem;
+    }
+
+    .code-panel {
+        padding: 20px;
+    }
+
+    .editor-box {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        background: rgba(2, 6, 23, 0.8);
+        min-height: 380px;
+        padding: 18px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        white-space: pre-wrap;
+    }
+
+    .tool-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .meta-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .chip {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, .12);
+        border: 1px solid rgba(96, 165, 250, .18);
+        color: #bfdbfe;
+        font-size: 0.72rem;
+    }
+
+    @media (max-width: 900px) {
+        .playground-shell {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="practice-subpage">
-  <div class="subpage-header">
-    <div>
-      <div class="eyebrow"><i class="bi bi-code-square"></i> Practice Arena</div>
-      <h1>Code Playground</h1>
-      <p style="color:#94a3b8;">Write, run, and save experiments in your private workspace.</p>
-    </div>
-    <a href="{% url 'blog:practice' %}" class="tool-btn">Back to Practice</a>
-  </div>
-
-  {% csrf_token %}
-  <div class="playground-shell" data-practice-editor data-run-url="{% url 'blog:playground_run' %}"
+<div class="playground-page solver" data-practice-editor data-run-url="{% url 'blog:playground_run' %}"
     data-save-url="{% url 'blog:playground_save' %}" data-session-id="{% if session %}{{ session.pk }}{% endif %}">
-    <section class="panel code-panel">
-      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
-        <div>
-          <label for="sessionTitle">Session title</label>
-          <input id="sessionTitle" data-session-title maxlength="120"
-            value="{% if session %}{{ session.title }}{% else %}Untitled session{% endif %}">
+    {% csrf_token %}
+    <header class="solver-topbar playground-topbar">
+        <a href="{% url 'blog:practice' %}" class="solver-back"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="solver-title playground-title">
+            <input id="sessionTitle" data-session-title maxlength="120" aria-label="Session title"
+                value="{% if session %}{{ session.title }}{% else %}Untitled session{% endif %}">
         </div>
-        {% if languages %}
-        <label>Language
-          <select data-language aria-label="Execution language">
-            {% for item in languages %}<option value="{{ item }}" {% if item==selected_language %}selected{% endif %}>{{
-              item|title }}</option>{% endfor %}
-          </select>
-        </label>
-        {% endif %}
-      </div>
-      <div class="meta-row">
-        <button class="tool-btn" type="button" data-action="run" {% if not runner_configured %}disabled{% endif %}>Run
-          Code</button>
-        <button class="tool-btn" type="button" data-action="save">Save session</button>
-        <button class="tool-btn" type="button" data-action="reset">Reset</button>
-      </div>
-      {% if not runner_configured %}<p class="status-message" data-kind="error">Code execution is unavailable until a
-        sandbox runner and supported languages are configured.</p>{% endif %}
-      <p class="status-message" data-run-status aria-live="polite"></p>
-      <div data-monaco-host
-        style="height:420px; margin-top:14px; border:1px solid rgba(148,163,184,.18); border-radius:12px; overflow:hidden;"
-        hidden></div>
-      <textarea data-code-input spellcheck="false" aria-label="Source code" class="editor-box">{% if session %}{{ session.source_code }}{% else %}print("Hello CodeLearn")
-{% endif %}</textarea>
-      <label for="stdinInput">Standard input</label>
-      <textarea id="stdinInput" data-stdin rows="3">{% if session %}{{ session.stdin }}{% endif %}</textarea>
-      <h3>Output</h3>
-      <pre class="editor-box" data-run-output aria-live="polite">Run output will appear here.</pre>
-    </section>
+        <div class="solver-actions playground-actions">
+            <button class="btn-run" type="button" data-action="run" {% if not runner_configured %}disabled{% endif %}>
+                <i class="bi bi-play-fill"></i> <span data-action-label>Run</span>
+            </button>
+            <button class="btn-submit" type="button" data-action="save">
+                <i class="bi bi-cloud-arrow-up"></i> <span data-action-label>Save</span>
+            </button>
+        </div>
+    </header>
 
-    <aside class="panel">
-      <h3 style="margin-top:0;">Recent sessions</h3>
-      <div class="problem-list">
-        {% for item in sessions %}
-        <div class="problem-item">
-          <h4>{{ item.title }}</h4>
-          <p>{{ item.language|title }} · {{ item.updated_at|timesince }} ago</p>
-          <a href="?session={{ item.pk }}" class="tool-btn">Open</a>
-        </div>
-        {% empty %}
-        <p>No saved sessions yet. Start coding and save your first playground.</p>
-        {% endfor %}
-      </div>
-    </aside>
-  </div>
+    {% if not runner_configured %}<p class="status-message" data-kind="error">Code execution is unavailable until a
+        sandbox runner and supported languages are configured.</p>{% endif %}
+
+    <div class="solver-body">
+        <section class="solver-left playground-left">
+            <div class="solver-panel">
+                <div class="desc-tabs" role="tablist" aria-label="Workspace views">
+                    <button type="button" class="active" data-playground-tab="workspace"
+                        aria-selected="true">Workspace</button>
+                    <button type="button" data-playground-tab="sessions" aria-selected="false">Recent sessions</button>
+                </div>
+                <div class="desc-body playground-description" data-playground-pane="workspace">
+                    <div class="eyebrow"><i class="bi bi-code-square"></i> Practice Arena</div>
+                    <h2>Code Playground</h2>
+                    <p>Private workspace</p>
+                    <div class="playground-meta">
+                        <span>{% if session %}{{ session.language|title }}{% else %}New session{% endif %}</span>
+                        <span>{{ sessions|length }} saved session{{ sessions|length|pluralize }}</span>
+                    </div>
+                </div>
+                <div class="tc-pane playground-description" data-playground-pane="sessions" hidden>
+                    <div class="playground-sessions">
+                        {% for item in sessions %}
+                        <a class="playground-session" href="?session={{ item.pk }}">
+                            <span>{{ item.title }}<small>{{ item.language|title }} · {{ item.updated_at|timesince }}
+                                    ago</small></span>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        </a>
+                        {% empty %}
+                        <p class="playground-empty">No saved sessions yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="solver-right playground-right">
+            <div class="solver-panel editor-panel playground-editor">
+                <div class="editor-toolbar">
+                    <div class="playground-language">
+                        {% if languages %}
+                        <label for="playgroundLanguage">
+                            <select id="playgroundLanguage" class="editor-lang-select" data-language
+                                aria-label="Execution language">
+                                {% for item in languages %}
+                                <option value="{{ item }}" {% if item==selected_language %}selected{% endif %}>{{
+                                    item|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        {% else %}
+                        <span class="editor-lang">No runner</span>
+                        {% endif %}
+                        <span class="editor-saved" data-run-status aria-live="polite"></span>
+                    </div>
+                    <div class="playground-editor-tools">
+                        <button class="editor-tool-btn" type="button" data-action="reset" title="Reset code">
+                            <i class="bi bi-arrow-counterclockwise"></i> <span data-action-label>Reset</span>
+                        </button>
+                    </div>
+                </div>
+                <div data-monaco-host class="playground-monaco" hidden></div>
+                <textarea data-code-input spellcheck="false" aria-label="Source code" class="playground-code">{% if session %}{{ session.source_code }}{% else %}print("Hello CodeLearn")
+{% endif %}</textarea>
+            </div>
+
+            <section class="solver-panel testcase-panel playground-console">
+                <div class="tc-tabs" role="tablist" aria-label="Input and output">
+                    <button type="button" class="tc-tab active" data-playground-tab="input" aria-selected="true">
+                        <i class="bi bi-ui-checks"></i> Standard Input
+                    </button>
+                    <button type="button" class="tc-tab" data-playground-tab="output" aria-selected="false">
+                        <i class="bi bi-terminal"></i> Test Result
+                    </button>
+                </div>
+                <div class="tc-pane" data-playground-pane="input">
+                    <div class="tc-field">
+                        <label for="stdinInput">Input</label>
+                        <textarea id="stdinInput" data-stdin class="playground-stdin"
+                            aria-label="Standard input">{% if session %}{{ session.stdin }}{% endif %}</textarea>
+                    </div>
+                </div>
+                <div class="tc-pane" data-playground-pane="output" hidden>
+                    <div class="tc-field">
+                        <label>Output</label>
+                        <pre class="playground-output" data-run-output
+                            aria-live="polite">Run your code to see the result.</pre>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </div>
 </div>
 {% endblock %}
 
