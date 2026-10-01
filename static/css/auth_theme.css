@@ -1,0 +1,238 @@
+/* Shared account pages theme: sign-in and sign-up. */
+body.light-theme {
+    color-scheme: light;
+    color: #1c2940;
+    background: #f3f6fb;
+}
+
+body.light-theme::before,
+body.light-theme::after {
+    display: none;
+}
+
+body.light-theme .navbar {
+    border-bottom-color: #e4eaf3;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 2px 10px rgba(34, 56, 92, .04);
+}
+
+body.light-theme .brand,
+body.light-theme .nav-link,
+body.light-theme .nav-login,
+body.light-theme .nav-join {
+    color: #1c2940;
+}
+
+body.light-theme .brand span {
+    color: #315fe8;
+}
+
+body.light-theme .nav-link:hover {
+    color: #315fe8;
+    background: #edf2ff;
+}
+
+body.light-theme .theme-toggle {
+    border-color: #e4eaf3;
+    color: #50627d;
+    background: #f7f9fd;
+}
+
+body.light-theme .theme-toggle:hover {
+    color: #315fe8;
+}
+
+body.light-theme .nav-login {
+    border-color: #dce5f2;
+    background: #fff;
+}
+
+body.light-theme .nav-join,
+body.light-theme .primary-btn,
+body.light-theme .login-submit,
+body.light-theme .signup-btn {
+    border-color: transparent;
+    color: #fff;
+    background: #315fe8;
+    box-shadow: 0 8px 22px rgba(49, 95, 232, .16);
+}
+
+body.light-theme .nav-join:hover,
+body.light-theme .primary-btn:hover,
+body.light-theme .login-submit:hover,
+body.light-theme .signup-btn:hover {
+    color: #fff;
+    background: #254fc8;
+}
+
+body.light-theme .hero h1,
+body.light-theme .section-heading h2,
+body.light-theme .section-heading h3,
+body.light-theme .signup-card h1,
+body.light-theme .login-card h2 {
+    color: #1c2940;
+}
+
+body.light-theme .hero-description,
+body.light-theme .hero-trust,
+body.light-theme .section-heading p,
+body.light-theme .login-subtitle,
+body.light-theme .subtitle,
+body.light-theme .login-area p,
+body.light-theme .footer {
+    color: #65748b;
+}
+
+body.light-theme .eyebrow {
+    border-color: #dce5f2;
+    color: #315fe8;
+    background: #edf2ff;
+}
+
+body.light-theme .gradient-text,
+body.light-theme .signup-card h1 span {
+    background: linear-gradient(90deg, #315fe8, #168fbc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light-theme .secondary-btn {
+    border-color: #dce5f2;
+    color: #315fe8;
+    background: #fff;
+}
+
+body.light-theme .secondary-btn:hover {
+    color: #254fc8;
+    background: #f7f9fd;
+}
+
+body.light-theme .login-card,
+body.light-theme .signup-card,
+body.light-theme .feature,
+body.light-theme .journey-step {
+    border-color: #e1e8f2;
+    color: #1c2940;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(34, 56, 92, .07);
+}
+
+body.light-theme .login-icon,
+body.light-theme .logo-icon,
+body.light-theme .feature-icon,
+body.light-theme .step-number {
+    color: #315fe8;
+    background: #edf2ff;
+    box-shadow: none;
+}
+
+body.light-theme .field label,
+body.light-theme .form-label {
+    color: #35455d;
+}
+
+body.light-theme .input-wrap,
+body.light-theme .input-wrapper {
+    border-color: #dce5f2;
+    background: #f7f9fd;
+}
+
+body.light-theme .input-wrap input,
+body.light-theme .input-wrapper input {
+    border-color: #dce5f2;
+    color: #1c2940;
+    background: #f7f9fd;
+}
+
+body.light-theme .input-wrap input::placeholder,
+body.light-theme .input-wrapper input::placeholder {
+    color: #8794a9;
+}
+
+body.light-theme .input-wrap>i,
+body.light-theme .input-icon,
+body.light-theme .password-toggle {
+    color: #71809a;
+}
+
+body.light-theme .password-toggle:hover {
+    color: #315fe8;
+}
+
+body.light-theme .signup-text,
+body.light-theme .signup-text a {
+    color: #315fe8;
+}
+
+body.light-theme .login-btn {
+    border: 1px solid #dce5f2;
+    color: #315fe8;
+    background: #fff;
+}
+
+body.light-theme .signup-text a:hover,
+body.light-theme .login-btn:hover {
+    color: #254fc8;
+}
+
+body.light-theme .login-btn:hover {
+    background: #f7f9fd;
+}
+
+body.light-theme .google-btn {
+    border-color: #dce5f2;
+    color: #33445e;
+    background: #fff;
+}
+
+body.light-theme .google-btn:hover {
+    background: #f7f9fd;
+}
+
+body.light-theme .divider-line {
+    background: #e4eaf3;
+}
+
+body.light-theme .divider span {
+    color: #71809a;
+}
+
+body.light-theme .form-errors {
+    border-color: #f3c7cc;
+    color: #9e2938;
+    background: #fff3f3;
+}
+
+body.light-theme .login-area {
+    color: #1c2940;
+}
+
+body.light-theme .cta {
+    border-color: #e1e8f2;
+    color: #1c2940;
+    background: linear-gradient(110deg, #fff, #eef5ff);
+}
+
+.auth-theme-toggle {
+    position: fixed;
+    z-index: 1200;
+    top: 18px;
+    right: 18px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(148, 163, 184, .25);
+    border-radius: 9px;
+    color: #63728a;
+    background: rgba(255, 255, 255, .86);
+    cursor: pointer;
+}
+
+body:not(.light-theme) .auth-theme-toggle {
+    border-color: rgba(255, 255, 255, .1);
+    color: #cbd5e1;
+    background: rgba(17, 24, 39, .85);
+}

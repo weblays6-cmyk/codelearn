@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 390" role="img" aria-labelledby="title">
+  <title id="title">vGrowHub</title>
+  <defs>
+    <linearGradient id="v-blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2452f5"/>
+      <stop offset="1" stop-color="#173ce0"/>
+    </linearGradient>
+    <linearGradient id="arrow-cyan" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#159bf5"/>
+      <stop offset="1" stop-color="#19d8e8"/>
+    </linearGradient>
+    <linearGradient id="hub-blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2544f1"/>
+      <stop offset="1" stop-color="#1680f5"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(12 15)">
+    <path fill="url(#v-blue)" d="M18 85c-12-20 2-46 26-46h35c17 0 31 9 40 25l55 98 51-87c9-16 24-25 42-25h29c25 0 39 27 26 48l-91 151c-13 22-45 22-58 0L18 85z"/>
+    <path fill="url(#arrow-cyan)" d="m108 104 47-70c8-12 24-16 37-9l52 28c13 7 18 23 11 36l-43 80c-7 13-23 18-36 11l-21-12-26 43-44-77 23-36z"/>
+    <path fill="#173fe9" opacity=".88" d="m25 86 91 5 65 116-22 36c-13 22-45 22-58 0L18 85c2 1 4 1 7 1z"/>
+  </g>
+  <text x="320" y="226" font-family="Arial, Helvetica, sans-serif" font-size="205" font-weight="900" letter-spacing="0">
+    <tspan fill="#2452f5">v</tspan><tspan fill="#172039">Grow</tspan><tspan fill="url(#hub-blue)">Hub</tspan>
+  </text>
+</svg>
