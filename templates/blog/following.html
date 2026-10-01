@@ -1,0 +1,278 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}
+    Following | {{ profile_user.username }}
+{% endblock %}
+
+{% block content %}
+
+<div class="following-page">
+
+    <div class="following-header">
+
+        <a
+            href="{% url 'blog:user_profile' profile_user.id %}"
+            class="back-btn"
+        >
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <div>
+            <h1>Following</h1>
+            <p>@{{ profile_user.username }}</p>
+        </div>
+
+    </div>
+
+
+    <div class="following-list">
+
+        {% for follow in following %}
+
+            <a
+                href="{% url 'blog:user_profile' follow.receiver.id %}"
+                class="following-card"
+            >
+
+                <div class="following-avatar">
+                    {{ follow.receiver.username|first|upper }}
+                </div>
+
+                <div class="following-info">
+
+                    <strong>
+                        {{ follow.receiver.username }}
+                    </strong>
+
+                    <span>
+                        CodeLearn Hub Member
+                    </span>
+
+                </div>
+
+                <i class="bi bi-chevron-right following-arrow"></i>
+
+            </a>
+
+        {% empty %}
+
+            <div class="empty-following">
+
+                <div class="empty-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+
+                <h3>Not following anyone yet</h3>
+
+                <p>
+                    {{ profile_user.username }} isn't following
+                    anyone yet.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+<style>
+
+.following-page {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.following-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.back-btn {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #303550;
+    border-radius: 11px;
+
+    color: #aeb5c9;
+    text-decoration: none;
+
+    background: #101321;
+}
+
+.back-btn:hover {
+    color: #ffffff;
+    border-color: #5865f2;
+}
+
+.following-header h1 {
+    margin: 0;
+    color: #f5f7ff;
+    font-size: 24px;
+}
+
+.following-header p {
+    margin: 4px 0 0;
+    color: #777e98;
+    font-size: 12px;
+}
+
+.following-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.following-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 14px 16px;
+
+    border: 1px solid #292d48;
+    border-radius: 14px;
+
+    background: #101321;
+
+    text-decoration: none;
+
+    transition: 0.2s ease;
+}
+
+.following-card:hover {
+    border-color: #5865f2;
+    transform: translateY(-1px);
+}
+
+.following-avatar {
+    width: 46px;
+    height: 46px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: linear-gradient(
+        135deg,
+        #7657ff,
+        #4d73ff
+    );
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.following-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.following-info strong {
+    display: block;
+
+    color: #f3f5ff;
+
+    font-size: 14px;
+}
+
+.following-info span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #777e98;
+
+    font-size: 11px;
+}
+
+.following-arrow {
+    color: #777e98;
+    font-size: 13px;
+}
+
+.following-card:hover .following-arrow {
+    color: #8c78ff;
+}
+
+.empty-following {
+    padding: 55px 20px;
+
+    text-align: center;
+
+    border: 1px solid #292d48;
+    border-radius: 16px;
+
+    background: #101321;
+}
+
+.empty-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 14px;
+
+    border-radius: 16px;
+
+    background: rgba(111, 83, 255, 0.12);
+
+    color: #8c78ff;
+
+    font-size: 25px;
+}
+
+.empty-following h3 {
+    margin: 0;
+
+    color: #f5f7ff;
+
+    font-size: 16px;
+}
+
+.empty-following p {
+    margin: 7px 0 0;
+
+    color: #777e98;
+
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+
+    .following-page {
+        width: 100%;
+    }
+
+    .following-header h1 {
+        font-size: 21px;
+    }
+
+    .following-card {
+        padding: 12px;
+    }
+
+}
+
+</style>
+
+{% endblock %}

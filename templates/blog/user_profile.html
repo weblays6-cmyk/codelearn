@@ -572,6 +572,25 @@ body.light-theme .profile-info-row {
     box-shadow: none;
 }
 
+
+.profile-stat-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.profile-stat-link:hover {
+    border-color: #5865f2;
+    transform: translateY(-2px);
+    background: rgba(88, 101, 242, 0.06);
+}
+
+.profile-stat-link:hover strong {
+    color: #8c78ff;
+}
+
 </style>
 
 {% endblock %}
@@ -691,7 +710,10 @@ body.light-theme .profile-info-row {
         <div class="profile-stats">
 
 
-            <div class="profile-stat">
+            <a
+                href="{% url 'blog:followers_list' profile_user.id %}"
+                class="profile-stat profile-stat-link"
+            >
 
                 <strong>
                     {{ follower_count }}
@@ -701,9 +723,12 @@ body.light-theme .profile-info-row {
                     Followers
                 </span>
 
-            </div>
+            </a>
 
-            <div class="profile-stat">
+            <a
+                href="{% url 'blog:following_list' profile_user.id %}"
+                class="profile-stat profile-stat-link"
+            >
                 <strong>
                     {{ following_count }}
                 </strong>
@@ -711,7 +736,7 @@ body.light-theme .profile-info-row {
                 <span>
                     Following
                 </span>
-            </div>
+            </a>
 
 
             <div class="profile-stat">

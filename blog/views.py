@@ -1266,7 +1266,6 @@ def user_profile(request, user_id):
 
     incoming_pending = incoming_request is not None 
 
-# incoming_pending = incoming_request is not None
 
     context = {
 
@@ -1306,6 +1305,44 @@ def user_profile(request, user_id):
         "blog/user_profile.html",
         context
     )
+
+@login_required
+def followers_list(request, user_id):
+    profile_user = get_object_or_404(User, id=user_id)
+
+    followers = FollowRequest.objects.filter(
+        receiver=profile_user,
+        status="ACCEPTED"
+    ).select_related("sender")
+
+    return render(
+        request,
+        "blog/followers.html",
+        {
+            "profile_user": profile_user,
+            "followers": followers,
+        }
+    )
+
+
+@login_required
+def following_list(request, user_id):
+    profile_user = get_object_or_404(User, id=user_id)
+
+    following = FollowRequest.objects.filter(
+        sender=profile_user,
+        status="ACCEPTED"
+    ).select_related("receiver")
+
+    return render(
+        request,
+        "blog/following.html",
+        {
+            "profile_user": profile_user,
+            "following": following,
+        }
+    )
+    
 # =========================================================
 # USER FOLLOW SYSTEM
 # =========================================================
