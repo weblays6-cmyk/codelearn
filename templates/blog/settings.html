@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    Settings | {{ SITE_NAME }}
+Settings | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
@@ -19,7 +19,7 @@
 
             <div class="header-left">
                 <h1>Settings</h1>
-                <p>Manage your CodeLearn Hub preferences.</p>
+                <p>Manage your {{ SITE_NAME }} preferences.</p>
             </div>
 
             <a href="{% url 'blog:dashboard' %}" class="back-btn">
@@ -35,7 +35,7 @@
 
             <div class="section-title">
                 <h2>Account</h2>
-                <p>Your CodeLearn Hub account information</p>
+                <p>Your {{ SITE_NAME }} account information</p>
             </div>
 
             <div class="account-box">
@@ -179,7 +179,7 @@
 
                     <div class="setting-text">
                         <h3>Logout</h3>
-                        <p>Sign out from your CodeLearn Hub account.</p>
+                        <p>Sign out from your {{ SITE_NAME }} account.</p>
                     </div>
 
                 </div>
@@ -196,4 +196,4 @@
         </div>
 
     </div>
-{% endblock %}
+    {% endblock %}

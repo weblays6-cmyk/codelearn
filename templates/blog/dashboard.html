@@ -120,7 +120,7 @@ Dashboard | {{ SITE_NAME }}
 
             <p>
                 Select your primary goal to
-                personalize your CodeLearn journey.
+                personalize your {{ SITE_NAME }} journey.
             </p>
 
             {% endif %}
@@ -277,112 +277,116 @@ Dashboard | {{ SITE_NAME }}
 
         {% with post=enrollment.course %}
 
-        <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
-
-            <div class="course-icon">
-
-                {% if post.category == "Python" %}
-
-                🐍
-
-                {% elif post.category == "Django" %}
-
-                ⚡
-
-                {% elif post.category == "AI" %}
-
-                🤖
-
-                {% elif post.category == "JavaScript" %}
-
-                JS
-
-                {% else %}
-
-                <i class="bi bi-code-square"></i>
-
+        {% if enrollment.next_lesson %}
+        <a href="{% url 'blog:start_lesson' post.pk enrollment.next_lesson.pk %}" class="course-card">
+            {% else %}
+            <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
                 {% endif %}
 
-            </div>
+                <div class="course-icon">
 
+                    {% if post.category == "Python" %}
 
-            <h4>
-                {{ post.title }}
-            </h4>
+                    🐍
 
+                    {% elif post.category == "Django" %}
 
-            <p>
-                {{ post.category }}
-                ·
-                {{ post.difficulty }}
-            </p>
+                    ⚡
 
+                    {% elif post.category == "AI" %}
 
-            <div class="progress-wrap">
+                    🤖
 
-                <div class="progress-bg">
+                    {% elif post.category == "JavaScript" %}
 
-                    <div class="progress-fill" style="width: {{ enrollment.progress }}%;"></div>
+                    JS
 
-                </div>
+                    {% else %}
 
+                    <i class="bi bi-code-square"></i>
 
-                <div class="progress-info">
-
-                    <span>
-
-                        {% if enrollment.progress == 0 %}
-
-                        Not started
-
-                        {% else %}
-
-                        Continue learning
-
-                        {% endif %}
-
-                    </span>
-
-                    <span>
-                        {{ enrollment.progress }}%
-                    </span>
+                    {% endif %}
 
                 </div>
 
-            </div>
 
-        </a>
+                <h4>
+                    {{ post.title }}
+                </h4>
 
-        {% endwith %}
 
-        {% empty %}
+                <p>
+                    {{ post.category }}
+                    ·
+                    {{ post.difficulty }}
+                </p>
 
-        <a href="{% url 'blog:blogpage' %}" class="course-card">
 
-            <div class="course-icon">
-                <i class="bi bi-rocket-takeoff"></i>
-            </div>
+                <div class="progress-wrap">
 
-            <h4>
-                Start Your First Course
-            </h4>
+                    <div class="progress-bg">
 
-            <p>
-                Explore courses and start
-                your learning journey.
-            </p>
+                        <div class="progress-fill" style="width: {{ enrollment.progress }}%;"></div>
 
-            <div class="progress-wrap">
+                    </div>
 
-                <span class="view-all">
-                    Explore Courses →
-                </span>
 
-            </div>
+                    <div class="progress-info">
 
-        </a>
+                        <span>
 
-        {% endfor %}
+                            {% if enrollment.progress == 0 %}
+
+                            Not started
+
+                            {% else %}
+
+                            Continue learning
+
+                            {% endif %}
+
+                        </span>
+
+                        <span>
+                            {{ enrollment.progress }}%
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+            {% endwith %}
+
+            {% empty %}
+
+            <a href="{% url 'blog:blogpage' %}" class="course-card">
+
+                <div class="course-icon">
+                    <i class="bi bi-rocket-takeoff"></i>
+                </div>
+
+                <h4>
+                    Start Your First Course
+                </h4>
+
+                <p>
+                    Explore courses and start
+                    your learning journey.
+                </p>
+
+                <div class="progress-wrap">
+
+                    <span class="view-all">
+                        Explore Courses →
+                    </span>
+
+                </div>
+
+            </a>
+
+            {% endfor %}
 
     </div>
 
@@ -442,9 +446,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:my_learning' %}" class="mission-btn">
                     Learn
-                </span>
+                </a>
 
             </div>
 
@@ -467,9 +471,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:practice' %}" class="mission-btn">
                     Practice
-                </span>
+                </a>
 
             </div>
 
@@ -492,9 +496,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:projects' %}" class="mission-btn">
                     Build
-                </span>
+                </a>
 
             </div>
 
@@ -520,9 +524,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:my_learning' %}" class="mission-btn">
                     Learn
-                </span>
+                </a>
 
             </div>
 
@@ -545,9 +549,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:assignments' %}" class="mission-btn">
                     Quiz
-                </span>
+                </a>
 
             </div>
 
@@ -570,9 +574,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:practice' %}" class="mission-btn">
                     Practice
-                </span>
+                </a>
 
             </div>
 
@@ -598,9 +602,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:projects' %}" class="mission-btn">
                     Build
-                </span>
+                </a>
 
             </div>
 
@@ -623,9 +627,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:projects' %}" class="mission-btn">
                     Work
-                </span>
+                </a>
 
             </div>
 
@@ -648,9 +652,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:projects' %}" class="mission-btn">
                     GitHub
-                </span>
+                </a>
 
             </div>
 
@@ -676,9 +680,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:practice_mock_tests' %}" class="mission-btn">
                     Start
-                </span>
+                </a>
 
             </div>
 
@@ -701,9 +705,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:ai_tutor' %}" class="mission-btn">
                     Mock
-                </span>
+                </a>
 
             </div>
 
@@ -726,9 +730,9 @@ Dashboard | {{ SITE_NAME }}
 
                 </div>
 
-                <span class="mission-btn">
+                <a href="{% url 'blog:projects' %}" class="mission-btn">
                     Review
-                </span>
+                </a>
 
             </div>
 
@@ -749,7 +753,7 @@ Dashboard | {{ SITE_NAME }}
                     </h5>
 
                     <p>
-                        Personalize your CodeLearn journey.
+                        Personalize your {{ SITE_NAME }} journey.
                     </p>
 
                 </div>
@@ -912,7 +916,7 @@ Dashboard | {{ SITE_NAME }}
         </a>
 
 
-        <div class="recommend">
+        <a href="{% url 'blog:practice_all' %}" class="recommend">
 
             <div class="recommend-icon">
                 🧠
@@ -926,10 +930,10 @@ Dashboard | {{ SITE_NAME }}
                 Prepare for technical coding interviews.
             </p>
 
-        </div>
+        </a>
 
 
-        <div class="recommend">
+        <a href="{% url 'blog:practice_mock_tests' %}" class="recommend">
 
             <div class="recommend-icon">
                 🎯
@@ -943,7 +947,7 @@ Dashboard | {{ SITE_NAME }}
                 Practice technical and HR interviews.
             </p>
 
-        </div>
+        </a>
 
 
     </div>

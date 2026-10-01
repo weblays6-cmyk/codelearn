@@ -49,8 +49,13 @@
 {% block content %}
 <div class="practice-subpage">
   <section class="result-panel">
-    <div class="eyebrow">{% if attempt.status == 'EXPIRED' %}Time expired · Final result{% else %}Test completed{% endif
-      %}</div>
+    <div class="eyebrow">
+      {% if attempt.status == 'EXPIRED' %}
+      Time expired · Final result
+      {% else %}
+      Test completed
+      {% endif %}
+    </div>
     <h1>{{ attempt.test.title }}</h1>
     <div class="score">{{ attempt.score }} <span style="color:#94a3b8;font-size:1.2rem">/ {{ attempt.total_score }}
         points</span></div>

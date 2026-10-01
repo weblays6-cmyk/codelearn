@@ -948,6 +948,14 @@ class ProjectCollaborator(models.Model):
         auto_now_add=True
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('project', 'user'),
+                name='unique_project_collaborator',
+            ),
+        ]
+
     def __str__(self):
         return f"{self.user.username} - {self.project.title}"
 
@@ -1042,6 +1050,15 @@ class ProjectView(models.Model):
         auto_now_add=True
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('project', 'user'),
+                condition=models.Q(user__isnull=False),
+                name='unique_project_view_per_user',
+            ),
+        ]
+
     def __str__(self):
         return f"{self.project.title} view"
 
@@ -1089,7 +1106,12 @@ class Conversation(models.Model):
                     "participant"
                 ],
                 name="unique_project_conversation"
-            )
+            ),
+            models.UniqueConstraint(
+                fields=("project_owner", "participant"),
+                condition=models.Q(project__isnull=True),
+                name="unique_personal_conversation",
+            ),
         ]
 
     def __str__(self):

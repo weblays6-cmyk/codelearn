@@ -27,11 +27,7 @@
 
                     <h1>
                         Practice.
-                        <span style="
-                        background:linear-gradient(90deg,#a78bfa,#60a5fa,#22d3ee);
-                        -webkit-background-clip:text;
-                        color:transparent;
-                    ">
+                        <span class="gradient-text">
                             Improve.
                         </span>
                     </h1>
@@ -152,22 +148,37 @@
 
                         {% for row in problems %}
                         {% with problem=row.problem status=row.status %}
-                        <div class="problem" data-id="{{ problem.slug }}" data-category="{{ problem.category|lower }}" data-name="{{ problem.title|lower }}" data-difficulty="{{ problem.difficulty|lower }}" data-status="{{ row.status|lower }}" data-tags="{% for tag in problem.tags %}{{ tag|lower }}|{% endfor %}">
-                            <div class="problem-status {% if status == 'SOLVED' %}solved-status{% elif status == 'ATTEMPTED' %}progress-status{% else %}pending-status{% endif %}">
-                                {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>{% elif status == 'ATTEMPTED' %}<i class="bi bi-play-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                        <div class="problem" data-id="{{ problem.slug }}" data-category="{{ problem.category|lower }}"
+                            data-name="{{ problem.title|lower }}" data-difficulty="{{ problem.difficulty|lower }}"
+                            data-status="{{ row.status|lower }}"
+                            data-tags="{% for tag in problem.tags %}{{ tag|lower }}|{% endfor %}">
+                            <div
+                                class="problem-status {% if status == 'SOLVED' %}solved-status{% elif status == 'ATTEMPTED' %}progress-status{% else %}pending-status{% endif %}">
+                                {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>{% elif status == 'ATTEMPTED'
+                                %}<i class="bi bi-play-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
                             </div>
                             <div class="problem-info">
                                 <h3>{{ forloop.counter }}. {{ problem.title }}</h3>
                                 <p>{{ problem.description|truncatewords:24 }}</p>
                                 <div class="tags">
-                                    {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% empty %}<span class="tag">{{ problem.category|title }}</span>{% endfor %}
+                                    {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% empty %}<span
+                                        class="tag">{{ problem.category|title }}</span>{% endfor %}
                                 </div>
                             </div>
                             <div class="problem-meta">
-                                <span class="difficulty {{ problem.difficulty|lower }}">{{ problem.get_difficulty_display|upper }}</span>
+                                <span class="difficulty {{ problem.difficulty|lower }}">{{
+                                    problem.get_difficulty_display|upper }}</span>
                                 <div class="solve-rate">{{ status|title|default:'Not started' }}</div>
                             </div>
-                            <a class="solve-btn" href="{% url 'blog:practice' %}?problem={{ problem.slug }}">{% if status == 'SOLVED' %}Review{% elif status == 'ATTEMPTED' %}Continue{% else %}Solve{% endif %}</a>
+                            <a class="solve-btn" href="{% url 'blog:practice' %}?problem={{ problem.slug }}">
+                                {% if status == 'SOLVED' %}
+                                Review
+                                {% elif status == 'ATTEMPTED' %}
+                                Continue
+                                {% else %}
+                                Solve
+                                {% endif %}
+                            </a>
                         </div>
                         {% endwith %}
                         {% empty %}
@@ -413,7 +424,11 @@
                         <div id="activityList">
                             {% for activity in practice_stats.recent_activity %}
                             <div class="activity-item">
-                                <div class="activity-icon {% if activity.status == 'ACCEPTED' %}green{% else %}blue{% endif %}"><i class="bi bi-{% if activity.status == 'ACCEPTED' %}check-lg{% else %}play-fill{% endif %}"></i></div>
+                                <div
+                                    class="activity-icon {% if activity.status == 'ACCEPTED' %}green{% else %}blue{% endif %}">
+                                    <i
+                                        class="bi bi-{% if activity.status == 'ACCEPTED' %}check-lg{% else %}play-fill{% endif %}"></i>
+                                </div>
                                 <div class="activity-info">
                                     <strong>{{ activity.title }}</strong>
                                     <span>{{ activity.created_at|timesince }} ago</span>
@@ -469,14 +484,17 @@
                 <button id="backBtn" class="solver-back" type="button"><i class="bi bi-arrow-left"></i> Back</button>
                 <span id="solverTitle" class="solver-title"></span>
                 <div class="solver-actions">
-                    <button id="runBtn" class="btn-run" type="button"><i class="bi bi-play-fill"></i> <span class="btn-label">Run</span></button>
-                    <button id="submitBtn" class="btn-submit" type="button"><i class="bi bi-cloud-upload"></i> <span class="btn-label">Submit</span></button>
+                    <button id="runBtn" class="btn-run" type="button"><i class="bi bi-play-fill"></i> <span
+                            class="btn-label">Run</span></button>
+                    <button id="submitBtn" class="btn-submit" type="button"><i class="bi bi-cloud-upload"></i> <span
+                            class="btn-label">Submit</span></button>
                 </div>
             </header>
             <div class="solver-body">
                 <div class="solver-panel solver-left">
                     <div class="desc-tabs">
-                        <button class="desc-tab-btn active" data-desctab="description" type="button">Description</button>
+                        <button class="desc-tab-btn active" data-desctab="description"
+                            type="button">Description</button>
                         <button class="desc-tab-btn" data-desctab="submissions" type="button">Submissions</button>
                     </div>
                     <div class="desc-body" id="descBody"></div>
@@ -494,8 +512,11 @@
                                 <span class="editor-saved" id="saveStatus">Saved</span>
                             </div>
                             <div class="editor-toolbar-right">
-                                <button id="resetCodeBtn" class="editor-tool-btn" type="button" title="Reset to starter code"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
-                                <button id="fullscreenBtn" class="editor-tool-btn" type="button" title="Toggle fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+                                <button id="resetCodeBtn" class="editor-tool-btn" type="button"
+                                    title="Reset to starter code"><i class="bi bi-arrow-counterclockwise"></i>
+                                    Reset</button>
+                                <button id="fullscreenBtn" class="editor-tool-btn" type="button"
+                                    title="Toggle fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
                             </div>
                         </div>
                         <div id="monacoHost" hidden></div>
@@ -503,8 +524,10 @@
                     </div>
                     <div class="solver-panel testcase-panel">
                         <div class="tc-tabs">
-                            <button class="tc-tab active" data-tab="testcase" type="button"><i class="bi bi-check2-square"></i> Testcase</button>
-                            <button class="tc-tab" data-tab="result" type="button"><i class="bi bi-terminal"></i> Test Result</button>
+                            <button class="tc-tab active" data-tab="testcase" type="button"><i
+                                    class="bi bi-check2-square"></i> Testcase</button>
+                            <button class="tc-tab" data-tab="result" type="button"><i class="bi bi-terminal"></i> Test
+                                Result</button>
                         </div>
                         <div class="tc-pane" id="testcasePane"></div>
                         <div class="tc-pane" id="resultPane" hidden></div>
@@ -523,7 +546,7 @@
 {{ database_problems|json_script:'practice-database-problems' }}
 <meta name="csrf-token" content="{{ csrf_token }}">
 <script>
-    window.PRACTICE_STATE = {{ practice_state|safe }};
+    window.PRACTICE_STATE = {{ practice_state | safe }};
     window.PRACTICE_DATABASE_PROBLEMS = JSON.parse(document.getElementById('practice-database-problems').textContent);
     window.PRACTICE_ENDPOINTS = {
         saveDraft: "{% url 'blog:practice_save_draft' %}",

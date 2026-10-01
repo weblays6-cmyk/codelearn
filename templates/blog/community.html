@@ -30,10 +30,10 @@ Community | {{ SITE_NAME }}
         <div class="post-box">
             <div class="post-box-top">
                 <div class="mini-avatar">{{ username|first|upper }}</div>
-                <div class="post-input">Share something with the community...</div>
+                <a class="post-input" href="{% url 'blog:create_project' %}">Share a project with the community...</a>
             </div>
             <div class="post-actions">
-                <a class="post-button" href="{% url 'blog:projects' %}">Start Discussion</a>
+                <a class="post-button" href="{% url 'blog:create_project' %}">Share a Project</a>
             </div>
         </div>
 
@@ -49,13 +49,16 @@ Community | {{ SITE_NAME }}
                 </div>
                 <i class="bi bi-three-dots more"></i>
             </div>
-            <h3 class="post-title">{{ project.title }}</h3>
+            <h3 class="post-title"><a href="{% url 'blog:project_detail' project.pk %}">{{ project.title }}</a></h3>
             <p class="post-content">{{ project.short_description }}</p>
             <span class="post-tag">#{{ project.category|cut:" " }}</span>
             <div class="post-footer">
-                <span class="post-action"><i class="bi bi-heart"></i> {{ project.like_count }} Likes</span>
-                <span class="post-action"><i class="bi bi-chat"></i> {{ project.comment_count }} Comments</span>
-                <span class="post-action"><i class="bi bi-share"></i> Share</span>
+                <a class="post-action" href="{% url 'blog:project_detail' project.pk %}#project-actions"><i
+                        class="bi bi-heart"></i> {{ project.like_count }} Likes</a>
+                <a class="post-action" href="{% url 'blog:project_detail' project.pk %}#project-comments"><i
+                        class="bi bi-chat"></i> {{ project.comment_count }} Comments</a>
+                <a class="post-action" href="{% url 'blog:project_detail' project.pk %}#project-share"><i
+                        class="bi bi-share"></i> Share</a>
             </div>
         </article>
         {% endfor %}

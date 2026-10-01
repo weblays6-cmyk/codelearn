@@ -1,225 +1,85 @@
 {% load static %}
 
-<aside class="sidebar">
-
-    <!-- =====================================================
-         BRAND
-    ====================================================== -->
-
-    <a
-        href="{% url 'blog:dashboard' %}"
-        class="brand"
-    >
-
-        <div class="brand-icon">
-            <i class="bi bi-code-slash"></i>
-        </div>
-
-        <div class="brand-text">
-            {{ SITE_NAME }}
-        </div>
-
+<aside class="sidebar" aria-label="Main navigation">
+    <a href="{% if user.is_authenticated %}{% url 'blog:dashboard' %}{% else %}{% url 'blog:blogpage' %}{% endif %}"
+        class="brand">
+        <img class="site-logo site-logo--sidebar" src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
     </a>
 
-
-    <!-- =====================================================
-         LEARNING
-    ====================================================== -->
-
-    <div class="nav-label">
-        LEARNING
-    </div>
-
-
-    <a
-        href="{% url 'blog:dashboard' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-grid"></i>
-        <span>Dashboard</span>
+    {% if user.is_authenticated %}
+    <div class="nav-label">Learning</div>
+    <a href="{% url 'blog:dashboard' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid" aria-hidden="true"></i><span>Dashboard</span>
+    </a>
+    <a href="{% url 'blog:blogpage' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'blogpage' or request.resolver_match.url_name == 'post_detail' %}active{% endif %}">
+        <i class="bi bi-book" aria-hidden="true"></i><span>Courses</span>
+    </a>
+    <a href="{% url 'blog:my_learning' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'my_learning' or request.resolver_match.url_name == 'lesson_detail' or request.resolver_match.url_name == 'start_lesson' %}active{% endif %}">
+        <i class="bi bi-mortarboard" aria-hidden="true"></i><span>My Learning</span>
+    </a>
+    <a href="{% url 'blog:practice' %}"
+        class="nav-link {% if 'practice' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-lightning-charge" aria-hidden="true"></i><span>Practice</span>
+    </a>
+    <a href="{% url 'blog:assignments' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'assignments' or request.resolver_match.url_name == 'assignment_attempt' %}active{% endif %}">
+        <i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Assignments</span>
+    </a>
+    <a href="{% url 'blog:ai_tutor' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'ai_tutor' %}active{% endif %}">
+        <i class="bi bi-robot" aria-hidden="true"></i><span>AI Tutor</span><span class="new-badge">NEW</span>
     </a>
 
-
-    <a
-        href="{% url 'blog:blogpage' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-book"></i>
-        <span>Courses</span>
+    <div class="nav-label nav-label-spaced">Your Space</div>
+    <a href="{% url 'blog:projects' %}"
+        class="nav-link {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-folder2-open" aria-hidden="true"></i><span>Projects</span>
+    </a>
+    <a href="{% url 'blog:community' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'community' %}active{% endif %}">
+        <i class="bi bi-people" aria-hidden="true"></i><span>Community</span>
+    </a>
+    <a href="{% url 'blog:messages' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
+        <i class="bi bi-chat-dots" aria-hidden="true"></i><span>Messages</span>
+        {% if UNREAD_MESSAGE_COUNT > 0 %}<span class="message-unread-count"
+            aria-label="{{ UNREAD_MESSAGE_COUNT }} unread messages">{% if UNREAD_MESSAGE_COUNT > 99 %}99+{% else %}{{
+            UNREAD_MESSAGE_COUNT }}{% endif %}</span>{% endif %}
     </a>
 
-
-    <a
-        href="{% url 'blog:my_learning' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-mortarboard"></i>
-        <span>My Learning</span>
+    <div class="nav-label nav-label-spaced">Account</div>
+    <a href="{% url 'blog:profile' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'user_profile' %}active{% endif %}">
+        <i class="bi bi-person-circle" aria-hidden="true"></i><span>Profile</span>
     </a>
-
-
-    <a
-        href="{% url 'blog:practice' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-lightning-charge"></i>
-        <span>Practice</span>
+    <a href="{% url 'blog:notifications' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <i class="bi bi-bell" aria-hidden="true"></i><span>Notifications</span>
     </a>
-
-
-    <a
-        href="{% url 'blog:assignments' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-clipboard-check"></i>
-        <span>Assignments</span>
+    <a href="{% url 'blog:settings' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+        <i class="bi bi-gear" aria-hidden="true"></i><span>Settings</span>
     </a>
-
-
-    <a
-        href="{% url 'blog:ai_tutor' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-robot"></i>
-        <span>AI Tutor</span>
-
-        <span class="new-badge">
-            NEW
-        </span>
-    </a>
-
-
-    <!-- =====================================================
-         YOUR SPACE
-    ====================================================== -->
-
-    <div
-        class="nav-label"
-        style="margin-top:20px;"
-    >
-        YOUR SPACE
-    </div>
-
-
-    <a
-        href="{% url 'blog:projects' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-folder2-open"></i>
-        <span>Projects</span>
-    </a>
-
-
-    <a
-        href="{% url 'blog:community' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-people"></i>
-        <span>Community</span>
-    </a>
-
-
-    <!-- =====================================================
-         MESSAGES
-         Total unread messages are shown globally.
-         Opening a conversation marks its incoming messages
-         as read, so this number automatically decreases.
-    ====================================================== -->
-
-    <a
-        href="{% url 'blog:messages' %}"
-        class="nav-link"
-    >
-
-        <i class="bi bi-chat-dots"></i>
-
-        <span>
-            Messages
-        </span>
-
-        {% if UNREAD_MESSAGE_COUNT > 0 %}
-
-            <span
-                class="message-unread-count"
-                aria-label="{{ UNREAD_MESSAGE_COUNT }} unread messages"
-                title="{{ UNREAD_MESSAGE_COUNT }} unread messages"
-                style="
-                    min-width:20px;
-                    height:20px;
-                    padding:0 6px;
-                    margin-left:auto;
-                    display:inline-flex;
-                    align-items:center;
-                    justify-content:center;
-                    box-sizing:border-box;
-                    border-radius:999px;
-                    background:#7c5cff;
-                    color:#ffffff;
-                    font-size:10px;
-                    font-weight:800;
-                    line-height:1;
-                    box-shadow:0 4px 10px rgba(124,92,255,.28);
-                "
-            >
-                {% if UNREAD_MESSAGE_COUNT > 99 %}
-                    99+
-                {% else %}
-                    {{ UNREAD_MESSAGE_COUNT }}
-                {% endif %}
-            </span>
-
-        {% endif %}
-
-    </a>
-
-
-    <!-- =====================================================
-         ACCOUNT
-    ====================================================== -->
-
-    <div
-        class="nav-label"
-        style="margin-top:20px;"
-    >
-        ACCOUNT
-    </div>
-
-
-    <a
-        href="{% url 'blog:profile' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-person-circle"></i>
-        <span>Profile</span>
-    </a>
-
-
-    <a
-        href="{% url 'blog:settings' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-gear"></i>
-        <span>Settings</span>
-    </a>
-
-
-    <form
-        method="POST"
-        action="{% url 'blog:logout' %}"
-        style="margin:4px 0;"
-    >
-
+    <form method="POST" action="{% url 'blog:logout' %}" class="sidebar-logout">
         {% csrf_token %}
-
-        <button
-            type="submit"
-            class="nav-link logout-link"
-            style="width:100%; border:0; background:transparent; text-align:left; cursor:pointer;"
-        >
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
+        <button type="submit" class="nav-link logout-link">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Log out</span>
         </button>
-
     </form>
-
+    {% else %}
+    <div class="nav-label">Explore</div>
+    <a href="{% url 'blog:blogpage' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'blogpage' or request.resolver_match.url_name == 'post_detail' %}active{% endif %}">
+        <i class="bi bi-book" aria-hidden="true"></i><span>Courses</span>
+    </a>
+    <a href="{% url 'blog:login' %}" class="nav-link">
+        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Sign in</span>
+    </a>
+    <a href="{% url 'blog:signup' %}" class="nav-link">
+        <i class="bi bi-person-plus" aria-hidden="true"></i><span>Create account</span>
+    </a>
+    {% endif %}
 </aside>

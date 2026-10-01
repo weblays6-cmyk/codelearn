@@ -7,20 +7,13 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Dashboard | CodeLearn Hub</title>
+    <title>Dashboard | {{ SITE_NAME }}</title>
 
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-
         /* =====================================================
            ROOT
         ===================================================== */
@@ -98,23 +91,17 @@
 
             background:
 
-                radial-gradient(
-                    circle at 12% 8%,
-                    rgba(124,58,237,0.18),
-                    transparent 27%
-                ),
+                radial-gradient(circle at 12% 8%,
+                    rgba(124, 58, 237, 0.18),
+                    transparent 27%),
 
-                radial-gradient(
-                    circle at 88% 10%,
-                    rgba(37,99,235,0.14),
-                    transparent 28%
-                ),
+                radial-gradient(circle at 88% 10%,
+                    rgba(37, 99, 235, 0.14),
+                    transparent 28%),
 
-                radial-gradient(
-                    circle at 50% 100%,
-                    rgba(34,211,238,0.07),
-                    transparent 30%
-                ),
+                radial-gradient(circle at 50% 100%,
+                    rgba(34, 211, 238, 0.07),
+                    transparent 30%),
 
                 var(--bg);
 
@@ -160,8 +147,7 @@
                 var(--sidebar);
 
             border-right:
-                1px solid
-                var(--border);
+                1px solid var(--border);
 
             backdrop-filter:
                 blur(25px);
@@ -204,15 +190,12 @@
             border-radius: 13px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     var(--purple),
-                    var(--blue)
-                );
+                    var(--blue));
 
             box-shadow:
-                0 0 28px
-                rgba(124,58,237,0.40);
+                0 0 28px rgba(124, 58, 237, 0.40);
         }
 
 
@@ -262,7 +245,7 @@
             transition: 0.25s ease;
         }
 
-                .logout-button {
+        .logout-button {
             width: 100%;
             border: none;
             background: transparent;
@@ -292,7 +275,7 @@
             color: white;
 
             background:
-                rgba(139,92,246,0.10);
+                rgba(139, 92, 246, 0.10);
 
             transform:
                 translateX(3px);
@@ -304,15 +287,12 @@
             color: white;
 
             background:
-                linear-gradient(
-                    90deg,
-                    rgba(124,58,237,0.28),
-                    rgba(37,99,235,0.09)
-                );
+                linear-gradient(90deg,
+                    rgba(124, 58, 237, 0.28),
+                    rgba(37, 99, 235, 0.09));
 
             box-shadow:
-                inset 3px 0 0
-                var(--purple);
+                inset 3px 0 0 var(--purple);
         }
 
 
@@ -326,11 +306,9 @@
             border-radius: 20px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 7px;
 
@@ -353,15 +331,12 @@
             border-radius: 18px;
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(124,58,237,0.18),
-                    rgba(37,99,235,0.07)
-                );
+                linear-gradient(135deg,
+                    rgba(124, 58, 237, 0.18),
+                    rgba(37, 99, 235, 0.07));
 
             border:
-                1px solid
-                rgba(139,92,246,0.20);
+                1px solid rgba(139, 92, 246, 0.20);
         }
 
 
@@ -409,11 +384,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 10px;
 
@@ -491,15 +464,14 @@
                 11px 15px 11px 41px;
 
             border:
-                1px solid
-                var(--border);
+                1px solid var(--border);
 
             border-radius: 13px;
 
             outline: none;
 
             background:
-                rgba(255,255,255,0.04);
+                rgba(255, 255, 255, 0.04);
 
             color: white;
 
@@ -516,11 +488,10 @@
         .search-input:focus {
 
             border-color:
-                rgba(139,92,246,0.45);
+                rgba(139, 92, 246, 0.45);
 
             box-shadow:
-                0 0 0 4px
-                rgba(139,92,246,0.06);
+                0 0 0 4px rgba(139, 92, 246, 0.06);
         }
 
 
@@ -548,13 +519,12 @@
             justify-content: center;
 
             border:
-                1px solid
-                var(--border);
+                1px solid var(--border);
 
             border-radius: 11px;
 
             background:
-                rgba(255,255,255,0.04);
+                rgba(255, 255, 255, 0.04);
 
             color: var(--muted);
 
@@ -567,7 +537,7 @@
             color: white;
 
             border-color:
-                rgba(139,92,246,0.35);
+                rgba(139, 92, 246, 0.35);
 
             transform:
                 translateY(-2px);
@@ -603,11 +573,9 @@
             border-radius: 50%;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #8b5cf6,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 13px;
 
@@ -650,32 +618,24 @@
                 var(--radius-lg);
 
             border:
-                1px solid
-                rgba(139,92,246,0.20);
+                1px solid rgba(139, 92, 246, 0.20);
 
             background:
 
-                radial-gradient(
-                    circle at 80% 25%,
-                    rgba(124,58,237,0.28),
-                    transparent 33%
-                ),
+                radial-gradient(circle at 80% 25%,
+                    rgba(124, 58, 237, 0.28),
+                    transparent 33%),
 
-                radial-gradient(
-                    circle at 94% 78%,
-                    rgba(37,99,235,0.16),
-                    transparent 26%
-                ),
+                radial-gradient(circle at 94% 78%,
+                    rgba(37, 99, 235, 0.16),
+                    transparent 26%),
 
-                linear-gradient(
-                    135deg,
-                    rgba(24,25,59,0.97),
-                    rgba(8,12,28,0.97)
-                );
+                linear-gradient(135deg,
+                    rgba(24, 25, 59, 0.97),
+                    rgba(8, 12, 28, 0.97));
 
             box-shadow:
-                0 28px 90px
-                rgba(0,0,0,0.25);
+                0 28px 90px rgba(0, 0, 0, 0.25);
 
             animation:
                 fadeUp 0.6s ease;
@@ -699,12 +659,10 @@
             border-radius: 50%;
 
             border:
-                1px solid
-                rgba(139,92,246,0.16);
+                1px solid rgba(139, 92, 246, 0.16);
 
             box-shadow:
-                0 0 100px
-                rgba(124,58,237,0.17);
+                0 0 100px rgba(124, 58, 237, 0.17);
         }
 
 
@@ -753,15 +711,14 @@
                 6px 11px;
 
             border:
-                1px solid
-                rgba(139,92,246,0.19);
+                1px solid rgba(139, 92, 246, 0.19);
 
             border-radius: 30px;
 
             color: #c4b5fd;
 
             background:
-                rgba(139,92,246,0.08);
+                rgba(139, 92, 246, 0.08);
 
             font-size: 9px;
 
@@ -792,12 +749,10 @@
         .gradient-text {
 
             background:
-                linear-gradient(
-                    90deg,
+                linear-gradient(90deg,
                     #a78bfa,
                     #60a5fa,
-                    #22d3ee
-                );
+                    #22d3ee);
 
             -webkit-background-clip: text;
 
@@ -845,19 +800,16 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 11px;
 
             font-weight: 700;
 
             box-shadow:
-                0 12px 32px
-                rgba(124,58,237,0.24);
+                0 12px 32px rgba(124, 58, 237, 0.24);
 
             transition: 0.25s;
         }
@@ -869,8 +821,7 @@
                 translateY(-2px);
 
             box-shadow:
-                0 17px 38px
-                rgba(124,58,237,0.34);
+                0 17px 38px rgba(124, 58, 237, 0.34);
         }
 
 
@@ -888,11 +839,10 @@
             border-radius: 11px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.11);
+                1px solid rgba(255, 255, 255, 0.11);
 
             background:
-                rgba(255,255,255,0.035);
+                rgba(255, 255, 255, 0.035);
 
             color: white;
 
@@ -905,7 +855,7 @@
         .secondary-btn:hover {
 
             background:
-                rgba(255,255,255,0.07);
+                rgba(255, 255, 255, 0.07);
         }
 
 
@@ -932,17 +882,14 @@
                 19px 21px;
 
             border:
-                1px solid
-                rgba(139,92,246,0.19);
+                1px solid rgba(139, 92, 246, 0.19);
 
             border-radius: 19px;
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(139,92,246,0.09),
-                    rgba(37,99,235,0.04)
-                );
+                linear-gradient(135deg,
+                    rgba(139, 92, 246, 0.09),
+                    rgba(37, 99, 235, 0.04));
 
             backdrop-filter:
                 blur(18px);
@@ -954,7 +901,7 @@
         .goal-card-main:hover {
 
             border-color:
-                rgba(139,92,246,0.32);
+                rgba(139, 92, 246, 0.32);
 
             transform:
                 translateY(-2px);
@@ -978,11 +925,9 @@
             border-radius: 16px;
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(124,58,237,0.22),
-                    rgba(37,99,235,0.11)
-                );
+                linear-gradient(135deg,
+                    rgba(124, 58, 237, 0.22),
+                    rgba(37, 99, 235, 0.11));
 
             font-size: 24px;
         }
@@ -1038,11 +983,10 @@
             border-radius: 9px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.10);
+                1px solid rgba(255, 255, 255, 0.10);
 
             background:
-                rgba(255,255,255,0.035);
+                rgba(255, 255, 255, 0.035);
 
             color: #c4b5fd;
 
@@ -1059,7 +1003,7 @@
             color: white;
 
             border-color:
-                rgba(139,92,246,0.30);
+                rgba(139, 92, 246, 0.30);
         }
 
 
@@ -1107,7 +1051,7 @@
                 translateY(-4px);
 
             border-color:
-                rgba(139,92,246,0.26);
+                rgba(139, 92, 246, 0.26);
 
             background:
                 var(--card-hover);
@@ -1141,7 +1085,7 @@
             border-radius: 12px;
 
             background:
-                rgba(139,92,246,0.12);
+                rgba(139, 92, 246, 0.12);
 
             color: #a78bfa;
 
@@ -1267,11 +1211,10 @@
                 translateY(-5px);
 
             border-color:
-                rgba(139,92,246,0.28);
+                rgba(139, 92, 246, 0.28);
 
             box-shadow:
-                0 20px 50px
-                rgba(0,0,0,0.22);
+                0 20px 50px rgba(0, 0, 0, 0.22);
         }
 
 
@@ -1292,7 +1235,7 @@
             border-radius: 14px;
 
             background:
-                rgba(139,92,246,0.12);
+                rgba(139, 92, 246, 0.12);
 
             color: #c4b5fd;
 
@@ -1335,7 +1278,7 @@
             border-radius: 30px;
 
             background:
-                rgba(255,255,255,0.08);
+                rgba(255, 255, 255, 0.08);
         }
 
 
@@ -1346,11 +1289,9 @@
             border-radius: inherit;
 
             background:
-                linear-gradient(
-                    90deg,
+                linear-gradient(90deg,
                     #8b5cf6,
-                    #38bdf8
-                );
+                    #38bdf8);
         }
 
 
@@ -1415,13 +1356,12 @@
             margin-bottom: 9px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.045);
+                1px solid rgba(255, 255, 255, 0.045);
 
             border-radius: 13px;
 
             background:
-                rgba(255,255,255,0.025);
+                rgba(255, 255, 255, 0.025);
 
             transition: 0.25s;
         }
@@ -1436,7 +1376,7 @@
         .mission:hover {
 
             background:
-                rgba(255,255,255,0.05);
+                rgba(255, 255, 255, 0.05);
 
             transform:
                 translateX(3px);
@@ -1466,7 +1406,7 @@
         .mission-icon.purple {
 
             background:
-                rgba(139,92,246,0.14);
+                rgba(139, 92, 246, 0.14);
 
             color: #a78bfa;
         }
@@ -1475,7 +1415,7 @@
         .mission-icon.blue {
 
             background:
-                rgba(59,130,246,0.14);
+                rgba(59, 130, 246, 0.14);
 
             color: #60a5fa;
         }
@@ -1484,7 +1424,7 @@
         .mission-icon.green {
 
             background:
-                rgba(34,197,94,0.13);
+                rgba(34, 197, 94, 0.13);
 
             color: #4ade80;
         }
@@ -1518,15 +1458,14 @@
                 6px 9px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.09);
+                1px solid rgba(255, 255, 255, 0.09);
 
             border-radius: 8px;
 
             color: #cbd5e1;
 
             background:
-                rgba(255,255,255,0.03);
+                rgba(255, 255, 255, 0.03);
 
             font-size: 8px;
         }
@@ -1545,11 +1484,9 @@
 
             background:
 
-                radial-gradient(
-                    circle at 85% 5%,
-                    rgba(124,58,237,0.17),
-                    transparent 45%
-                ),
+                radial-gradient(circle at 85% 5%,
+                    rgba(124, 58, 237, 0.17),
+                    transparent 45%),
 
                 var(--card);
         }
@@ -1570,7 +1507,7 @@
             border-radius: 50%;
 
             background:
-                rgba(124,58,237,0.13);
+                rgba(124, 58, 237, 0.13);
 
             filter: blur(25px);
         }
@@ -1605,11 +1542,9 @@
             border-radius: 13px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 20px;
         }
@@ -1645,11 +1580,10 @@
             border-radius: 12px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.06);
+                1px solid rgba(255, 255, 255, 0.06);
 
             background:
-                rgba(255,255,255,0.04);
+                rgba(255, 255, 255, 0.04);
 
             color: #cbd5e1;
 
@@ -1676,11 +1610,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 10px;
 
@@ -1716,7 +1648,7 @@
             border-radius: 15px;
 
             background:
-                rgba(255,255,255,0.035);
+                rgba(255, 255, 255, 0.035);
 
             transition: 0.25s;
         }
@@ -1728,7 +1660,7 @@
                 translateY(-4px);
 
             border-color:
-                rgba(139,92,246,0.28);
+                rgba(139, 92, 246, 0.28);
         }
 
 
@@ -1749,7 +1681,7 @@
             border-radius: 11px;
 
             background:
-                rgba(59,130,246,0.10);
+                rgba(59, 130, 246, 0.10);
 
             font-size: 17px;
         }
@@ -1910,8 +1842,7 @@
                 border-right: none;
 
                 border-bottom:
-                    1px solid
-                    var(--border);
+                    1px solid var(--border);
             }
 
 
@@ -2024,7 +1955,6 @@
             }
 
         }
-
     </style>
 
 </head>
@@ -2033,428 +1963,361 @@
 <body>
 
 
-<!-- =====================================================
+    <!-- =====================================================
      SIDEBAR
 ===================================================== -->
 
-<aside class="sidebar">
+    <aside class="sidebar">
 
 
-    <div class="brand">
-
-        <div class="brand-icon">
-
-            <i class="bi bi-code-slash"></i>
-
+        <div class="brand">
+            <img class="site-logo site-logo--sidebar"
+                style="display:block;width:184px;max-width:100%;height:auto;object-fit:contain;padding:2px 4px;border-radius:3px;background:#fff;"
+                src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
         </div>
 
 
-        <div class="brand-text">
 
-            CodeLearn
-            <span>Hub</span>
-
+        <div class="nav-label">
+            Main
         </div>
 
-    </div>
 
+        <!-- DASHBOARD -->
 
+        <a href="{% url 'blog:dashboard' %}" class="nav-link active">
 
-    <div class="nav-label">
-        Main
-    </div>
+            <i class="bi bi-grid-1x2-fill"></i>
 
+            <span>
+                Dashboard
+            </span>
 
-    <!-- DASHBOARD -->
-
-    <a
-        href="{% url 'blog:dashboard' %}"
-        class="nav-link active"
-    >
-
-        <i class="bi bi-grid-1x2-fill"></i>
-
-        <span>
-            Dashboard
-        </span>
-
-    </a>
-
-
-    <!-- COURSES -->
-
-    <a
-        href="{% url 'blog:blogpage' %}"
-        class="nav-link"
-    >
-
-        <i class="bi bi-book"></i>
-
-        <span>
-            Courses
-        </span>
-
-    </a>
-
-
-    <!-- MY LEARNING -->
-
-    <a
-        href="{% url 'blog:my_learning' %}"
-        class="nav-link"
-    >
-
-        <i class="bi bi-mortarboard"></i>
-
-        <span>
-            My Learning
-        </span>
-
-    </a>
-
-
-    <!-- PRACTICE -->
-
-    <a
-    href="{% url 'blog:practice' %}"
-    class="nav-link"
->
-    <i class="bi bi-lightning-charge"></i>
-
-    <span>
-        Practice
-    </span>
-</a>
-
-
-    <!-- ASSIGNMENTS -->
-
-    <a href="{% url 'blog:assignments' %}" class="nav-link">
-        <i class="bi bi-clipboard-check"></i>
-        <span>Assignments</span>
-    </a>
-
-
-    <!-- AI -->
-
-    <a
-        href="{% url 'blog:ai_tutor' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-robot"></i>
-        <span>
-            AI Tutor
-        </span>
-        <span class="new-badge">
-            NEW
-        </span>
-    </a>
-    <div class="nav-label">
-        Your Space
-    </div>
-    <!-- PROJECTS -->
-    <a
-        href="{% url 'blog:projects' %}"
-        class="nav-link"
-    >
-        <i class="bi bi-folder2-open"></i>
-
-        <span>
-            Projects
-        </span>
-
-    </a>
-
-
-    <!-- COMMUNITY -->
-
-    <a
-        href="{% url 'blog:community' %}"
-        class="nav-link"
-    >
-
-        <i class="bi bi-people"></i>
-
-        <span>
-            Community
-        </span>
-
-    </a>
-
-
-    <!-- PROFILE -->
-
-    <a
-        href="{% url 'blog:profile' %}"
-        class="nav-link"
-    >
-
-        <i class="bi bi-person-circle"></i>
-
-        <span>
-            Profile
-        </span>
-
-    </a>
-
-
-    <!-- SETTINGS -->
-
-    <a href="{% url 'blog:settings' %}" class="nav-link">
-    <i class="bi bi-gear"></i>
-    <span>Settings</span>
-    </a>
-
-
-<!-- LOGOUT -->
-
-<form
-    method="POST"
-    action="{% url 'blog:logout' %}"
-    style="margin: 4px 0;"
->
-
-    {% csrf_token %}
-
-    <button
-        type="submit"
-        class="nav-link logout-button"
-    >
-
-        <i class="bi bi-box-arrow-right"></i>
-
-        <span>
-            Logout
-        </span>
-
-    </button>
-
-</form>
-
-    <!-- PREMIUM -->
-
-    <div class="premium-card">
-
-        <small>
-            ✦ CODELEARN PRO
-        </small>
-
-        <h4>
-            Learn without limits.
-        </h4>
-
-        <p>
-            Unlock advanced AI tools,
-            projects and career features.
-        </p>
-
-        <a
-            href="#"
-            class="premium-btn"
-        >
-            Explore Pro
         </a>
 
-    </div>
+
+        <!-- COURSES -->
+
+        <a href="{% url 'blog:blogpage' %}" class="nav-link">
+
+            <i class="bi bi-book"></i>
+
+            <span>
+                Courses
+            </span>
+
+        </a>
 
 
-</aside>
+        <!-- MY LEARNING -->
+
+        <a href="{% url 'blog:my_learning' %}" class="nav-link">
+
+            <i class="bi bi-mortarboard"></i>
+
+            <span>
+                My Learning
+            </span>
+
+        </a>
 
 
+        <!-- PRACTICE -->
 
-<!-- =====================================================
-     MAIN
-===================================================== -->
+        <a href="{% url 'blog:practice' %}" class="nav-link">
+            <i class="bi bi-lightning-charge"></i>
 
-<main class="main">
-
-
-    <!-- =====================================================
-         TOPBAR
-    ===================================================== -->
-
-    <header class="topbar">
+            <span>
+                Practice
+            </span>
+        </a>
 
 
-         <form method="GET"
-            action="{% url 'blog:blogpage' %}"
-            class="search-wrapper">
+        <!-- ASSIGNMENTS -->
 
-            <i class="bi bi-search"></i>
+        <a href="{% url 'blog:assignments' %}" class="nav-link">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Assignments</span>
+        </a>
 
-            <input
-                type="text"
-                name="search"
-                class="search-input"
-                placeholder="Search courses, lessons, projects..."
-                value="{{ request.GET.search|default:'' }}"
-            >
+
+        <!-- AI -->
+
+        <a href="{% url 'blog:ai_tutor' %}" class="nav-link">
+            <i class="bi bi-robot"></i>
+            <span>
+                AI Tutor
+            </span>
+            <span class="new-badge">
+                NEW
+            </span>
+        </a>
+        <div class="nav-label">
+            Your Space
+        </div>
+        <!-- PROJECTS -->
+        <a href="{% url 'blog:projects' %}" class="nav-link">
+            <i class="bi bi-folder2-open"></i>
+
+            <span>
+                Projects
+            </span>
+
+        </a>
+
+
+        <!-- COMMUNITY -->
+
+        <a href="{% url 'blog:community' %}" class="nav-link">
+
+            <i class="bi bi-people"></i>
+
+            <span>
+                Community
+            </span>
+
+        </a>
+
+
+        <!-- PROFILE -->
+
+        <a href="{% url 'blog:profile' %}" class="nav-link">
+
+            <i class="bi bi-person-circle"></i>
+
+            <span>
+                Profile
+            </span>
+
+        </a>
+
+
+        <!-- SETTINGS -->
+
+        <a href="{% url 'blog:settings' %}" class="nav-link">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+        </a>
+
+
+        <!-- LOGOUT -->
+
+        <form method="POST" action="{% url 'blog:logout' %}" style="margin: 4px 0;">
+
+            {% csrf_token %}
+
+            <button type="submit" class="nav-link logout-button">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>
+                    Logout
+                </span>
+
+            </button>
 
         </form>
 
+        <!-- PREMIUM -->
 
-        <div class="top-actions">
+        <div class="premium-card">
 
+            <small>
+                ✦ {{ SITE_NAME|upper }} PRO
+            </small>
 
-             <a
-                href="{% url 'blog:notifications' %}"
-                class="icon-btn"
-                title="Notifications"
-            >
-                <i class="bi bi-bell"></i>
+            <h4>
+                Learn without limits.
+            </h4>
+
+            <p>
+                Unlock advanced AI tools,
+                projects and career features.
+            </p>
+
+            <a href="#" class="premium-btn">
+                Explore Pro
             </a>
 
-
-            <a
-                href="{% url 'blog:settings' %}"
-                class="icon-btn"
-                title="Settings"
-            >
-
-                <i class="bi bi-gear"></i>
-
-            </a>
-
-            <a href="{% url 'blog:profile' %}" class="user-box">
+        </div>
 
 
-                <div class="avatar">
-
-                    {{ username|first|upper }}
-
-                </div>
+    </aside>
 
 
-                <div class="user-info">
 
-                    <strong>
-                        {{ username }}
-                    </strong>
+    <!-- =====================================================
+     MAIN
+===================================================== -->
 
-                    <span>
-                        Learner
-                    </span>
+    <main class="main">
 
-                </div>
+
+        <!-- =====================================================
+         TOPBAR
+    ===================================================== -->
+
+        <header class="topbar">
+
+
+            <form method="GET" action="{% url 'blog:blogpage' %}" class="search-wrapper">
+
+                <i class="bi bi-search"></i>
+
+                <input type="text" name="search" class="search-input" placeholder="Search courses, lessons, projects..."
+                    value="{{ request.GET.search|default:'' }}">
+
+            </form>
+
+
+            <div class="top-actions">
+
+
+                <a href="{% url 'blog:notifications' %}" class="icon-btn" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                </a>
+
+
+                <a href="{% url 'blog:settings' %}" class="icon-btn" title="Settings">
+
+                    <i class="bi bi-gear"></i>
+
+                </a>
+
+                <a href="{% url 'blog:profile' %}" class="user-box">
+
+
+                    <div class="avatar">
+
+                        {{ username|first|upper }}
+
+                    </div>
+
+
+                    <div class="user-info">
+
+                        <strong>
+                            {{ username }}
+                        </strong>
+
+                        <span>
+                            Learner
+                        </span>
+
+                    </div>
 
 
             </div>
 
 
-        </div>
+            </div>
 
 
-    </header>
+        </header>
 
 
 
-    <!-- =====================================================
+        <!-- =====================================================
          HERO
     ===================================================== -->
 
-    <section class="hero">
+        <section class="hero">
 
 
-        <div class="hero-content">
+            <div class="hero-content">
 
 
-            <div class="eyebrow">
+                <div class="eyebrow">
 
-                <i class="bi bi-stars"></i>
+                    <i class="bi bi-stars"></i>
 
-                YOUR JOURNEY TO SUCCESS
+                    YOUR JOURNEY TO SUCCESS
 
-            </div>
-
-
-            <h1>
-
-                Learn Code.
-                <span class="gradient-text">
-                    Build Future.
-                </span>
-
-            </h1>
+                </div>
 
 
-            <p>
+                <h1>
 
-                Hi <strong>{{ username }}</strong> 👋
+                    Learn Code.
+                    <span class="gradient-text">
+                        Build Future.
+                    </span>
 
-                Welcome back to CodeLearn Hub.
-
-                Learn new skills, practice coding,
-                build real-world projects and become
-                job ready with AI-powered guidance.
-
-            </p>
+                </h1>
 
 
-            <div class="hero-buttons">
+                <p>
+
+                    Hi <strong>{{ username }}</strong> 👋
+
+                    Welcome back to {{ SITE_NAME }}.
+
+                    Learn new skills, practice coding,
+                    build real-world projects and become
+                    job ready with AI-powered guidance.
+
+                </p>
 
 
-                <a
-                    href="{% url 'blog:blogpage' %}"
-                    class="primary-btn"
-                >
-
-                    <i class="bi bi-compass"></i>
-
-                    Explore Courses
-
-                </a>
+                <div class="hero-buttons">
 
 
-                <a
-                    href="#mission"
-                    class="secondary-btn"
-                >
+                    <a href="{% url 'blog:blogpage' %}" class="primary-btn">
 
-                    <i class="bi bi-lightning"></i>
+                        <i class="bi bi-compass"></i>
 
-                    Today's Mission
+                        Explore Courses
 
-                </a>
+                    </a>
+
+
+                    <a href="#mission" class="secondary-btn">
+
+                        <i class="bi bi-lightning"></i>
+
+                        Today's Mission
+
+                    </a>
+
+
+                </div>
 
 
             </div>
 
 
-        </div>
-
-
-    </section>
+        </section>
 
 
 
-    <!-- =====================================================
+        <!-- =====================================================
          CURRENT GOAL
     ===================================================== -->
 
-    <section class="goal-section">
+        <section class="goal-section">
 
 
-        <div class="goal-card-main">
+            <div class="goal-card-main">
 
 
-            <div class="goal-icon-main">
+                <div class="goal-icon-main">
 
-                🎯
+                    🎯
 
-            </div>
-
-
-            <div class="goal-content">
+                </div>
 
 
-                <span class="goal-label">
-
-                    YOUR CURRENT GOAL
-
-                </span>
+                <div class="goal-content">
 
 
-                {% if user_profile.goal == "job" %}
+                    <span class="goal-label">
+
+                        YOUR CURRENT GOAL
+
+                    </span>
+
+
+                    {% if user_profile.goal == "job" %}
 
                     <h2>
                         Get a Job
@@ -2466,7 +2329,7 @@
                     </p>
 
 
-                {% elif user_profile.goal == "skill" %}
+                    {% elif user_profile.goal == "skill" %}
 
                     <h2>
                         Learn New Skills
@@ -2478,7 +2341,7 @@
                     </p>
 
 
-                {% elif user_profile.goal == "projects" %}
+                    {% elif user_profile.goal == "projects" %}
 
                     <h2>
                         Build Projects
@@ -2490,7 +2353,7 @@
                     </p>
 
 
-                {% elif user_profile.goal == "interview" %}
+                    {% elif user_profile.goal == "interview" %}
 
                     <h2>
                         Prepare for Interviews
@@ -2502,7 +2365,7 @@
                     </p>
 
 
-                {% else %}
+                    {% else %}
 
                     <h2>
                         Choose Your Goal
@@ -2510,235 +2373,8 @@
 
                     <p>
                         Select your primary goal to
-                        personalize your CodeLearn journey.
+                        personalize your {{ SITE_NAME }} journey.
                     </p>
-
-                {% endif %}
-
-
-            </div>
-
-
-            <a
-                href="{% url 'blog:choose_goal' %}"
-                class="change-goal-btn"
-            >
-
-                Change Goal
-
-            </a>
-
-
-        </div>
-
-
-    </section>
-
-
-
-    <!-- =====================================================
-         STATS
-    ===================================================== -->
-
-    <section class="stats">
-
-
-        <div class="stat-card">
-
-            <div class="stat-top">
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-book"></i>
-
-                </div>
-
-                <span class="stat-change">
-                    Start
-                </span>
-
-            </div>
-
-
-            <div class="stat-value">
-                0
-            </div>
-
-
-            <div class="stat-label">
-                Courses Enrolled
-            </div>
-
-        </div>
-
-
-
-        <div class="stat-card">
-
-            <div class="stat-top">
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-code-square"></i>
-
-                </div>
-
-                <span class="stat-change">
-                    Practice
-                </span>
-
-            </div>
-
-
-            <div class="stat-value">
-                0
-            </div>
-
-
-            <div class="stat-label">
-                Problems Solved
-            </div>
-
-        </div>
-
-
-
-        <div class="stat-card">
-
-            <div class="stat-top">
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-folder2-open"></i>
-
-                </div>
-
-                <span class="stat-change">
-                    Build
-                </span>
-
-            </div>
-
-
-            <div class="stat-value">
-                0
-            </div>
-
-
-            <div class="stat-label">
-                Projects Built
-            </div>
-
-        </div>
-
-
-
-        <div class="stat-card">
-
-            <div class="stat-top">
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-fire"></i>
-
-                </div>
-
-                <span class="stat-change">
-                    Keep going
-                </span>
-
-            </div>
-
-
-            <div class="stat-value">
-                0
-            </div>
-
-
-            <div class="stat-label">
-                Day Streak
-            </div>
-
-        </div>
-
-
-    </section>
-
-
-
-    <!-- =====================================================
-         CONTINUE LEARNING
-    ===================================================== -->
-
-    <section class="section">
-
-
-        <div class="section-header">
-
-
-            <div>
-
-                <h3>
-                    Continue Learning
-                </h3>
-
-                <span>
-                    Pick up where you left off
-                </span>
-
-            </div>
-
-
-            <a
-                href="{% url 'blog:my_learning' %}"
-                class="view-all"
-            >
-
-                My Learning →
-
-            </a>
-
-
-        </div>
-
-
-        <div class="course-grid">
-
-
-            {% for enrollment in my_enrollments %}
-
-
-            {% with post=enrollment.course %}
-
-
-            <a
-                href="{% url 'blog:post_detail' post.pk %}"
-                class="course-card"
-            >
-
-
-                <div class="course-icon">
-
-
-                    {% if post.category == "Python" %}
-
-                        🐍
-
-                    {% elif post.category == "Django" %}
-
-                        ⚡
-
-                    {% elif post.category == "AI" %}
-
-                        🤖
-
-                    {% elif post.category == "JavaScript" %}
-
-                        JS
-
-                    {% else %}
-
-                        <i class="bi bi-code-square"></i>
 
                     {% endif %}
 
@@ -2746,548 +2382,754 @@
                 </div>
 
 
-                <h4>
-                    {{ post.title }}
-                </h4>
+                <a href="{% url 'blog:choose_goal' %}" class="change-goal-btn">
+
+                    Change Goal
+
+                </a>
 
 
-                <p>
-
-                    {{ post.category }}
-
-                    ·
-
-                    {{ post.difficulty }}
-
-                </p>
+            </div>
 
 
-                <div class="progress-wrap">
-
-
-                    <div class="progress-bg">
-
-
-                        <div
-                            class="progress-fill"
-                            style="width: {{ enrollment.progress }}%;"
-                        ></div>
-
-
-                    </div>
-
-
-                    <div class="progress-info">
-
-                        <span>
-
-                            {% if enrollment.progress == 0 %}
-
-                                Not started
-
-                            {% else %}
-
-                                Continue learning
-
-                            {% endif %}
-
-                        </span>
-
-
-                        <span>
-                            {{ enrollment.progress }}%
-                        </span>
-
-                    </div>
-
-
-                </div>
-
-
-            </a>
-
-
-            {% endwith %}
-
-
-            {% empty %}
-
-
-            <a
-                href="{% url 'blog:blogpage' %}"
-                class="course-card"
-            >
-
-                <div class="course-icon">
-
-                    <i class="bi bi-rocket-takeoff"></i>
-
-                </div>
-
-
-                <h4>
-                    Start Your First Course
-                </h4>
-
-
-                <p>
-                    Explore courses and start
-                    your learning journey.
-                </p>
-
-
-                <div class="progress-wrap">
-
-                    <span class="view-all">
-                        Explore Courses →
-                    </span>
-
-                </div>
-
-
-            </a>
-
-
-            {% endfor %}
-
-
-        </div>
-
-
-    </section>
+        </section>
 
 
 
-    <!-- =====================================================
-         MISSION + AI
+        <!-- =====================================================
+         STATS
     ===================================================== -->
 
-    <section
-        class="section"
-        id="mission"
-    >
+        <section class="stats">
 
 
-        <div class="two-column">
+            <div class="stat-card">
 
+                <div class="stat-top">
 
-            <!-- TODAY'S MISSION -->
+                    <div class="stat-icon">
 
-            <div class="panel">
-
-
-                <div class="section-header">
-
-
-                    <div>
-
-                        <h3>
-                            Today's Mission
-                        </h3>
-
-                        <span>
-                            Personalized for your goal
-                        </span>
+                        <i class="bi bi-book"></i>
 
                     </div>
 
-
-                </div>
-
-
-
-                {% if user_profile.goal == "job" %}
-
-
-                <div class="mission">
-
-                    <div class="mission-icon purple">
-                        🎓
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Complete one learning lesson
-                        </h5>
-
-                        <p>
-                            Build skills for your target role.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Learn
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon blue">
-                        💻
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Solve 2 coding problems
-                        </h5>
-
-                        <p>
-                            Improve your problem-solving skills.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Practice
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon green">
-                        🚀
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Work on one project task
-                        </h5>
-
-                        <p>
-                            Build something for your portfolio.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Build
-                    </span>
-
-                </div>
-
-
-
-                {% elif user_profile.goal == "skill" %}
-
-
-                <div class="mission">
-
-                    <div class="mission-icon purple">
-                        📚
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Complete today's lesson
-                        </h5>
-
-                        <p>
-                            Continue your learning journey.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Learn
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon blue">
-                        🧠
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Take a concept quiz
-                        </h5>
-
-                        <p>
-                            Test your understanding.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Quiz
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon green">
-                        ✨
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Practice a new concept
-                        </h5>
-
-                        <p>
-                            Turn learning into practical skill.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Practice
-                    </span>
-
-                </div>
-
-
-
-                {% elif user_profile.goal == "projects" %}
-
-
-                <div class="mission">
-
-                    <div class="mission-icon purple">
-                        🚀
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Complete one project task
-                        </h5>
-
-                        <p>
-                            Move your project forward.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Build
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon blue">
-                        🗄️
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Improve your database design
-                        </h5>
-
-                        <p>
-                            Strengthen your project foundation.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Work
-                    </span>
-
-                </div>
-
-
-                <div class="mission">
-
-                    <div class="mission-icon green">
-                        🐙
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Update your GitHub project
-                        </h5>
-
-                        <p>
-                            Keep your portfolio ready.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        GitHub
-                    </span>
-
-                </div>
-
-
-
-                {% elif user_profile.goal == "interview" %}
-
-
-                <div class="mission">
-
-                    <div class="mission-icon purple">
-                        🎤
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Practice 5 interview questions
-                        </h5>
-
-                        <p>
-                            Strengthen your technical knowledge.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
+                    <span class="stat-change">
                         Start
                     </span>
 
                 </div>
 
 
-                <div class="mission">
-
-                    <div class="mission-icon blue">
-                        🧑‍💻
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Take a mock interview
-                        </h5>
-
-                        <p>
-                            Practice answering naturally.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Mock
-                    </span>
-
+                <div class="stat-value">
+                    0
                 </div>
 
 
-                <div class="mission">
-
-                    <div class="mission-icon green">
-                        📄
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Practice project explanation
-                        </h5>
-
-                        <p>
-                            Prepare to explain your work clearly.
-                        </p>
-
-                    </div>
-
-                    <span class="mission-btn">
-                        Review
-                    </span>
-
+                <div class="stat-label">
+                    Courses Enrolled
                 </div>
-
-
-
-                {% else %}
-
-
-                <div class="mission">
-
-                    <div class="mission-icon purple">
-                        🎯
-                    </div>
-
-                    <div class="mission-info">
-
-                        <h5>
-                            Choose your learning goal
-                        </h5>
-
-                        <p>
-                            Personalize your CodeLearn journey.
-                        </p>
-
-                    </div>
-
-                    <a
-                        href="{% url 'blog:choose_goal' %}"
-                        class="mission-btn"
-                    >
-                        Choose
-                    </a>
-
-                </div>
-
-
-                {% endif %}
-
 
             </div>
 
 
 
-            <!-- =================================================
-                 AI PANEL
-            ================================================== -->
+            <div class="stat-card">
 
-            <div class="panel ai-panel">
+                <div class="stat-top">
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-code-square"></i>
+
+                    </div>
+
+                    <span class="stat-change">
+                        Practice
+                    </span>
+
+                </div>
 
 
-                <div class="ai-glow"></div>
+                <div class="stat-value">
+                    0
+                </div>
 
 
-                <div class="ai-header">
+                <div class="stat-label">
+                    Problems Solved
+                </div>
+
+            </div>
 
 
-                    <div class="ai-avatar">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-folder2-open"></i>
+
+                    </div>
+
+                    <span class="stat-change">
+                        Build
+                    </span>
+
+                </div>
+
+
+                <div class="stat-value">
+                    0
+                </div>
+
+
+                <div class="stat-label">
+                    Projects Built
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-fire"></i>
+
+                    </div>
+
+                    <span class="stat-change">
+                        Keep going
+                    </span>
+
+                </div>
+
+
+                <div class="stat-value">
+                    0
+                </div>
+
+
+                <div class="stat-label">
+                    Day Streak
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================================
+         CONTINUE LEARNING
+    ===================================================== -->
+
+        <section class="section">
+
+
+            <div class="section-header">
+
+
+                <div>
+
+                    <h3>
+                        Continue Learning
+                    </h3>
+
+                    <span>
+                        Pick up where you left off
+                    </span>
+
+                </div>
+
+
+                <a href="{% url 'blog:my_learning' %}" class="view-all">
+
+                    My Learning →
+
+                </a>
+
+
+            </div>
+
+
+            <div class="course-grid">
+
+
+                {% for enrollment in my_enrollments %}
+
+
+                {% with post=enrollment.course %}
+
+
+                <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
+
+
+                    <div class="course-icon">
+
+
+                        {% if post.category == "Python" %}
+
+                        🐍
+
+                        {% elif post.category == "Django" %}
+
+                        ⚡
+
+                        {% elif post.category == "AI" %}
+
                         🤖
+
+                        {% elif post.category == "JavaScript" %}
+
+                        JS
+
+                        {% else %}
+
+                        <i class="bi bi-code-square"></i>
+
+                        {% endif %}
+
+
                     </div>
 
 
-                    <div>
+                    <h4>
+                        {{ post.title }}
+                    </h4>
 
-                        <h4>
-                            Your AI Learning Assistant
-                        </h4>
 
-                        <p>
-                            Personalized guidance for your journey
-                        </p>
+                    <p>
+
+                        {{ post.category }}
+
+                        ·
+
+                        {{ post.difficulty }}
+
+                    </p>
+
+
+                    <div class="progress-wrap">
+
+
+                        <div class="progress-bg">
+
+
+                            <div class="progress-fill" style="width: {{ enrollment.progress }}%;"></div>
+
+
+                        </div>
+
+
+                        <div class="progress-info">
+
+                            <span>
+
+                                {% if enrollment.progress == 0 %}
+
+                                Not started
+
+                                {% else %}
+
+                                Continue learning
+
+                                {% endif %}
+
+                            </span>
+
+
+                            <span>
+                                {{ enrollment.progress }}%
+                            </span>
+
+                        </div>
+
 
                     </div>
+
+
+                </a>
+
+
+                {% endwith %}
+
+
+                {% empty %}
+
+
+                <a href="{% url 'blog:blogpage' %}" class="course-card">
+
+                    <div class="course-icon">
+
+                        <i class="bi bi-rocket-takeoff"></i>
+
+                    </div>
+
+
+                    <h4>
+                        Start Your First Course
+                    </h4>
+
+
+                    <p>
+                        Explore courses and start
+                        your learning journey.
+                    </p>
+
+
+                    <div class="progress-wrap">
+
+                        <span class="view-all">
+                            Explore Courses →
+                        </span>
+
+                    </div>
+
+
+                </a>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================================
+         MISSION + AI
+    ===================================================== -->
+
+        <section class="section" id="mission">
+
+
+            <div class="two-column">
+
+
+                <!-- TODAY'S MISSION -->
+
+                <div class="panel">
+
+
+                    <div class="section-header">
+
+
+                        <div>
+
+                            <h3>
+                                Today's Mission
+                            </h3>
+
+                            <span>
+                                Personalized for your goal
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    {% if user_profile.goal == "job" %}
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon purple">
+                            🎓
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Complete one learning lesson
+                            </h5>
+
+                            <p>
+                                Build skills for your target role.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Learn
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon blue">
+                            💻
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Solve 2 coding problems
+                            </h5>
+
+                            <p>
+                                Improve your problem-solving skills.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Practice
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon green">
+                            🚀
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Work on one project task
+                            </h5>
+
+                            <p>
+                                Build something for your portfolio.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Build
+                        </span>
+
+                    </div>
+
+
+
+                    {% elif user_profile.goal == "skill" %}
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon purple">
+                            📚
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Complete today's lesson
+                            </h5>
+
+                            <p>
+                                Continue your learning journey.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Learn
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon blue">
+                            🧠
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Take a concept quiz
+                            </h5>
+
+                            <p>
+                                Test your understanding.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Quiz
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon green">
+                            ✨
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Practice a new concept
+                            </h5>
+
+                            <p>
+                                Turn learning into practical skill.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Practice
+                        </span>
+
+                    </div>
+
+
+
+                    {% elif user_profile.goal == "projects" %}
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon purple">
+                            🚀
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Complete one project task
+                            </h5>
+
+                            <p>
+                                Move your project forward.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Build
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon blue">
+                            🗄️
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Improve your database design
+                            </h5>
+
+                            <p>
+                                Strengthen your project foundation.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Work
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon green">
+                            🐙
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Update your GitHub project
+                            </h5>
+
+                            <p>
+                                Keep your portfolio ready.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            GitHub
+                        </span>
+
+                    </div>
+
+
+
+                    {% elif user_profile.goal == "interview" %}
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon purple">
+                            🎤
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Practice 5 interview questions
+                            </h5>
+
+                            <p>
+                                Strengthen your technical knowledge.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Start
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon blue">
+                            🧑‍💻
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Take a mock interview
+                            </h5>
+
+                            <p>
+                                Practice answering naturally.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Mock
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon green">
+                            📄
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Practice project explanation
+                            </h5>
+
+                            <p>
+                                Prepare to explain your work clearly.
+                            </p>
+
+                        </div>
+
+                        <span class="mission-btn">
+                            Review
+                        </span>
+
+                    </div>
+
+
+
+                    {% else %}
+
+
+                    <div class="mission">
+
+                        <div class="mission-icon purple">
+                            🎯
+                        </div>
+
+                        <div class="mission-info">
+
+                            <h5>
+                                Choose your learning goal
+                            </h5>
+
+                            <p>
+                                Personalize your {{ SITE_NAME }} journey.
+                            </p>
+
+                        </div>
+
+                        <a href="{% url 'blog:choose_goal' %}" class="mission-btn">
+                            Choose
+                        </a>
+
+                    </div>
+
+
+                    {% endif %}
 
 
                 </div>
 
 
-                <div class="ai-message">
+
+                <!-- =================================================
+                 AI PANEL
+            ================================================== -->
+
+                <div class="panel ai-panel">
 
 
-                    {% if user_profile.goal == "job" %}
+                    <div class="ai-glow"></div>
+
+
+                    <div class="ai-header">
+
+
+                        <div class="ai-avatar">
+                            🤖
+                        </div>
+
+
+                        <div>
+
+                            <h4>
+                                Your AI Learning Assistant
+                            </h4>
+
+                            <p>
+                                Personalized guidance for your journey
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="ai-message">
+
+
+                        {% if user_profile.goal == "job" %}
 
                         Your goal is to get a job.
 
@@ -3296,7 +3138,7 @@
                         projects and interview preparation.
 
 
-                    {% elif user_profile.goal == "skill" %}
+                        {% elif user_profile.goal == "skill" %}
 
                         Your goal is to learn new skills.
 
@@ -3304,7 +3146,7 @@
                         and practice every concept.
 
 
-                    {% elif user_profile.goal == "projects" %}
+                        {% elif user_profile.goal == "projects" %}
 
                         Your goal is to build projects.
 
@@ -3312,7 +3154,7 @@
                         quality and portfolio building.
 
 
-                    {% elif user_profile.goal == "interview" %}
+                        {% elif user_profile.goal == "interview" %}
 
                         Your goal is interview preparation.
 
@@ -3320,181 +3162,169 @@
                         mock interviews and project explanations.
 
 
-                    {% else %}
+                        {% else %}
 
-                        Choose a goal and CodeLearn Hub
+                        Choose a goal and {{ SITE_NAME }}
                         will personalize your learning journey.
 
-                    {% endif %}
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <button type="button" class="ai-action">
+
+                        Ask AI Tutor
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </button>
 
 
                 </div>
 
 
-                <button
-                    type="button"
-                    class="ai-action"
-                >
-
-                    Ask AI Tutor
-
-                    <i class="bi bi-arrow-right"></i>
-
-                </button>
-
-
             </div>
 
 
-        </div>
-
-
-    </section>
+        </section>
 
 
 
-    <!-- =====================================================
+        <!-- =====================================================
          RECOMMENDED
     ===================================================== -->
 
-    <section class="section">
+        <section class="section">
 
 
-        <div class="section-header">
+            <div class="section-header">
 
 
-            <div>
+                <div>
 
-                <h3>
-                    Recommended For You
-                </h3>
+                    <h3>
+                        Recommended For You
+                    </h3>
 
-                <span>
-                    Skills that can move your career forward
-                </span>
+                    <span>
+                        Skills that can move your career forward
+                    </span>
+
+                </div>
+
+
+                <a href="{% url 'blog:blogpage' %}" class="view-all">
+                    Explore →
+                </a>
+
 
             </div>
 
 
-            <a
-                href="{% url 'blog:blogpage' %}"
-                class="view-all"
-            >
-                Explore →
-            </a>
+            <div class="recommend-grid">
 
 
-        </div>
+                <a href="{% url 'blog:blogpage' %}?search=Python" class="recommend">
+
+                    <div class="recommend-icon">
+                        🐍
+                    </div>
+
+                    <h5>
+                        Python
+                    </h5>
+
+                    <p>
+                        Build a strong programming foundation.
+                    </p>
+
+                </a>
 
 
-        <div class="recommend-grid">
+
+                <a href="{% url 'blog:blogpage' %}?search=Django" class="recommend">
+
+                    <div class="recommend-icon">
+                        ⚡
+                    </div>
+
+                    <h5>
+                        Django
+                    </h5>
+
+                    <p>
+                        Learn backend development with Python.
+                    </p>
+
+                </a>
 
 
-            <a
-                href="{% url 'blog:blogpage' %}?search=Python"
-                class="recommend"
-            >
 
-                <div class="recommend-icon">
-                    🐍
+                <div class="recommend">
+
+                    <div class="recommend-icon">
+                        🧠
+                    </div>
+
+                    <h5>
+                        Data Structures
+                    </h5>
+
+                    <p>
+                        Prepare for technical coding interviews.
+                    </p>
+
                 </div>
 
-                <h5>
-                    Python
-                </h5>
-
-                <p>
-                    Build a strong programming foundation.
-                </p>
-
-            </a>
 
 
+                <div class="recommend">
 
-            <a
-                href="{% url 'blog:blogpage' %}?search=Django"
-                class="recommend"
-            >
+                    <div class="recommend-icon">
+                        🎯
+                    </div>
 
-                <div class="recommend-icon">
-                    ⚡
+                    <h5>
+                        Interview Prep
+                    </h5>
+
+                    <p>
+                        Practice technical and HR interviews.
+                    </p>
+
                 </div>
 
-                <h5>
-                    Django
-                </h5>
-
-                <p>
-                    Learn backend development with Python.
-                </p>
-
-            </a>
-
-
-
-            <div class="recommend">
-
-                <div class="recommend-icon">
-                    🧠
-                </div>
-
-                <h5>
-                    Data Structures
-                </h5>
-
-                <p>
-                    Prepare for technical coding interviews.
-                </p>
 
             </div>
 
 
-
-            <div class="recommend">
-
-                <div class="recommend-icon">
-                    🎯
-                </div>
-
-                <h5>
-                    Interview Prep
-                </h5>
-
-                <p>
-                    Practice technical and HR interviews.
-                </p>
-
-            </div>
-
-
-        </div>
-
-
-    </section>
+        </section>
 
 
 
-    <!-- =====================================================
+        <!-- =====================================================
          FOOTER
     ===================================================== -->
 
-    <footer class="footer">
+        <footer class="footer">
 
 
-        <span>
-            © 2026 CodeLearn Hub
-        </span>
+            <span>
+                © {% now "Y" %} {{ SITE_NAME }}
+            </span>
 
 
-        <span>
-            Learn · Practice · Build · Grow
-        </span>
+            <span>
+                Learn · Practice · Build · Grow
+            </span>
 
 
-    </footer>
+        </footer>
 
 
-</main>
+    </main>
 
 
 </body>

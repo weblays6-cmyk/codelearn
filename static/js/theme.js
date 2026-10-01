@@ -52,7 +52,7 @@ function toggleTheme() {
 document.addEventListener("DOMContentLoaded", function () {
 
     const savedTheme =
-        localStorage.getItem("codelearn-theme") || "dark";
+        localStorage.getItem("codelearn-theme") || "light";
 
     applyTheme(savedTheme);
 

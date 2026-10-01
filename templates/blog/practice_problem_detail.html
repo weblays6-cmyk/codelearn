@@ -145,8 +145,15 @@
     </section>
     <section class="editor-card">
       <div class="editor-controls">
-        {% if languages %}<label>Language <select data-language>{% for item in languages %}<option value="{{ item }}" {%
-              if item==language %}selected{% endif %}>{{ item|title }}</option>{% endfor %}</select></label>{% endif %}
+        {% if languages %}
+        <label>Language
+          <select data-language>
+            {% for item in languages %}
+            <option value="{{ item }}" {% if item==language %}selected{% endif %}>{{ item|title }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
         <button type="button" class="tool-btn" data-action="run" {% if not languages %}disabled{% endif %}>Run
           Samples</button>
         <button type="button" class="tool-btn" data-action="submit" {% if not languages %}disabled{% endif %}>Submit
@@ -173,8 +180,12 @@
         submission.passed_test_cases }}/{{ submission.total_test_cases }} tests · {{ submission.submitted_at|date:'M d,
         Y H:i' }}</span></div>
     {% empty %}<p>You haven't submitted a solution yet.</p>{% endfor %}
-    {% if history.has_previous %}<a href="?page={{ history.previous_page_number }}">Previous</a>{% endif %} {% if
-    history.has_next %}<a href="?page={{ history.next_page_number }}">Next</a>{% endif %}
+    {% if history.has_previous %}
+    <a href="?page={{ history.previous_page_number }}">Previous</a>
+    {% endif %}
+    {% if history.has_next %}
+    <a href="?page={{ history.next_page_number }}">Next</a>
+    {% endif %}
   </section>
 </div>
 {% endblock %}

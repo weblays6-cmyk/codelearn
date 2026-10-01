@@ -121,8 +121,11 @@
       item.question.points|pluralize }}</div>
     <h2>{{ item.question.prompt }}</h2>
     {% for option in item.question.options %}
-    <label class="answer-option"><input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {%
-        if item.answer==option.id|stringformat:'s' %}checked{% endif %}><span>{{ option.text }}</span></label>
+    <label class="answer-option">
+      <input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {% if
+        item.answer==option.id|stringformat:'s' %}checked{% endif %}>
+      <span>{{ option.text }}</span>
+    </label>
     {% empty %}<p>This question has no configured answer options.</p>{% endfor %}
   </section>
   {% endfor %}

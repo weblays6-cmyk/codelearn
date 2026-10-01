@@ -68,10 +68,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 if ("liked" in data) {
 
                     button.innerHTML = `
-                        <i class="bi ${
-                            data.liked
-                                ? "bi-heart-fill"
-                                : "bi-heart"
+                        <i class="bi ${data.liked
+                            ? "bi-heart-fill"
+                            : "bi-heart"
                         }"></i>
                         ${data.count}
                     `;
@@ -92,10 +91,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 if ("saved" in data) {
 
                     button.innerHTML = `
-                        <i class="bi ${
-                            data.saved
-                                ? "bi-bookmark-fill"
-                                : "bi-bookmark"
+                        <i class="bi ${data.saved
+                            ? "bi-bookmark-fill"
+                            : "bi-bookmark"
                         }"></i>
                         ${data.count}
                     `;
@@ -116,15 +114,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 if ("following" in data) {
 
                     button.innerHTML = `
-                        <i class="bi ${
-                            data.following
-                                ? "bi-bell-fill"
-                                : "bi-bell"
+                        <i class="bi ${data.following
+                            ? "bi-bell-fill"
+                            : "bi-bell"
                         }"></i>
-                        ${
-                            data.following
-                                ? "Following"
-                                : "Follow"
+                        ${data.following
+                            ? "Following"
+                            : "Follow"
                         }
                     `;
 
@@ -155,6 +151,66 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     });
+
+
+    /*
+    =========================================================
+    SHARE PROJECT
+    =========================================================
+    */
+
+    const shareForm = document.querySelector(".project-share-form");
+
+    if (shareForm) {
+        shareForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const button = shareForm.querySelector("button[type='submit']");
+            const status = shareForm.querySelector(".share-project-status");
+            const shareUrl = shareForm.dataset.shareUrl;
+            if (!button || !shareUrl || button.disabled) {
+                return;
+            }
+
+            button.disabled = true;
+            status.textContent = "";
+
+            try {
+                let platform = "copy";
+                if (navigator.share) {
+                    await navigator.share({ title: document.title, url: shareUrl });
+                    platform = "native";
+                } else if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(shareUrl);
+                } else {
+                    window.prompt("Copy this project link", shareUrl);
+                }
+
+                const payload = new FormData(shareForm);
+                payload.set("platform", platform);
+                const response = await fetch(shareForm.action, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    body: payload,
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || "Unable to record the share.");
+                }
+
+                status.textContent = platform === "copy" ? "Link copied" : "Shared";
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    status.textContent = "Sharing failed. Try again.";
+                }
+            } finally {
+                button.disabled = false;
+            }
+        });
+    }
 
 
     /*
@@ -235,28 +291,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
                             <div class="comment-avatar">
                                 ${escapeHTML(
-                                    data.comment.initial
-                                )}
+                        data.comment.initial
+                    )}
                             </div>
 
                             <div class="comment-content">
 
                                 <strong>
                                     ${escapeHTML(
-                                        data.comment.username
-                                    )}
+                        data.comment.username
+                    )}
                                 </strong>
 
                                 <span class="comment-date">
                                     ${escapeHTML(
-                                        data.comment.date
-                                    )}
+                        data.comment.date
+                    )}
                                 </span>
 
                                 <p>
                                     ${escapeHTML(
-                                        data.comment.content
-                                    )}
+                        data.comment.content
+                    )}
                                 </p>
 
                             </div>
@@ -587,78 +643,78 @@ document.addEventListener("DOMContentLoaded", function () {
     =========================================================
     */
 
-   if (connectConfirm) {
+    if (connectConfirm) {
 
-    connectConfirm.addEventListener(
-        "click",
-        async function () {
+        connectConfirm.addEventListener(
+            "click",
+            async function () {
 
-            const connectUrl =
-                connectConfirm.dataset.connectUrl;
+                const connectUrl =
+                    connectConfirm.dataset.connectUrl;
 
-            if (!connectUrl) {
-                alert("Connection URL not found.");
-                return;
-            }
+                if (!connectUrl) {
+                    alert("Connection URL not found.");
+                    return;
+                }
 
-            connectConfirm.disabled = true;
+                connectConfirm.disabled = true;
 
-            connectConfirm.innerHTML = `
+                connectConfirm.innerHTML = `
                 <i class="bi bi-hourglass-split"></i>
                 Connecting...
             `;
 
-            try {
+                try {
 
-                const response = await fetch(
-                    connectUrl,
-                    {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrfToken,
-                            "X-Requested-With": "XMLHttpRequest"
+                    const response = await fetch(
+                        connectUrl,
+                        {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrfToken,
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
                         }
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-                    alert(
-                        data.error ||
-                        "Unable to start conversation."
                     );
-                    return;
-                }
 
-                window.location.href =
-                    data.redirect_url;
+                    const data =
+                        await response.json();
 
-            } catch (error) {
+                    if (!data.success) {
+                        alert(
+                            data.error ||
+                            "Unable to start conversation."
+                        );
+                        return;
+                    }
 
-                console.error(
-                    "Connect error:",
-                    error
-                );
+                    window.location.href =
+                        data.redirect_url;
 
-                alert(
-                    "Unable to connect right now."
-                );
+                } catch (error) {
 
-            } finally {
+                    console.error(
+                        "Connect error:",
+                        error
+                    );
 
-                connectConfirm.disabled = false;
+                    alert(
+                        "Unable to connect right now."
+                    );
 
-                connectConfirm.innerHTML = `
+                } finally {
+
+                    connectConfirm.disabled = false;
+
+                    connectConfirm.innerHTML = `
                     <i class="bi bi-chat-dots"></i>
                     Connect
                 `;
+                }
             }
-        }
-    );
+        );
 
-}
+    }
     /*
     =========================================================
     ESC KEY → CLOSE MODAL

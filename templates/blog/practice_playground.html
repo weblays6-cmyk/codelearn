@@ -195,7 +195,7 @@
                     </div>
                 </div>
                 <div data-monaco-host class="playground-monaco" hidden></div>
-                <textarea data-code-input spellcheck="false" aria-label="Source code" class="playground-code">{% if session %}{{ session.source_code }}{% else %}print("Hello CodeLearn")
+                <textarea data-code-input spellcheck="false" aria-label="Source code" class="playground-code">{% if session %}{{ session.source_code }}{% else %}print("Hello {{ SITE_NAME }}")
 {% endif %}</textarea>
             </div>
 

@@ -1,12 +1,8 @@
 from django.contrib import admin
-from django.core.exceptions import ValidationError
-from django.forms.models import BaseInlineFormSet
 from django.utils import timezone
-from .services.course_progress import refresh_progress_for_assignment
 from .models import (
     Post,
     Lesson,
-    Module,
     Assignment,
     AssignmentAudience,
     AssignmentAttempt,
@@ -15,27 +11,15 @@ from .models import (
     AssignmentSubmission,
     Comment,
     PracticeProblem,
-    PracticeProblemSet,
     PracticeProgress,
     PracticeSubmission,
-    MockTest,
-    MockTestQuestion,
-    MockTestAttempt,
     UserAssignmentProgress,
     UserProfile,
-    Enrollment,
-    LessonProgress,
 )
 
 
 class LessonInline(admin.TabularInline):
     model = Lesson
-    extra = 1
-    ordering = ('order',)
-
-
-class ModuleInline(admin.TabularInline):
-    model = Module
     extra = 1
     ordering = ('order',)
 
@@ -46,7 +30,6 @@ class PostAdmin(admin.ModelAdmin):
         'title',
         'category',
         'difficulty',
-        'status',
         'author',
         'created_at',
         'image',
@@ -55,8 +38,6 @@ class PostAdmin(admin.ModelAdmin):
     list_filter = (
         'category',
         'difficulty',
-        'status',
-        'sequential_learning',
         'created_at',
     )
 
@@ -68,15 +49,7 @@ class PostAdmin(admin.ModelAdmin):
         'author__username',
     )
 
-    inlines = [ModuleInline, LessonInline]
-
-
-@admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'course', 'order')
-    list_filter = ('course',)
-    search_fields = ('title', 'course__title')
-    ordering = ('course', 'order')
+    inlines = [LessonInline]
 
 
 class LessonAdmin(admin.ModelAdmin):
@@ -103,43 +76,6 @@ class LessonAdmin(admin.ModelAdmin):
         'course',
         'order',
     )
-
-
-class AssignmentAudienceInline(admin.TabularInline):
-    model = AssignmentAudience
-    extra = 1
-
-
-class AssignmentQuestionInline(admin.TabularInline):
-    model = AssignmentQuestion
-    extra = 1
-    fields = ('question', 'question_type', 'marks', 'order')
-    show_change_link = True
-
-
-class AssignmentOptionInlineFormSet(BaseInlineFormSet):
-    def clean(self):
-        super().clean()
-        if any(self.errors):
-            return
-
-        options = [
-            form.cleaned_data
-            for form in self.forms
-            if form.cleaned_data and not form.cleaned_data.get('DELETE')
-        ]
-        question_type = self.instance.question_type
-
-        if len(options) < 2:
-            raise ValidationError('Add at least two options for this question.')
-
-        correct_count = sum(option.get('is_correct', False) for option in options)
-        if question_type == 'SINGLE' and correct_count != 1:
-            raise ValidationError('Single-choice questions must have exactly one correct option.')
-        if question_type == 'MULTIPLE' and correct_count < 1:
-            raise ValidationError('Multiple-choice questions must have at least one correct option.')
-        if question_type == 'TRUE_FALSE' and (len(options) != 2 or correct_count != 1):
-            raise ValidationError('True/false questions must have exactly two options and one correct option.')
 
 
 class AssignmentAdmin(admin.ModelAdmin):
@@ -177,7 +113,6 @@ class AssignmentAdmin(admin.ModelAdmin):
         ('Availability', {'fields': ('release_date', 'due_date', 'max_attempts', 'late_submission_allowed', 'required', 'status')}),
         ('Ownership', {'fields': ('created_by', 'published_at')}),
     )
-    inlines = [AssignmentAudienceInline, AssignmentQuestionInline]
 
 
 class AssignmentSubmissionAdmin(admin.ModelAdmin):
@@ -238,7 +173,6 @@ class AssignmentSubmissionAdmin(admin.ModelAdmin):
                     progress.save(update_fields=(
                         'status', 'best_score', 'evaluated_at', 'completed_at'
                     ))
-            refresh_progress_for_assignment(obj.student, obj.assignment)
 
 
 @admin.register(AssignmentAudience)
@@ -255,20 +189,6 @@ class UserAssignmentProgressAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'assignment__title')
 
 
-@admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ('student', 'course', 'status', 'progress', 'completed', 'enrolled_at')
-    list_filter = ('status', 'completed', 'course')
-    search_fields = ('student__username', 'course__title')
-
-
-@admin.register(LessonProgress)
-class LessonProgressAdmin(admin.ModelAdmin):
-    list_display = ('student', 'lesson', 'completed', 'completed_at')
-    list_filter = ('completed', 'lesson__course')
-    search_fields = ('student__username', 'lesson__title', 'lesson__course__title')
-
-
 @admin.register(AssignmentAttempt)
 class AssignmentAttemptAdmin(admin.ModelAdmin):
     list_display = ('user', 'assignment', 'attempt_number', 'status', 'score', 'submitted_at')
@@ -276,26 +196,11 @@ class AssignmentAttemptAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'assignment__title')
 
 
-class AssignmentOptionInline(admin.TabularInline):
-    model = AssignmentOption
-    extra = 2
-    fields = ('option_text', 'is_correct', 'order')
-    formset = AssignmentOptionInlineFormSet
-    min_num = 2
-
-
 @admin.register(AssignmentQuestion)
 class AssignmentQuestionAdmin(admin.ModelAdmin):
     list_display = ('assignment', 'order', 'question_type', 'marks')
     list_filter = ('question_type',)
     search_fields = ('assignment__title', 'question')
-    inlines = [AssignmentOptionInline]
-    fieldsets = (
-        ('Question details', {
-            'fields': ('assignment', 'question', 'question_type', 'marks', 'order'),
-            'description': 'Save the question with at least two options. Mark the correct answer(s) below.',
-        }),
-    )
 
 
 @admin.register(AssignmentOption)
@@ -324,36 +229,6 @@ class PracticeSubmissionAdmin(admin.ModelAdmin):
     list_display = ('user', 'problem', 'language', 'status', 'submitted_at')
     list_filter = ('status', 'language')
     search_fields = ('user__username', 'problem__title')
-
-
-class MockTestQuestionInline(admin.TabularInline):
-    model = MockTestQuestion
-    extra = 1
-    ordering = ('order',)
-
-
-@admin.register(MockTest)
-class MockTestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'difficulty', 'duration_minutes', 'active', 'allow_retakes')
-    list_filter = ('active', 'difficulty', 'allow_retakes')
-    search_fields = ('title', 'description')
-    inlines = [MockTestQuestionInline]
-
-
-@admin.register(PracticeProblemSet)
-class PracticeProblemSetAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'active', 'updated_at')
-    list_filter = ('active',)
-    search_fields = ('title', 'description', 'slug')
-    filter_horizontal = ('problems',)
-
-
-@admin.register(MockTestAttempt)
-class MockTestAttemptAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'status', 'score', 'total_score', 'started_at', 'submitted_at')
-    list_filter = ('status', 'test', 'submitted_at')
-    search_fields = ('user__username', 'test__title')
-    readonly_fields = ('user', 'test', 'started_at', 'expires_at', 'submitted_at', 'answers', 'score', 'total_score', 'status')
 
 
 class CommentAdmin(admin.ModelAdmin):

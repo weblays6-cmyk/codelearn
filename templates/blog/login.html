@@ -1,5 +1,6 @@
 {% load static %}
 {% load socialaccount %}
+{% get_providers as socialaccount_providers %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,12 +9,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CodeLearn Hub | Learn. Practice. Build.</title>
+    <title>{{ SITE_NAME }} | Learn. Practice. Build.</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         * {
@@ -24,8 +22,8 @@
 
         :root {
             --bg: #050713;
-            --card: rgba(255,255,255,.045);
-            --border: rgba(255,255,255,.08);
+            --card: rgba(255, 255, 255, .045);
+            --border: rgba(255, 255, 255, .08);
             --text: #f8fafc;
             --muted: #94a3b8;
             --dim: #64748b;
@@ -38,8 +36,8 @@
 
         body.light-theme {
             --bg: #f5f7fb;
-            --card: rgba(255,255,255,.85);
-            --border: rgba(15,23,42,.10);
+            --card: rgba(255, 255, 255, .85);
+            --border: rgba(15, 23, 42, .10);
             --text: #111827;
             --muted: #475569;
             --dim: #64748b;
@@ -54,21 +52,15 @@
             color: var(--text);
 
             background:
-                radial-gradient(
-                    circle at 15% 10%,
-                    rgba(124,58,237,.18),
-                    transparent 28%
-                ),
-                radial-gradient(
-                    circle at 85% 20%,
-                    rgba(37,99,235,.15),
-                    transparent 28%
-                ),
-                radial-gradient(
-                    circle at 50% 90%,
-                    rgba(6,182,212,.08),
-                    transparent 30%
-                ),
+                radial-gradient(circle at 15% 10%,
+                    rgba(124, 58, 237, .18),
+                    transparent 28%),
+                radial-gradient(circle at 85% 20%,
+                    rgba(37, 99, 235, .15),
+                    transparent 28%),
+                radial-gradient(circle at 50% 90%,
+                    rgba(6, 182, 212, .08),
+                    transparent 30%),
                 var(--bg);
 
             font-family:
@@ -102,9 +94,9 @@
 
             padding: 0 6%;
 
-            background: rgba(5,7,19,.72);
+            background: rgba(5, 7, 19, .72);
 
-            border-bottom: 1px solid rgba(255,255,255,.06);
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
 
             backdrop-filter: blur(18px);
         }
@@ -129,15 +121,12 @@
             border-radius: 12px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #8b5cf6,
-                    #2563eb
-                );
+                    #2563eb);
 
             box-shadow:
-                0 0 28px
-                rgba(124,58,237,.32);
+                0 0 28px rgba(124, 58, 237, .32);
         }
 
         .brand span {
@@ -165,7 +154,7 @@
 
         .nav-link:hover {
             color: white;
-            background: rgba(255,255,255,.05);
+            background: rgba(255, 255, 255, .05);
         }
 
         .nav-login {
@@ -173,11 +162,11 @@
 
             color: white;
 
-            border: 1px solid rgba(139,92,246,.3);
+            border: 1px solid rgba(139, 92, 246, .3);
 
             border-radius: 9px;
 
-            background: rgba(139,92,246,.1);
+            background: rgba(139, 92, 246, .1);
 
             font-size: 14px;
             font-weight: 800;
@@ -191,29 +180,26 @@
             border-radius: 9px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 14px;
             font-weight: 800;
 
             box-shadow:
-                0 8px 25px
-                rgba(79,70,229,.2);
+                0 8px 25px rgba(79, 70, 229, .2);
         }
 
         .theme-toggle {
             width: 38px;
             height: 38px;
 
-            border: 1px solid rgba(255,255,255,.08);
+            border: 1px solid rgba(255, 255, 255, .08);
             border-radius: 9px;
 
             color: var(--muted);
-            background: rgba(255,255,255,.04);
+            background: rgba(255, 255, 255, .04);
 
             cursor: pointer;
         }
@@ -256,13 +242,13 @@
 
             padding: 7px 11px;
 
-            border: 1px solid rgba(139,92,246,.2);
+            border: 1px solid rgba(139, 92, 246, .2);
 
             border-radius: 30px;
 
             color: #c4b5fd;
 
-            background: rgba(139,92,246,.07);
+            background: rgba(139, 92, 246, .07);
 
             font-size: 12px;
             font-weight: 850;
@@ -285,12 +271,10 @@
 
         .gradient-text {
             background:
-                linear-gradient(
-                    90deg,
+                linear-gradient(90deg,
                     #a78bfa,
                     #60a5fa,
-                    #22d3ee
-                );
+                    #22d3ee);
 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -334,15 +318,12 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             box-shadow:
-                0 12px 35px
-                rgba(79,70,229,.23);
+                0 12px 35px rgba(79, 70, 229, .23);
         }
 
         .secondary-btn {
@@ -350,7 +331,7 @@
 
             border: 1px solid var(--border);
 
-            background: rgba(255,255,255,.035);
+            background: rgba(255, 255, 255, .035);
         }
 
         .secondary-btn:hover {
@@ -396,7 +377,7 @@
 
             border-radius: 50%;
 
-            background: rgba(124,58,237,.16);
+            background: rgba(124, 58, 237, .16);
 
             filter: blur(70px);
         }
@@ -410,20 +391,17 @@
 
             padding: 27px;
 
-            border: 1px solid rgba(255,255,255,.1);
+            border: 1px solid rgba(255, 255, 255, .1);
 
             border-radius: 22px;
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(25,27,52,.9),
-                    rgba(10,12,27,.92)
-                );
+                linear-gradient(145deg,
+                    rgba(25, 27, 52, .9),
+                    rgba(10, 12, 27, .92));
 
             box-shadow:
-                0 30px 90px
-                rgba(0,0,0,.4);
+                0 30px 90px rgba(0, 0, 0, .4);
 
             backdrop-filter: blur(20px);
         }
@@ -441,11 +419,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 18px;
         }
@@ -488,7 +464,7 @@
             position: relative;
         }
 
-        .input-wrap > i {
+        .input-wrap>i {
             position: absolute;
 
             left: 12px;
@@ -510,7 +486,7 @@
 
             padding: 0 12px 0 35px;
 
-            border: 1px solid rgba(255,255,255,.1);
+            border: 1px solid rgba(255, 255, 255, .1);
 
             border-radius: 10px;
 
@@ -518,7 +494,7 @@
 
             color: white;
 
-            background: rgba(3,5,15,.6);
+            background: rgba(3, 5, 15, .6);
 
             font-size: 14px;
 
@@ -529,8 +505,7 @@
             border-color: #7c5cff;
 
             box-shadow:
-                0 0 0 3px
-                rgba(124,92,255,.09);
+                0 0 0 3px rgba(124, 92, 255, .09);
         }
 
         /* ================= PASSWORD TOGGLE ================= */
@@ -568,7 +543,7 @@
 
         .password-toggle:hover {
             color: #a78bfa;
-            background: rgba(255,255,255,.05);
+            background: rgba(255, 255, 255, .05);
         }
 
         .login-submit {
@@ -585,11 +560,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7654ff,
-                    #4775ff
-                );
+                    #4775ff);
 
             font-size: 13px;
             font-weight: 850;
@@ -623,7 +596,7 @@
 
             height: 1px;
 
-            background: rgba(255,255,255,.07);
+            background: rgba(255, 255, 255, .07);
         }
 
         .signup-text {
@@ -675,13 +648,13 @@
             justify-content: center;
             gap: 8px;
 
-            border: 1px solid rgba(255,255,255,.1);
+            border: 1px solid rgba(255, 255, 255, .1);
 
             border-radius: 10px;
 
             color: white;
 
-            background: rgba(255,255,255,.04);
+            background: rgba(255, 255, 255, .04);
 
             font-size: 13px;
             font-weight: 750;
@@ -690,8 +663,8 @@
         }
 
         .google-btn:hover {
-            background: rgba(255,255,255,.08);
-            border-color: rgba(139,92,246,.3);
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .3);
         }
 
         /* ================= SECTIONS ================= */
@@ -763,9 +736,9 @@
         .feature:hover {
             transform: translateY(-5px);
 
-            border-color: rgba(139,92,246,.25);
+            border-color: rgba(139, 92, 246, .25);
 
-            background: rgba(255,255,255,.06);
+            background: rgba(255, 255, 255, .06);
         }
 
         .feature-icon {
@@ -780,7 +753,7 @@
 
             color: #a78bfa;
 
-            background: rgba(139,92,246,.11);
+            background: rgba(139, 92, 246, .11);
 
             font-size: 18px;
         }
@@ -817,7 +790,7 @@
 
             border-radius: 15px;
 
-            background: rgba(255,255,255,.035);
+            background: rgba(255, 255, 255, .035);
         }
 
         .step-number {
@@ -835,11 +808,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 13px;
             font-weight: 850;
@@ -869,17 +840,15 @@
 
             text-align: center;
 
-            border: 1px solid rgba(139,92,246,.18);
+            border: 1px solid rgba(139, 92, 246, .18);
 
             border-radius: 25px;
 
             background:
-                radial-gradient(
-                    circle at 50% 0%,
-                    rgba(124,58,237,.18),
-                    transparent 50%
-                ),
-                rgba(255,255,255,.035);
+                radial-gradient(circle at 50% 0%,
+                    rgba(124, 58, 237, .18),
+                    transparent 50%),
+                rgba(255, 255, 255, .035);
         }
 
         .cta h2 {
@@ -902,7 +871,7 @@
         footer {
             padding: 30px 6%;
 
-            border-top: 1px solid rgba(255,255,255,.06);
+            border-top: 1px solid rgba(255, 255, 255, .06);
 
             color: var(--dim);
 
@@ -985,449 +954,364 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/auth_theme.css' %}?v=2">
 </head>
 
-<body>
+<body class="light-theme">
 
-<!-- ================= NAVBAR ================= -->
+    <!-- ================= NAVBAR ================= -->
 
-<nav class="navbar">
+    <nav class="navbar">
 
-    <a href="#top" class="brand">
+        <a href="#top" class="brand">
 
-        <div class="brand-icon">
-            <i class="bi bi-code-slash"></i>
-        </div>
+            <img class="site-logo site-logo--auth"
+                style="display:block;width:220px;max-width:100%;height:auto;object-fit:contain;padding:2px 4px;border-radius:3px;background:#fff;"
+                src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
 
-        <div>
-            CodeLearn
-            <span>Hub</span>
-        </div>
-
-    </a>
-
-    <div class="nav-right">
-
-        <a href="#features" class="nav-link">
-            Features
         </a>
 
-        <a href="#journey" class="nav-link">
-            How It Works
-        </a>
+        <div class="nav-right">
 
-        <button
-            type="button"
-            class="theme-toggle"
-            id="themeToggle"
-            onclick="toggleTheme()"
-        >
-            <i class="bi bi-moon-fill" id="themeIcon"></i>
-        </button>
-
-        <a href="#login" class="nav-login">
-            Login
-        </a>
-
-        <a
-            href="{% url 'blog:signup' %}"
-            class="nav-join"
-        >
-            Join Free
-        </a>
-
-    </div>
-
-</nav>
-
-
-<!-- ================= HERO ================= -->
-
-<section class="hero" id="top">
-
-    <div class="hero-content">
-
-        <div class="eyebrow">
-            <i class="bi bi-stars"></i>
-            Developer Learning Platform
-        </div>
-
-        <h1>
-            Learn Code.
-            <br>
-            <span class="gradient-text">
-                Build Your Future.
-            </span>
-        </h1>
-
-        <p class="hero-description">
-            CodeLearn Hub is a complete learning platform
-            designed to take you from programming fundamentals
-            to real-world development skills — through courses,
-            coding practice, assignments, projects, AI guidance
-            and career-focused learning.
-        </p>
-
-        <div class="hero-buttons">
-
-            <a
-                href="{% url 'blog:signup' %}"
-                class="primary-btn"
-            >
-                <i class="bi bi-rocket-takeoff"></i>
-                Start Learning Free
+            <a href="#features" class="nav-link">
+                Features
             </a>
 
-            <a
-                href="#features"
-                class="secondary-btn"
-            >
-                Explore CodeLearn Hub
-                <i class="bi bi-arrow-down"></i>
+            <a href="#journey" class="nav-link">
+                How It Works
+            </a>
+
+            <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                <i class="bi bi-moon-fill" id="themeIcon"></i>
+            </button>
+
+            <a href="#login" class="nav-login">
+                Login
+            </a>
+
+            <a href="{% url 'blog:signup' %}" class="nav-join">
+                Join Free
             </a>
 
         </div>
 
-        <div class="hero-trust">
+    </nav>
 
-            <div class="trust-item">
-                <i class="bi bi-check-circle-fill"></i>
-                Learn at your pace
+
+    <!-- ================= HERO ================= -->
+
+    <section class="hero" id="top">
+
+        <div class="hero-content">
+
+            <div class="eyebrow">
+                <i class="bi bi-stars"></i>
+                Developer Learning Platform
             </div>
 
-            <div class="trust-item">
-                <i class="bi bi-check-circle-fill"></i>
-                Practice by doing
+            <h1>
+                Learn Code.
+                <br>
+                <span class="gradient-text">
+                    Build Your Future.
+                </span>
+            </h1>
+
+            <p class="hero-description">
+                {{ SITE_NAME }} is a complete learning platform
+                designed to take you from programming fundamentals
+                to real-world development skills — through courses,
+                coding practice, assignments, projects, AI guidance
+                and career-focused learning.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="{% url 'blog:signup' %}" class="primary-btn">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    Start Learning Free
+                </a>
+
+                <a href="#features" class="secondary-btn">
+                    Explore {{ SITE_NAME }}
+                    <i class="bi bi-arrow-down"></i>
+                </a>
+
             </div>
 
-            <div class="trust-item">
-                <i class="bi bi-check-circle-fill"></i>
-                Build real projects
+            <div class="hero-trust">
+
+                <div class="trust-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Learn at your pace
+                </div>
+
+                <div class="trust-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Practice by doing
+                </div>
+
+                <div class="trust-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Build real projects
+                </div>
+
             </div>
 
         </div>
 
-    </div>
+
+        <!-- ================= LOGIN ================= -->
+
+        <div class="login-area" id="login">
+
+            <div class="glow"></div>
+
+            <div class="login-card">
+
+                <div class="login-icon">
+                    <i class="bi bi-person-lock"></i>
+                </div>
 
 
-    <!-- ================= LOGIN ================= -->
-
-    <div
-        class="login-area"
-        id="login"
-    >
-
-        <div class="glow"></div>
-
-        <div class="login-card">
-
-            <div class="login-icon">
-                <i class="bi bi-person-lock"></i>
-            </div>
-
-
-            <!-- =================================================
+                <!-- =================================================
                  FORGOT PASSWORD / OTP
             ================================================= -->
 
-            {% if show_forgot %}
+                {% if show_forgot %}
 
                 {% if show_otp %}
 
-                    <h2>
-                        Verify <span>OTP</span>
-                    </h2>
+                <h2>
+                    Verify <span>OTP</span>
+                </h2>
 
-                    <p class="login-subtitle">
-                        Enter the 6-digit OTP sent to your email.
-                    </p>
+                <p class="login-subtitle">
+                    Enter the 6-digit OTP sent to your email.
+                </p>
 
-                    {% if error %}
-                        <p style="
+                {% if error %}
+                <p style="
                             margin-top:12px;
                             color:#fb7185;
                             font-size:12px;
                             line-height:1.6;
                         ">
-                            {{ error }}
-                        </p>
-                    {% endif %}
+                    {{ error }}
+                </p>
+                {% endif %}
 
-                    <form
-                        method="POST"
-                        action="{% url 'blog:verify_otp' %}"
-                    >
+                <form method="POST" action="{% url 'blog:verify_otp' %}">
 
-                        {% csrf_token %}
+                    {% csrf_token %}
 
-                        <div class="field">
+                    <div class="field">
 
-                            <label>OTP</label>
+                        <label>OTP</label>
 
-                            <div class="input-wrap">
+                        <div class="input-wrap">
 
-                                <i class="bi bi-shield-lock"></i>
+                            <i class="bi bi-shield-lock"></i>
 
-                                <input
-                                    type="text"
-                                    name="otp"
-                                    placeholder="Enter 6-digit OTP"
-                                    maxlength="6"
-                                    inputmode="numeric"
-                                    required
-                                    autofocus
-                                >
-
-                            </div>
+                            <input type="text" name="otp" placeholder="Enter 6-digit OTP" maxlength="6"
+                                inputmode="numeric" required autofocus>
 
                         </div>
 
-                        <button
-                            type="submit"
-                            class="login-submit"
-                        >
-                            <i class="bi bi-check-circle"></i>
-                            Verify OTP
-                        </button>
-
-                    </form>
-
-                    <div
-                        class="signup-text"
-                        style="margin-top:20px;"
-                    >
-                        <a href="{% url 'blog:forgot_password' %}">
-                            ← Change Email
-                        </a>
                     </div>
+
+                    <button type="submit" class="login-submit">
+                        <i class="bi bi-check-circle"></i>
+                        Verify OTP
+                    </button>
+
+                </form>
+
+                <div class="signup-text" style="margin-top:20px;">
+                    <a href="{% url 'blog:forgot_password' %}">
+                        ← Change Email
+                    </a>
+                </div>
 
                 {% else %}
 
-                    <h2>
-                        Forgot <span>Password?</span>
-                    </h2>
+                <h2>
+                    Forgot <span>Password?</span>
+                </h2>
 
-                    <p class="login-subtitle">
-                        Enter your registered email to receive a password reset OTP.
-                    </p>
+                <p class="login-subtitle">
+                    Enter your registered email to receive a password reset OTP.
+                </p>
 
-                    {% if error %}
-                        <p style="
+                {% if error %}
+                <p style="
                             margin-top:12px;
                             color:#fb7185;
                             font-size:12px;
                             line-height:1.6;
                         ">
-                            {{ error }}
-                        </p>
-                    {% endif %}
+                    {{ error }}
+                </p>
+                {% endif %}
 
-                    <form
-                        method="POST"
-                        action="{% url 'blog:forgot_password' %}"
-                    >
+                <form method="POST" action="{% url 'blog:forgot_password' %}">
 
-                        {% csrf_token %}
+                    {% csrf_token %}
 
-                        <div class="field">
+                    <div class="field">
 
-                            <label>Email Address</label>
+                        <label>Email Address</label>
 
-                            <div class="input-wrap">
+                        <div class="input-wrap">
 
-                                <i class="bi bi-envelope"></i>
+                            <i class="bi bi-envelope"></i>
 
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="Enter your email"
-                                    autocomplete="email"
-                                    required
-                                    autofocus
-                                >
-
-                            </div>
+                            <input type="email" name="email" placeholder="Enter your email" autocomplete="email"
+                                required autofocus>
 
                         </div>
 
-                        <button
-                            type="submit"
-                            class="login-submit"
-                        >
-                            <i class="bi bi-send"></i>
-                            Send OTP
-                        </button>
-
-                    </form>
-
-                    <div
-                        class="signup-text"
-                        style="margin-top:20px;"
-                    >
-                        <a href="{% url 'blog:login' %}">
-                            ← Back to Login
-                        </a>
                     </div>
+
+                    <button type="submit" class="login-submit">
+                        <i class="bi bi-send"></i>
+                        Send OTP
+                    </button>
+
+                </form>
+
+                <div class="signup-text" style="margin-top:20px;">
+                    <a href="{% url 'blog:login' %}">
+                        ← Back to Login
+                    </a>
+                </div>
 
                 {% endif %}
 
 
-            <!-- =================================================
+                <!-- =================================================
                  RESET PASSWORD
             ================================================= -->
 
-            {% elif show_reset %}
+                {% elif show_reset %}
 
                 <h2>
                     Reset <span>Password</span>
                 </h2>
 
                 <p class="login-subtitle">
-                    Create a new password for your CodeLearn Hub account.
+                    Create a new password for your {{ SITE_NAME }} account.
                 </p>
 
                 {% if password_changed %}
 
-                    <p style="
+                <p style="
                         margin-top:18px;
                         color:#4ade80;
                         font-size:13px;
                         text-align:center;
                         line-height:1.7;
                     ">
-                        Password changed successfully!
-                    </p>
+                    Password changed successfully!
+                </p>
 
-                    <a
-                        href="{% url 'blog:login' %}"
-                        class="login-submit"
-                        style="
+                <a href="{% url 'blog:login' %}" class="login-submit" style="
                             display:flex;
                             align-items:center;
                             justify-content:center;
                             text-decoration:none;
                             margin-top:20px;
-                        "
-                    >
-                        Login Now
-                    </a>
+                        ">
+                    Login Now
+                </a>
 
                 {% else %}
 
-                    {% if error %}
-                        <p style="
+                {% if error %}
+                <p style="
                             margin-top:12px;
                             color:#fb7185;
                             font-size:12px;
                             line-height:1.6;
                         ">
-                            {{ error }}
-                        </p>
-                    {% endif %}
+                    {{ error }}
+                </p>
+                {% endif %}
 
-                    <form
-                        method="POST"
-                        action="{% url 'blog:reset_password' %}"
-                    >
+                <form method="POST" action="{% url 'blog:reset_password' %}">
 
-                        {% csrf_token %}
+                    {% csrf_token %}
 
 
-                        <!-- NEW PASSWORD -->
+                    <!-- NEW PASSWORD -->
 
-                        <div class="field">
+                    <div class="field">
 
-                            <label>
-                                New Password
-                            </label>
+                        <label>
+                            New Password
+                        </label>
 
-                            <div class="input-wrap password-wrap">
+                        <div class="input-wrap password-wrap">
 
-                                <i class="bi bi-lock"></i>
+                            <i class="bi bi-lock"></i>
 
-                                <input
-                                    type="password"
-                                    name="password1"
-                                    id="resetPassword1"
-                                    placeholder="Enter new password"
-                                    autocomplete="new-password"
-                                    required
-                                    autofocus
-                                >
+                            <input type="password" name="password1" id="resetPassword1" placeholder="Enter new password"
+                                autocomplete="new-password" required autofocus>
 
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="resetPassword1"
-                                    aria-label="Show password"
-                                    title="Show password"
-                                >
-                                    <i class="bi bi-eye"></i>
-                                </button>
-
-                            </div>
+                            <button type="button" class="password-toggle" data-target="resetPassword1"
+                                aria-label="Show password" title="Show password">
+                                <i class="bi bi-eye"></i>
+                            </button>
 
                         </div>
 
+                    </div>
 
-                        <!-- CONFIRM PASSWORD -->
 
-                        <div class="field">
+                    <!-- CONFIRM PASSWORD -->
 
-                            <label>
-                                Confirm Password
-                            </label>
+                    <div class="field">
 
-                            <div class="input-wrap password-wrap">
+                        <label>
+                            Confirm Password
+                        </label>
 
-                                <i class="bi bi-lock-fill"></i>
+                        <div class="input-wrap password-wrap">
 
-                                <input
-                                    type="password"
-                                    name="password2"
-                                    id="resetPassword2"
-                                    placeholder="Confirm new password"
-                                    autocomplete="new-password"
-                                    required
-                                >
+                            <i class="bi bi-lock-fill"></i>
 
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="resetPassword2"
-                                    aria-label="Show password"
-                                    title="Show password"
-                                >
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                            <input type="password" name="password2" id="resetPassword2"
+                                placeholder="Confirm new password" autocomplete="new-password" required>
 
-                            </div>
+                            <button type="button" class="password-toggle" data-target="resetPassword2"
+                                aria-label="Show password" title="Show password">
+                                <i class="bi bi-eye"></i>
+                            </button>
 
                         </div>
 
+                    </div>
 
-                        <button
-                            type="submit"
-                            class="login-submit"
-                        >
-                            <i class="bi bi-key"></i>
-                            Change Password
-                        </button>
 
-                    </form>
+                    <button type="submit" class="login-submit">
+                        <i class="bi bi-key"></i>
+                        Change Password
+                    </button>
+
+                </form>
 
                 {% endif %}
 
 
-            <!-- =================================================
+                <!-- =================================================
                  NORMAL LOGIN
             ================================================= -->
 
-            {% else %}
+                {% else %}
 
                 <h2>
                     Welcome to
-                    <span>CodeLearn</span>
+                    <span>{{ SITE_NAME }}</span>
                 </h2>
 
                 <p class="login-subtitle">
@@ -1435,12 +1319,12 @@
                     and build skills that matter.
                 </p>
 
-                <form
-                    method="POST"
-                    action="{% url 'blog:login' %}"
-                >
+                <form method="POST" action="{% url 'blog:login' %}">
 
                     {% csrf_token %}
+                    {% if request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
 
 
                     <!-- USERNAME -->
@@ -1455,14 +1339,8 @@
 
                             <i class="bi bi-person"></i>
 
-                            <input
-                                type="text"
-                                name="username"
-                                placeholder="Enter your username"
-                                autocomplete="username"
-                                required
-                                autofocus
-                            >
+                            <input type="text" name="username" placeholder="Enter your username" autocomplete="username"
+                                required autofocus>
 
                         </div>
 
@@ -1481,22 +1359,11 @@
 
                             <i class="bi bi-lock"></i>
 
-                            <input
-                                type="password"
-                                name="password"
-                                id="loginPassword"
-                                placeholder="Enter your password"
-                                autocomplete="current-password"
-                                required
-                            >
+                            <input type="password" name="password" id="loginPassword" placeholder="Enter your password"
+                                autocomplete="current-password" required>
 
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                data-target="loginPassword"
-                                aria-label="Show password"
-                                title="Show password"
-                            >
+                            <button type="button" class="password-toggle" data-target="loginPassword"
+                                aria-label="Show password" title="Show password">
                                 <i class="bi bi-eye"></i>
                             </button>
 
@@ -1509,9 +1376,7 @@
 
                     <div class="forgot-password">
 
-                        <a
-                            href="{% url 'blog:forgot_password' %}"
-                        >
+                        <a href="{% url 'blog:forgot_password' %}">
                             Forgot Password?
                         </a>
 
@@ -1522,49 +1387,41 @@
 
                     {% if error %}
 
-                        <p style="
+                    <p style="
                             margin-top:12px;
                             color:#fb7185;
                             font-size:12px;
                             line-height:1.6;
                         ">
-                            {{ error }}
-                        </p>
+                        {{ error }}
+                    </p>
 
                     {% endif %}
 
 
                     <!-- LOGIN -->
 
-                    <button
-                        type="submit"
-                        class="login-submit"
-                    >
+                    <button type="submit" class="login-submit">
                         <i class="bi bi-box-arrow-in-right"></i>
-                        Login to CodeLearn Hub
+                        Login to {{ SITE_NAME }}
                     </button>
 
                 </form>
 
 
+                {% for social_provider in socialaccount_providers %}
+                {% if social_provider.id == 'google' %}
                 <div class="divider">
                     OR
                 </div>
-
-
-                <!-- GOOGLE LOGIN -->
-
                 <div class="google-login">
-
-                    <a
-                        href="{% provider_login_url 'google' %}"
-                        class="google-btn"
-                    >
+                    <a href="{% provider_login_url 'google' %}" class="google-btn">
                         <i class="bi bi-google"></i>
                         Continue with Google
                     </a>
-
                 </div>
+                {% endif %}
+                {% endfor %}
 
 
                 <div class="signup-text">
@@ -1577,502 +1434,494 @@
 
                 </div>
 
-            {% endif %}
+                {% endif %}
+
+            </div>
 
         </div>
 
-    </div>
-
-</section>
+    </section>
 
 
-<!-- ================= FEATURES ================= -->
+    <!-- ================= FEATURES ================= -->
 
-<section
-    class="section"
-    id="features"
->
+    <section class="section" id="features">
 
-    <div class="section-heading">
+        <div class="section-heading">
+
+            <div class="section-label">
+                Everything in one place
+            </div>
+
+            <h2>
+                More Than Just
+                <span class="gradient-text">
+                    Online Courses.
+                </span>
+            </h2>
+
+            <p>
+                {{ SITE_NAME }} combines learning,
+                practice, projects, AI assistance and
+                career preparation into one developer-focused
+                learning experience.
+            </p>
+
+        </div>
+
+
+        <div class="features">
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-book"></i>
+                </div>
+
+                <h3>Structured Courses</h3>
+
+                <p>
+                    Learn programming concepts through
+                    organized courses and lessons designed
+                    to build your knowledge step by step.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+
+                <h3>Practice Arena</h3>
+
+                <p>
+                    Solve coding problems, improve your
+                    problem-solving skills and practice
+                    Python, Django, SQL, JavaScript and more.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
+
+                <h3>Assignments</h3>
+
+                <p>
+                    Apply what you learn through practical
+                    assignments and track your completion,
+                    submissions and scores.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-robot"></i>
+                </div>
+
+                <h3>AI Learning Assistant</h3>
+
+                <p>
+                    Get programming explanations,
+                    debugging guidance and step-by-step
+                    learning support from the AI Tutor.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+
+                <h3>Real-World Projects</h3>
+
+                <p>
+                    Turn your knowledge into portfolio-ready
+                    applications and gain experience by
+                    building practical projects.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+
+                <h3>Progress Tracking</h3>
+
+                <p>
+                    Track enrolled courses, lesson progress,
+                    completed learning activities and your
+                    overall development journey.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <h3>Developer Community</h3>
+
+                <p>
+                    Discuss programming, ask questions,
+                    share your work and learn from other
+                    developers and learners.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-person-workspace"></i>
+                </div>
+
+                <h3>Career Preparation</h3>
+
+                <p>
+                    Prepare for developer roles through
+                    practical coding, projects, interview
+                    preparation and skill development.
+                </p>
+            </div>
+
+
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+
+                <h3>Build Your Developer Profile</h3>
+
+                <p>
+                    Keep your learning achievements,
+                    projects and progress organized as
+                    you grow toward becoming job ready.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= JOURNEY ================= -->
+
+    <section class="section" id="journey">
+
+        <div class="section-heading">
+
+            <div class="section-label">
+                Your Developer Journey
+            </div>
+
+            <h2>
+                From Beginner
+                <span class="gradient-text">
+                    to Job Ready.
+                </span>
+            </h2>
+
+            <p>
+                {{ SITE_NAME }} is designed around a simple
+                learning journey: understand → practice →
+                build → improve → prepare.
+            </p>
+
+        </div>
+
+
+        <div class="journey">
+
+            <div class="journey-step">
+
+                <div class="step-number">
+                    01
+                </div>
+
+                <h3>Learn</h3>
+
+                <p>
+                    Master programming fundamentals
+                    and development concepts.
+                </p>
+
+            </div>
+
+
+            <div class="journey-step">
+
+                <div class="step-number">
+                    02
+                </div>
+
+                <h3>Practice</h3>
+
+                <p>
+                    Solve problems and strengthen
+                    your coding ability.
+                </p>
+
+            </div>
+
+
+            <div class="journey-step">
+
+                <div class="step-number">
+                    03
+                </div>
+
+                <h3>Build</h3>
+
+                <p>
+                    Create real-world projects
+                    and portfolio applications.
+                </p>
+
+            </div>
+
+
+            <div class="journey-step">
+
+                <div class="step-number">
+                    04
+                </div>
+
+                <h3>Improve</h3>
+
+                <p>
+                    Use feedback, progress tracking
+                    and AI guidance to improve.
+                </p>
+
+            </div>
+
+
+            <div class="journey-step">
+
+                <div class="step-number">
+                    05
+                </div>
+
+                <h3>Get Job Ready</h3>
+
+                <p>
+                    Prepare your skills, projects
+                    and developer profile.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CTA ================= -->
+
+    <section class="cta">
 
         <div class="section-label">
-            Everything in one place
+            START YOUR JOURNEY
         </div>
 
         <h2>
-            More Than Just
+            Your Next Level
             <span class="gradient-text">
-                Online Courses.
+                Starts Here.
             </span>
         </h2>
 
         <p>
-            CodeLearn Hub combines learning,
-            practice, projects, AI assistance and
-            career preparation into one developer-focused
-            learning experience.
+            Don't just watch tutorials.
+            Learn concepts, write code, solve problems,
+            build projects and become the developer
+            you want to be.
         </p>
 
-    </div>
+        <a href="{% url 'blog:signup' %}" class="primary-btn">
+            <i class="bi bi-rocket-takeoff"></i>
+            Join {{ SITE_NAME }} Free
+        </a>
 
+    </section>
 
-    <div class="features">
 
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-book"></i>
-            </div>
+    <!-- ================= FOOTER ================= -->
 
-            <h3>Structured Courses</h3>
+    <footer>
+        © {% now "Y" %} {{ SITE_NAME }}
+        • Learn. Practice. Build. Grow.
+    </footer>
 
-            <p>
-                Learn programming concepts through
-                organized courses and lessons designed
-                to build your knowledge step by step.
-            </p>
-        </div>
 
+    <script>
 
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-lightning-charge"></i>
-            </div>
+        /* =====================================================
+           THEME
+        ===================================================== */
 
-            <h3>Practice Arena</h3>
+        function toggleTheme() {
 
-            <p>
-                Solve coding problems, improve your
-                problem-solving skills and practice
-                Python, Django, SQL, JavaScript and more.
-            </p>
-        </div>
+            document.body.classList.toggle("light-theme");
 
+            const icon =
+                document.getElementById("themeIcon");
 
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-clipboard-check"></i>
-            </div>
+            if (
+                document.body.classList.contains("light-theme")
+            ) {
 
-            <h3>Assignments</h3>
+                icon.className = "bi bi-sun-fill";
 
-            <p>
-                Apply what you learn through practical
-                assignments and track your completion,
-                submissions and scores.
-            </p>
-        </div>
+                localStorage.setItem(
+                    "codelearn-theme",
+                    "light"
+                );
 
+            } else {
 
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-robot"></i>
-            </div>
+                icon.className = "bi bi-moon-fill";
 
-            <h3>AI Learning Assistant</h3>
-
-            <p>
-                Get programming explanations,
-                debugging guidance and step-by-step
-                learning support from the AI Tutor.
-            </p>
-        </div>
-
-
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-folder2-open"></i>
-            </div>
-
-            <h3>Real-World Projects</h3>
-
-            <p>
-                Turn your knowledge into portfolio-ready
-                applications and gain experience by
-                building practical projects.
-            </p>
-        </div>
-
-
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
-
-            <h3>Progress Tracking</h3>
-
-            <p>
-                Track enrolled courses, lesson progress,
-                completed learning activities and your
-                overall development journey.
-            </p>
-        </div>
-
-
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-people"></i>
-            </div>
-
-            <h3>Developer Community</h3>
-
-            <p>
-                Discuss programming, ask questions,
-                share your work and learn from other
-                developers and learners.
-            </p>
-        </div>
-
-
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-person-workspace"></i>
-            </div>
-
-            <h3>Career Preparation</h3>
-
-            <p>
-                Prepare for developer roles through
-                practical coding, projects, interview
-                preparation and skill development.
-            </p>
-        </div>
-
-
-        <div class="feature">
-            <div class="feature-icon">
-                <i class="bi bi-trophy"></i>
-            </div>
-
-            <h3>Build Your Developer Profile</h3>
-
-            <p>
-                Keep your learning achievements,
-                projects and progress organized as
-                you grow toward becoming job ready.
-            </p>
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= JOURNEY ================= -->
-
-<section
-    class="section"
-    id="journey"
->
-
-    <div class="section-heading">
-
-        <div class="section-label">
-            Your Developer Journey
-        </div>
-
-        <h2>
-            From Beginner
-            <span class="gradient-text">
-                to Job Ready.
-            </span>
-        </h2>
-
-        <p>
-            CodeLearn Hub is designed around a simple
-            learning journey: understand → practice →
-            build → improve → prepare.
-        </p>
-
-    </div>
-
-
-    <div class="journey">
-
-        <div class="journey-step">
-
-            <div class="step-number">
-                01
-            </div>
-
-            <h3>Learn</h3>
-
-            <p>
-                Master programming fundamentals
-                and development concepts.
-            </p>
-
-        </div>
-
-
-        <div class="journey-step">
-
-            <div class="step-number">
-                02
-            </div>
-
-            <h3>Practice</h3>
-
-            <p>
-                Solve problems and strengthen
-                your coding ability.
-            </p>
-
-        </div>
-
-
-        <div class="journey-step">
-
-            <div class="step-number">
-                03
-            </div>
-
-            <h3>Build</h3>
-
-            <p>
-                Create real-world projects
-                and portfolio applications.
-            </p>
-
-        </div>
-
-
-        <div class="journey-step">
-
-            <div class="step-number">
-                04
-            </div>
-
-            <h3>Improve</h3>
-
-            <p>
-                Use feedback, progress tracking
-                and AI guidance to improve.
-            </p>
-
-        </div>
-
-
-        <div class="journey-step">
-
-            <div class="step-number">
-                05
-            </div>
-
-            <h3>Get Job Ready</h3>
-
-            <p>
-                Prepare your skills, projects
-                and developer profile.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= CTA ================= -->
-
-<section class="cta">
-
-    <div class="section-label">
-        START YOUR JOURNEY
-    </div>
-
-    <h2>
-        Your Next Level
-        <span class="gradient-text">
-            Starts Here.
-        </span>
-    </h2>
-
-    <p>
-        Don't just watch tutorials.
-        Learn concepts, write code, solve problems,
-        build projects and become the developer
-        you want to be.
-    </p>
-
-    <a
-        href="{% url 'blog:signup' %}"
-        class="primary-btn"
-    >
-        <i class="bi bi-rocket-takeoff"></i>
-        Join CodeLearn Hub Free
-    </a>
-
-</section>
-
-
-<!-- ================= FOOTER ================= -->
-
-<footer>
-    © 2026 CodeLearn Hub
-    • Learn. Practice. Build. Grow.
-</footer>
-
-
-<script>
-
-/* =====================================================
-   THEME
-===================================================== */
-
-function toggleTheme() {
-
-    document.body.classList.toggle("light-theme");
-
-    const icon =
-        document.getElementById("themeIcon");
-
-    if (
-        document.body.classList.contains("light-theme")
-    ) {
-
-        icon.className = "bi bi-sun-fill";
-
-        localStorage.setItem(
-            "codelearn-theme",
-            "light"
-        );
-
-    } else {
-
-        icon.className = "bi bi-moon-fill";
-
-        localStorage.setItem(
-            "codelearn-theme",
-            "dark"
-        );
-    }
-}
-
-
-/* =====================================================
-   RESTORE THEME
-===================================================== */
-
-const savedTheme =
-    localStorage.getItem("codelearn-theme");
-
-if (savedTheme === "light") {
-
-    document.body.classList.add("light-theme");
-
-    document.getElementById(
-        "themeIcon"
-    ).className = "bi bi-sun-fill";
-}
-
-
-/* =====================================================
-   PASSWORD SHOW / HIDE
-===================================================== */
-
-document
-    .querySelectorAll(".password-toggle")
-    .forEach(function(button) {
-
-        button.addEventListener(
-            "click",
-            function() {
-
-                const targetId =
-                    button.dataset.target;
-
-                const input =
-                    document.getElementById(targetId);
-
-                if (!input) return;
-
-                const icon =
-                    button.querySelector("i");
-
-                if (input.type === "password") {
-
-                    input.type = "text";
-
-                    icon.className =
-                        "bi bi-eye-slash";
-
-                    button.setAttribute(
-                        "aria-label",
-                        "Hide password"
-                    );
-
-                    button.setAttribute(
-                        "title",
-                        "Hide password"
-                    );
-
-                } else {
-
-                    input.type = "password";
-
-                    icon.className =
-                        "bi bi-eye";
-
-                    button.setAttribute(
-                        "aria-label",
-                        "Show password"
-                    );
-
-                    button.setAttribute(
-                        "title",
-                        "Show password"
-                    );
-                }
+                localStorage.setItem(
+                    "codelearn-theme",
+                    "dark"
+                );
             }
-        );
-    });
+        }
 
 
-/* =====================================================
-   HIDE PASSWORD WHEN FOCUS/CURSOR LEAVES
-===================================================== */
+        /* =====================================================
+           RESTORE THEME
+        ===================================================== */
 
-document
-    .querySelectorAll(".password-wrap input")
-    .forEach(function(input) {
+        const savedTheme =
+            localStorage.getItem("codelearn-theme") || "light";
 
-        input.addEventListener(
-            "blur",
-            function() {
+        if (savedTheme === "light") {
 
-                if (input.type === "text") {
+            document.body.classList.add("light-theme");
 
-                    input.type = "password";
+            document.getElementById(
+                "themeIcon"
+            ).className = "bi bi-sun-fill";
+        }
 
-                    const button =
-                        input.parentElement
-                            .querySelector(
-                                ".password-toggle"
+
+        /* =====================================================
+           PASSWORD SHOW / HIDE
+        ===================================================== */
+
+        document
+            .querySelectorAll(".password-toggle")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const targetId =
+                            button.dataset.target;
+
+                        const input =
+                            document.getElementById(targetId);
+
+                        if (!input) return;
+
+                        const icon =
+                            button.querySelector("i");
+
+                        if (input.type === "password") {
+
+                            input.type = "text";
+
+                            icon.className =
+                                "bi bi-eye-slash";
+
+                            button.setAttribute(
+                                "aria-label",
+                                "Hide password"
                             );
 
-                    if (!button) return;
+                            button.setAttribute(
+                                "title",
+                                "Hide password"
+                            );
 
-                    const icon =
-                        button.querySelector("i");
+                        } else {
 
-                    icon.className =
-                        "bi bi-eye";
+                            input.type = "password";
 
-                    button.setAttribute(
-                        "aria-label",
-                        "Show password"
-                    );
+                            icon.className =
+                                "bi bi-eye";
 
-                    button.setAttribute(
-                        "title",
-                        "Show password"
-                    );
-                }
-            }
-        );
-    });
+                            button.setAttribute(
+                                "aria-label",
+                                "Show password"
+                            );
 
-</script>
+                            button.setAttribute(
+                                "title",
+                                "Show password"
+                            );
+                        }
+                    }
+                );
+            });
+
+
+        /* =====================================================
+           HIDE PASSWORD WHEN FOCUS/CURSOR LEAVES
+        ===================================================== */
+
+        document
+            .querySelectorAll(".password-wrap input")
+            .forEach(function (input) {
+
+                input.addEventListener(
+                    "blur",
+                    function () {
+
+                        if (input.type === "text") {
+
+                            input.type = "password";
+
+                            const button =
+                                input.parentElement
+                                    .querySelector(
+                                        ".password-toggle"
+                                    );
+
+                            if (!button) return;
+
+                            const icon =
+                                button.querySelector("i");
+
+                            icon.className =
+                                "bi bi-eye";
+
+                            button.setAttribute(
+                                "aria-label",
+                                "Show password"
+                            );
+
+                            button.setAttribute(
+                                "title",
+                                "Show password"
+                            );
+                        }
+                    }
+                );
+            });
+
+    </script>
 
 </body>
+
 </html>

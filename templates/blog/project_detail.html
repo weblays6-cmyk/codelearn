@@ -40,13 +40,13 @@
 
         <div class="project-detail-status status-{{ project.status }}">
             {% if project.status == "idea" %}
-                IDEA
+            IDEA
             {% elif project.status == "development" %}
-                IN DEVELOPMENT
+            IN DEVELOPMENT
             {% elif project.status == "completed" %}
-                COMPLETED
+            COMPLETED
             {% elif project.status == "live" %}
-                LIVE
+            LIVE
             {% endif %}
         </div>
 
@@ -60,10 +60,7 @@
 
         {% for image in project.images.all %}
         <div class="project-detail-image">
-            <img
-                src="{{ image.image.url }}"
-                alt="{{ project.title }}"
-            >
+            <img src="{{ image.image.url }}" alt="{{ project.title }}">
         </div>
         {% endfor %}
 
@@ -150,12 +147,9 @@
 
 
             <!-- ACTIONS -->
-            <section class="project-actions">
+            <section class="project-actions" id="project-actions">
 
-                <form
-                    method="POST"
-                    action="{% url 'blog:project_like' project.pk %}"
-                >
+                <form method="POST" action="{% url 'blog:project_like' project.pk %}">
                     {% csrf_token %}
 
                     <button type="submit">
@@ -165,10 +159,7 @@
                 </form>
 
 
-                <form
-                    method="POST"
-                    action="{% url 'blog:project_save' project.pk %}"
-                >
+                <form method="POST" action="{% url 'blog:project_save' project.pk %}">
                     {% csrf_token %}
 
                     <button type="submit">
@@ -178,10 +169,7 @@
                 </form>
 
 
-                <form
-                    method="POST"
-                    action="{% url 'blog:project_follow' project.pk %}"
-                >
+                <form method="POST" action="{% url 'blog:project_follow' project.pk %}">
                     {% csrf_token %}
 
                     <button type="submit">
@@ -190,11 +178,21 @@
                     </button>
                 </form>
 
+                <form method="POST" action="{% url 'blog:project_share' project.pk %}" class="project-share-form"
+                    id="project-share" data-share-url="{{ request.build_absolute_uri }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="platform" value="copy">
+                    <button type="submit" class="share-project-button">
+                        <i class="bi bi-share"></i> Share
+                    </button>
+                    <span class="share-project-status" aria-live="polite"></span>
+                </form>
+
             </section>
 
 
             <!-- COMMENTS -->
-            <section class="detail-card">
+            <section class="detail-card" id="project-comments">
 
                 <div class="detail-heading">
                     <i class="bi bi-chat"></i>
@@ -205,19 +203,12 @@
                 </div>
 
 
-                <form
-                    method="POST"
-                    action="{% url 'blog:project_comment' project.pk %}"
-                    class="comment-form"
-                >
+                <form method="POST" action="{% url 'blog:project_comment' project.pk %}" class="comment-form">
 
                     {% csrf_token %}
 
-                    <textarea
-                        name="content"
-                        placeholder="Share your thoughts about this project..."
-                        required
-                    ></textarea>
+                    <textarea name="content" placeholder="Share your thoughts about this project..."
+                        required></textarea>
 
                     <button type="submit">
                         <i class="bi bi-send"></i>
@@ -296,10 +287,7 @@
 
                 </div>
 
-                 <a
-                    href="{% url 'blog:user_profile' project.owner.id %}"
-                    class="owner-profile-btn"
-                >
+                <a href="{% url 'blog:user_profile' project.owner.id %}" class="owner-profile-btn">
                     View Profile
                 </a>
 
@@ -317,12 +305,8 @@
 
                 {% if project.github_url %}
 
-                <a
-                    href="{{ project.github_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="project-external-link"
-                >
+                <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer"
+                    class="project-external-link">
                     <i class="bi bi-github"></i>
                     <span>
                         <strong>GitHub</strong>
@@ -336,12 +320,8 @@
 
                 {% if project.live_demo_url %}
 
-                <a
-                    href="{{ project.live_demo_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="project-external-link"
-                >
+                <a href="{{ project.live_demo_url }}" target="_blank" rel="noopener noreferrer"
+                    class="project-external-link">
                     <i class="bi bi-globe2"></i>
                     <span>
                         <strong>Live Demo</strong>
@@ -367,163 +347,133 @@
             <!-- COLLABORATION -->
             {% if project.looking_for_collaborators %}
 
-<section class="detail-card collaboration-card">
+            <section class="detail-card collaboration-card">
 
-    <div class="detail-heading">
-        <i class="bi bi-people"></i>
+                <div class="detail-heading">
+                    <i class="bi bi-people"></i>
 
-        <div>
-            <h2>Looking for Collaborators</h2>
+                    <div>
+                        <h2>Looking for Collaborators</h2>
 
-            <p class="collaboration-subtitle">
-                Interested in contributing to this project?
-            </p>
-        </div>
-    </div>
-
-
-    {% if project.collaborator_types %}
-
-    <div class="collaborator-types">
-        <i class="bi bi-person-workspace"></i>
-
-        <div>
-            <strong>Open Roles</strong>
-            <span>{{ project.collaborator_types }}</span>
-        </div>
-    </div>
-
-    {% endif %}
+                        <p class="collaboration-subtitle">
+                            Interested in contributing to this project?
+                        </p>
+                    </div>
+                </div>
 
 
-    <form
-        method="POST"
-        action="{% url 'blog:project_collaborate' project.pk %}"
-        class="collaboration-form"
-    >
+                {% if project.collaborator_types %}
 
-        {% csrf_token %}
+                <div class="collaborator-types">
+                    <i class="bi bi-person-workspace"></i>
 
-        <button
-            type="submit"
-            class="collaborate-btn"
-            id="collaborateBtn"
-        >
-            <i class="bi bi-person-plus"></i>
+                    <div>
+                        <strong>Open Roles</strong>
+                        <span>{{ project.collaborator_types }}</span>
+                    </div>
+                </div>
 
-            <span>I'm Interested</span>
-        </button>
-
-    </form>
+                {% endif %}
 
 
-    <div class="collaboration-note">
-        <i class="bi bi-shield-check"></i>
+                <form method="POST" action="{% url 'blog:project_collaborate' project.pk %}" class="collaboration-form">
 
-        <span>
-            Your interest is private. The project owner will
-            be contacted only if you choose to connect.
-        </span>
-    </div>
+                    {% csrf_token %}
 
-</section>
+                    <button type="submit" class="collaborate-btn" id="collaborateBtn">
+                        <i class="bi bi-person-plus"></i>
+
+                        <span>I'm Interested</span>
+                    </button>
+
+                </form>
 
 
-<!-- =====================================================
+                <div class="collaboration-note">
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Your interest is private. The project owner will
+                        be contacted only if you choose to connect.
+                    </span>
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
      CONNECT MODAL
 ===================================================== -->
 
-<div
-    class="connect-modal"
-    id="connectModal"
-    aria-hidden="true"
->
+            <div class="connect-modal" id="connectModal" aria-hidden="true">
 
-    <div class="connect-modal-overlay"></div>
+                <div class="connect-modal-overlay"></div>
 
 
-    <div
-        class="connect-modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="connectModalTitle"
-    >
+                <div class="connect-modal-card" role="dialog" aria-modal="true" aria-labelledby="connectModalTitle">
 
-        <button
-            type="button"
-            class="connect-modal-close"
-            id="closeConnectModal"
-            aria-label="Close"
-        >
-            <i class="bi bi-x-lg"></i>
-        </button>
+                    <button type="button" class="connect-modal-close" id="closeConnectModal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
 
 
-        <div class="connect-modal-icon">
-            <i class="bi bi-chat-heart"></i>
-        </div>
+                    <div class="connect-modal-icon">
+                        <i class="bi bi-chat-heart"></i>
+                    </div>
 
 
-        <h2 id="connectModalTitle">
-            Connect with Project Admin?
-        </h2>
+                    <h2 id="connectModalTitle">
+                        Connect with Project Admin?
+                    </h2>
 
 
-        <p>
-            You're interested in this project.
-            Would you like to start a private conversation
-            with the project creator?
-        </p>
+                    <p>
+                        You're interested in this project.
+                        Would you like to start a private conversation
+                        with the project creator?
+                    </p>
 
 
-        <div class="connect-admin-preview">
+                    <div class="connect-admin-preview">
 
-            <div class="connect-admin-avatar">
-                {{ project.owner.username|first|upper }}
+                        <div class="connect-admin-avatar">
+                            {{ project.owner.username|first|upper }}
+                        </div>
+
+                        <div>
+                            <strong>{{ project.owner.username }}</strong>
+                            <span>Project Creator</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="connect-modal-actions">
+
+                        <button type="button" class="connect-not-now" id="connectNotNow">
+                            Not Now
+                        </button>
+
+
+                        <button type="button" class="connect-confirm" id="connectConfirm"
+                            data-connect-url="{% url 'blog:project_connect' project.pk %}">
+                            <i class="bi bi-chat-dots"></i>
+                            Connect
+                        </button>
+
+                    </div>
+
+
+                    <div class="connect-private-note">
+                        <i class="bi bi-lock"></i>
+                        Private conversation
+                    </div>
+
+                </div>
+
             </div>
 
-            <div>
-                <strong>{{ project.owner.username }}</strong>
-                <span>Project Creator</span>
-            </div>
-
-        </div>
-
-
-        <div class="connect-modal-actions">
-
-            <button
-                type="button"
-                class="connect-not-now"
-                id="connectNotNow"
-            >
-                Not Now
-            </button>
-
-
-            <button
-                type="button"
-                class="connect-confirm"
-                id="connectConfirm"
-                data-connect-url="{% url 'blog:project_connect' project.pk %}"
-            >
-                <i class="bi bi-chat-dots"></i>
-                 Connect
-</button>
-
-        </div>
-
-
-        <div class="connect-private-note">
-            <i class="bi bi-lock"></i>
-            Private conversation
-        </div>
-
-    </div>
-
-</div>
-
-{% endif %}
+            {% endif %}
 
             <!-- PROJECT INFO -->
             <section class="detail-card">

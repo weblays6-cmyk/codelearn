@@ -7,20 +7,14 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sign Up | CodeLearn Hub</title>
+    <title>Sign Up | {{ SITE_NAME }}</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth_theme.css' %}?v=2">
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -176,11 +170,9 @@
             border-radius: 13px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #805cff,
-                    #4d8dff
-                );
+                    #4d8dff);
 
             display: flex;
 
@@ -191,8 +183,7 @@
             font-size: 20px;
 
             box-shadow:
-                0 10px 35px
-                rgba(92, 76, 255, .25);
+                0 10px 35px rgba(92, 76, 255, .25);
         }
 
 
@@ -221,11 +212,9 @@
         .signup-card {
 
             background:
-                linear-gradient(
-                    145deg,
+                linear-gradient(145deg,
                     #131525,
-                    #0c0e1b
-                );
+                    #0c0e1b);
 
             border:
                 1px solid #2b2e45;
@@ -235,8 +224,7 @@
             padding: 30px;
 
             box-shadow:
-                0 25px 70px
-                rgba(0,0,0,.35);
+                0 25px 70px rgba(0, 0, 0, .35);
         }
 
 
@@ -279,12 +267,10 @@
         .signup-card h1 span {
 
             background:
-                linear-gradient(
-                    90deg,
+                linear-gradient(90deg,
                     #a78bfa,
                     #60a5fa,
-                    #22d3ee
-                );
+                    #22d3ee);
 
             -webkit-background-clip: text;
 
@@ -392,8 +378,7 @@
             border-color: #745bf0;
 
             box-shadow:
-                0 0 0 3px
-                rgba(116,91,240,.12);
+                0 0 0 3px rgba(116, 91, 240, .12);
         }
 
 
@@ -469,11 +454,10 @@
         .form-errors {
 
             background:
-                rgba(255,87,110,.07);
+                rgba(255, 87, 110, .07);
 
             border:
-                1px solid
-                rgba(255,87,110,.20);
+                1px solid rgba(255, 87, 110, .20);
 
             border-radius: 10px;
 
@@ -502,11 +486,9 @@
             border-radius: 10px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7654ff,
-                    #4b74ff
-                );
+                    #4b74ff);
 
             color: white;
 
@@ -517,8 +499,7 @@
             cursor: pointer;
 
             box-shadow:
-                0 10px 25px
-                rgba(87,76,255,.18);
+                0 10px 25px rgba(87, 76, 255, .18);
 
             transition: .2s;
 
@@ -679,78 +660,68 @@
             }
 
         }
-
     </style>
 
 </head>
 
 
-<body>
+<body class="light-theme">
+
+    <button type="button" class="auth-theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <i class="bi bi-sun-fill" id="themeIcon" aria-hidden="true"></i>
+    </button>
 
 
-<div class="page">
+    <div class="page">
 
 
-    <!-- =====================================
+        <!-- =====================================
          LOGO
     ====================================== -->
 
-    <div class="logo">
-
-        <div class="logo-icon">
-
-            <i class="bi bi-code-slash"></i>
-
+        <div class="logo">
+            <img class="site-logo site-logo--auth"
+                style="display:block;width:220px;max-width:100%;height:auto;object-fit:contain;padding:2px 4px;border-radius:3px;background:#fff;"
+                src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
         </div>
 
 
-        <div class="logo-text">
 
-            CodeLearn
-
-            <span>Hub</span>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =====================================
+        <!-- =====================================
          SIGNUP CARD
     ====================================== -->
 
-    <div class="signup-card">
+        <div class="signup-card">
 
 
-        <div class="eyebrow">
+            <div class="eyebrow">
 
-            <i class="bi bi-person-plus"></i>
+                <i class="bi bi-person-plus"></i>
 
-            Start Learning
+                Start Learning
 
-        </div>
-
-
-        <h1>
-
-            Create your <span>account</span>
-
-        </h1>
+            </div>
 
 
-        <p class="subtitle">
+            <h1>
 
-            Join CodeLearn Hub and start learning,
-            practicing and building real-world skills.
+                Create your <span>account</span>
 
-        </p>
-
+            </h1>
 
 
-        <!-- FORM ERRORS -->
+            <p class="subtitle">
 
-        {% if form.non_field_errors %}
+                Join {{ SITE_NAME }} and start learning,
+                practicing and building real-world skills.
+
+            </p>
+
+
+
+            <!-- FORM ERRORS -->
+
+            {% if form.non_field_errors %}
 
             <div class="form-errors">
 
@@ -758,235 +729,218 @@
 
             </div>
 
-        {% endif %}
+            {% endif %}
 
 
 
-        <form method="POST">
+            <form method="POST">
 
-            {% csrf_token %}
+                {% csrf_token %}
 
 
 
-            <!-- =====================================
+                <!-- =====================================
                  USERNAME
             ====================================== -->
 
-            <div class="form-group">
+                <div class="form-group">
 
-                <label
-                    class="form-label"
-                    for="{{ form.username.id_for_label }}"
-                >
-                    Username
-                </label>
+                    <label class="form-label" for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
 
 
-                <div class="input-wrapper">
+                    <div class="input-wrapper">
 
-                    <i class="bi bi-at input-icon"></i>
+                        <i class="bi bi-at input-icon"></i>
 
-                    {{ form.username }}
+                        {{ form.username }}
 
-                </div>
+                    </div>
 
 
-                {% if form.username.errors %}
+                    {% if form.username.errors %}
 
                     {{ form.username.errors }}
 
-                {% endif %}
+                    {% endif %}
 
-            </div>
+                </div>
 
 
 
-            <!-- =====================================
+                <!-- =====================================
                  EMAIL
             ====================================== -->
 
-            <div class="form-group">
+                <div class="form-group">
 
-                <label
-                    class="form-label"
-                    for="{{ form.email.id_for_label }}"
-                >
-                    Email Address
-                </label>
+                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                        Email Address
+                    </label>
 
 
-                <div class="input-wrapper">
+                    <div class="input-wrapper">
 
-                    <i class="bi bi-envelope input-icon"></i>
+                        <i class="bi bi-envelope input-icon"></i>
 
-                    {{ form.email }}
+                        {{ form.email }}
 
-                </div>
+                    </div>
 
 
-                {% if form.email.errors %}
+                    {% if form.email.errors %}
 
                     {{ form.email.errors }}
 
-                {% endif %}
+                    {% endif %}
 
-            </div>
+                </div>
 
 
 
-            <!-- =====================================
+                <!-- =====================================
                  PASSWORD
             ====================================== -->
 
-            <div class="form-group">
+                <div class="form-group">
 
-                <label
-                    class="form-label"
-                    for="{{ form.password1.id_for_label }}"
-                >
+                    <label class="form-label" for="{{ form.password1.id_for_label }}">
 
-                    Password
+                        Password
 
-                </label>
+                    </label>
 
 
-                <div class="input-wrapper">
+                    <div class="input-wrapper">
 
-                    <i class="bi bi-lock input-icon"></i>
+                        <i class="bi bi-lock input-icon"></i>
 
-                    {{ form.password1 }}
+                        {{ form.password1 }}
 
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        data-target="{{ form.password1.id_for_label }}"
-                        aria-label="Show password"
-                        title="Show password"
-                    >
+                        <button type="button" class="password-toggle" data-target="{{ form.password1.id_for_label }}"
+                            aria-label="Show password" title="Show password">
 
-                        <i class="bi bi-eye"></i>
+                            <i class="bi bi-eye"></i>
 
-                    </button>
+                        </button>
 
-                </div>
+                    </div>
 
 
-                {% if form.password1.errors %}
+                    {% if form.password1.errors %}
 
                     {{ form.password1.errors }}
 
-                {% endif %}
-
-            </div>
-
-
-
-            <!-- =====================================
-                 CONFIRM PASSWORD
-            ====================================== -->
-
-            <div class="form-group">
-
-                <label
-                    class="form-label"
-                    for="{{ form.password2.id_for_label }}"
-                >
-
-                    Confirm Password
-
-                </label>
-
-
-                <div class="input-wrapper">
-
-                    <i class="bi bi-shield-lock input-icon"></i>
-
-                    {{ form.password2 }}
-
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        data-target="{{ form.password2.id_for_label }}"
-                        aria-label="Show password"
-                        title="Show password"
-                    >
-
-                        <i class="bi bi-eye"></i>
-
-                    </button>
+                    {% endif %}
 
                 </div>
 
 
-                {% if form.password2.errors %}
+
+                <!-- =====================================
+                 CONFIRM PASSWORD
+            ====================================== -->
+
+                <div class="form-group">
+
+                    <label class="form-label" for="{{ form.password2.id_for_label }}">
+
+                        Confirm Password
+
+                    </label>
+
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-shield-lock input-icon"></i>
+
+                        {{ form.password2 }}
+
+                        <button type="button" class="password-toggle" data-target="{{ form.password2.id_for_label }}"
+                            aria-label="Show password" title="Show password">
+
+                            <i class="bi bi-eye"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    {% if form.password2.errors %}
 
                     {{ form.password2.errors }}
 
-                {% endif %}
+                    {% endif %}
+
+                </div>
+
+
+
+                <!-- =====================================
+                 SUBMIT
+            ====================================== -->
+
+                <button type="submit" class="signup-btn">
+
+                    <i class="bi bi-person-plus"></i>
+
+                    Create {{ SITE_NAME }} Account
+
+                </button>
+
+
+            </form>
+
+
+
+            <!-- =====================================
+             DIVIDER
+        ====================================== -->
+
+            <div class="divider">
+
+                <div class="divider-line"></div>
+
+                <span>or</span>
+
+                <div class="divider-line"></div>
 
             </div>
 
 
 
             <!-- =====================================
-                 SUBMIT
-            ====================================== -->
-
-            <button
-                type="submit"
-                class="signup-btn"
-            >
-
-                <i class="bi bi-person-plus"></i>
-
-                Create CodeLearn Account
-
-            </button>
-
-
-        </form>
-
-
-
-        <!-- =====================================
-             DIVIDER
-        ====================================== -->
-
-        <div class="divider">
-
-            <div class="divider-line"></div>
-
-            <span>or</span>
-
-            <div class="divider-line"></div>
-
-        </div>
-
-
-
-        <!-- =====================================
              LOGIN
         ====================================== -->
 
-        <div class="login-area">
+            <div class="login-area">
 
-            <p>
+                <p>
 
-                Already have an account?
+                    Already have an account?
 
-            </p>
+                </p>
 
 
-            <a
-                href="{% url 'blog:login' %}"
-                class="login-btn"
-            >
+                <a href="{% url 'blog:login' %}" class="login-btn">
 
-                <i class="bi bi-box-arrow-in-right"></i>
+                    <i class="bi bi-box-arrow-in-right"></i>
 
-                Login to Your Account
+                    Login to Your Account
 
-            </a>
+                </a>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="footer">
+
+            {{ SITE_NAME }} · Learn. Practice. Build.
 
         </div>
 
@@ -995,160 +949,152 @@
 
 
 
-    <div class="footer">
-
-        CodeLearn Hub · Learn. Practice. Build.
-
-    </div>
-
-
-</div>
-
-
-
-<!-- =====================================
+    <!-- =====================================
      PASSWORD TOGGLE JAVASCRIPT
 ====================================== -->
 
-<script>
+    <script>
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
-        const passwordToggles =
-            document.querySelectorAll(
-                ".password-toggle"
-            );
-
-
-        passwordToggles.forEach(
-            function (toggle) {
-
-                const targetId =
-                    toggle.dataset.target;
-
-
-                const passwordInput =
-                    document.getElementById(
-                        targetId
+                const passwordToggles =
+                    document.querySelectorAll(
+                        ".password-toggle"
                     );
 
 
-                const icon =
-                    toggle.querySelector("i");
+                passwordToggles.forEach(
+                    function (toggle) {
+
+                        const targetId =
+                            toggle.dataset.target;
 
 
-                if (
-                    !passwordInput ||
-                    !icon
-                ) {
-                    return;
-                }
+                        const passwordInput =
+                            document.getElementById(
+                                targetId
+                            );
 
 
-                /* ==============================
-                   CLICK → SHOW / HIDE
-                ============================== */
+                        const icon =
+                            toggle.querySelector("i");
 
-                toggle.addEventListener(
-                    "click",
-                    function () {
 
                         if (
-                            passwordInput.type ===
-                            "password"
+                            !passwordInput ||
+                            !icon
                         ) {
-
-                            passwordInput.type =
-                                "text";
-
-
-                            icon.classList.remove(
-                                "bi-eye"
-                            );
-
-
-                            icon.classList.add(
-                                "bi-eye-slash"
-                            );
-
-
-                            toggle.setAttribute(
-                                "aria-label",
-                                "Hide password"
-                            );
-
-
-                            toggle.setAttribute(
-                                "title",
-                                "Hide password"
-                            );
-
-                        } else {
-
-                            passwordInput.type =
-                                "password";
-
-
-                            icon.classList.remove(
-                                "bi-eye-slash"
-                            );
-
-
-                            icon.classList.add(
-                                "bi-eye"
-                            );
-
-
-                            toggle.setAttribute(
-                                "aria-label",
-                                "Show password"
-                            );
-
-
-                            toggle.setAttribute(
-                                "title",
-                                "Show password"
-                            );
-
+                            return;
                         }
 
-                    }
-                );
+
+                        /* ==============================
+                           CLICK → SHOW / HIDE
+                        ============================== */
+
+                        toggle.addEventListener(
+                            "click",
+                            function () {
+
+                                if (
+                                    passwordInput.type ===
+                                    "password"
+                                ) {
+
+                                    passwordInput.type =
+                                        "text";
 
 
-                /* ==============================
-                   FOCUS LEAVE → HIDE
-                ============================== */
-
-                passwordInput.addEventListener(
-                    "blur",
-                    function () {
-
-                        passwordInput.type =
-                            "password";
+                                    icon.classList.remove(
+                                        "bi-eye"
+                                    );
 
 
-                        icon.classList.remove(
-                            "bi-eye-slash"
+                                    icon.classList.add(
+                                        "bi-eye-slash"
+                                    );
+
+
+                                    toggle.setAttribute(
+                                        "aria-label",
+                                        "Hide password"
+                                    );
+
+
+                                    toggle.setAttribute(
+                                        "title",
+                                        "Hide password"
+                                    );
+
+                                } else {
+
+                                    passwordInput.type =
+                                        "password";
+
+
+                                    icon.classList.remove(
+                                        "bi-eye-slash"
+                                    );
+
+
+                                    icon.classList.add(
+                                        "bi-eye"
+                                    );
+
+
+                                    toggle.setAttribute(
+                                        "aria-label",
+                                        "Show password"
+                                    );
+
+
+                                    toggle.setAttribute(
+                                        "title",
+                                        "Show password"
+                                    );
+
+                                }
+
+                            }
                         );
 
 
-                        icon.classList.add(
-                            "bi-eye"
-                        );
+                        /* ==============================
+                           FOCUS LEAVE → HIDE
+                        ============================== */
+
+                        passwordInput.addEventListener(
+                            "blur",
+                            function () {
+
+                                passwordInput.type =
+                                    "password";
 
 
-                        toggle.setAttribute(
-                            "aria-label",
-                            "Show password"
-                        );
+                                icon.classList.remove(
+                                    "bi-eye-slash"
+                                );
 
 
-                        toggle.setAttribute(
-                            "title",
-                            "Show password"
+                                icon.classList.add(
+                                    "bi-eye"
+                                );
+
+
+                                toggle.setAttribute(
+                                    "aria-label",
+                                    "Show password"
+                                );
+
+
+                                toggle.setAttribute(
+                                    "title",
+                                    "Show password"
+                                );
+
+                            }
                         );
 
                     }
@@ -1157,11 +1103,9 @@ document.addEventListener(
             }
         );
 
-    }
-);
+    </script>
 
-</script>
-
+    <script src="{% static 'js/theme.js' %}"></script>
 
 </body>
 

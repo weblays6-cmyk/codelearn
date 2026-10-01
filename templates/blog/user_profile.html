@@ -2,595 +2,585 @@
 {% load static %}
 
 {% block title %}
-    {{ profile_user.username }} | {{ SITE_NAME }}
+{{ profile_user.username }} | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
 
 <style>
+    .user-profile-page {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
 
-.user-profile-page {
-    max-width: 1100px;
-    margin: 0 auto;
-}
 
-
-/* =====================================================
+    /* =====================================================
    PROFILE HERO
 ===================================================== */
 
-.user-profile-hero {
-    position: relative;
-    overflow: hidden;
+    .user-profile-hero {
+        position: relative;
+        overflow: hidden;
 
-    padding: 32px;
+        padding: 32px;
 
-    border: 1px solid #292d4a;
-    border-radius: 20px;
+        border: 1px solid #292d4a;
+        border-radius: 20px;
 
-    background:
-        radial-gradient(
-            circle at 90% 10%,
-            rgba(103, 78, 255, 0.20),
-            transparent 35%
-        ),
-        #101321;
+        background:
+            radial-gradient(circle at 90% 10%,
+                rgba(103, 78, 255, 0.20),
+                transparent 35%),
+            #101321;
 
-    margin-bottom: 22px;
-}
+        margin-bottom: 22px;
+    }
 
 
-.user-profile-main {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-}
+    .user-profile-main {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
 
 
-.user-profile-avatar {
-    width: 90px;
-    height: 90px;
+    .user-profile-avatar {
+        width: 90px;
+        height: 90px;
 
-    flex-shrink: 0;
+        flex-shrink: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    border-radius: 24px;
+        border-radius: 24px;
 
-    background: linear-gradient(
-        135deg,
-        #7657ff,
-        #4d73ff
-    );
+        background: linear-gradient(135deg,
+                #7657ff,
+                #4d73ff);
 
-    color: #ffffff;
+        color: #ffffff;
 
-    font-size: 34px;
-    font-weight: 800;
+        font-size: 34px;
+        font-weight: 800;
 
-    box-shadow:
-        0 12px 35px rgba(91, 75, 255, 0.25);
-}
+        box-shadow:
+            0 12px 35px rgba(91, 75, 255, 0.25);
+    }
 
 
-.user-profile-info {
-    flex: 1;
-}
+    .user-profile-info {
+        flex: 1;
+    }
 
 
-.user-profile-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    .user-profile-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
 
-    margin-bottom: 7px;
+        margin-bottom: 7px;
 
-    color: #8878ff;
+        color: #8878ff;
 
-    font-size: 11px;
-    font-weight: 800;
+        font-size: 11px;
+        font-weight: 800;
 
-    letter-spacing: 1.3px;
-    text-transform: uppercase;
-}
-
-
-.user-profile-info h1 {
-    margin: 0;
-
-    color: #f5f7ff;
-
-    font-size: 28px;
-    line-height: 1.2;
-}
+        letter-spacing: 1.3px;
+        text-transform: uppercase;
+    }
 
 
-.user-profile-info p {
-    margin: 8px 0 0;
+    .user-profile-info h1 {
+        margin: 0;
 
-    color: #858ba5;
+        color: #f5f7ff;
 
-    font-size: 13px;
-}
-
-
-.profile-connect-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    min-height: 43px;
-    padding: 0 20px;
-
-    border: 0;
-    border-radius: 10px;
-
-    background: linear-gradient(
-        135deg,
-        #7657ff,
-        #4d73ff
-    );
-
-    color: #ffffff;
-
-    font-size: 13px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    text-decoration: none;
-
-    transition: 0.2s ease;
-}
-
-.profile-connect-btn:hover {
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 8px 25px rgba(91, 75, 255, 0.25);
-}
+        font-size: 28px;
+        line-height: 1.2;
+    }
 
 
-/* =====================================================
+    .user-profile-info p {
+        margin: 8px 0 0;
+
+        color: #858ba5;
+
+        font-size: 13px;
+    }
+
+
+    .profile-connect-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        min-height: 43px;
+        padding: 0 20px;
+
+        border: 0;
+        border-radius: 10px;
+
+        background: linear-gradient(135deg,
+                #7657ff,
+                #4d73ff);
+
+        color: #ffffff;
+
+        font-size: 13px;
+        font-weight: 700;
+
+        cursor: pointer;
+
+        text-decoration: none;
+
+        transition: 0.2s ease;
+    }
+
+    .profile-connect-btn:hover {
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 8px 25px rgba(91, 75, 255, 0.25);
+    }
+
+
+    /* =====================================================
    STATS
 ===================================================== */
 
-.profile-stats {
-    display: grid;
+    .profile-stats {
+        display: grid;
 
-    grid-template-columns:
-        repeat(5, 1fr);
+        grid-template-columns:
+            repeat(5, 1fr);
 
-    gap: 12px;
+        gap: 12px;
 
-    margin-top: 28px;
-}
-
-
-.profile-stat {
-    padding: 17px;
-
-    border: 1px solid #292d48;
-    border-radius: 12px;
-
-    background: rgba(255, 255, 255, 0.02);
-}
+        margin-top: 28px;
+    }
 
 
-.profile-stat strong {
-    display: block;
+    .profile-stat {
+        padding: 17px;
 
-    color: #f5f7ff;
+        border: 1px solid #292d48;
+        border-radius: 12px;
 
-    font-size: 21px;
-}
-
-
-.profile-stat span {
-    display: block;
-
-    margin-top: 4px;
-
-    color: #777e98;
-
-    font-size: 11px;
-}
+        background: rgba(255, 255, 255, 0.02);
+    }
 
 
-/* =====================================================
+    .profile-stat strong {
+        display: block;
+
+        color: #f5f7ff;
+
+        font-size: 21px;
+    }
+
+
+    .profile-stat span {
+        display: block;
+
+        margin-top: 4px;
+
+        color: #777e98;
+
+        font-size: 11px;
+    }
+
+
+    /* =====================================================
    CONTENT GRID
 ===================================================== */
 
-.profile-content-grid {
-    display: grid;
+    .profile-content-grid {
+        display: grid;
 
-    grid-template-columns:
-        1.6fr 1fr;
+        grid-template-columns:
+            1.6fr 1fr;
 
-    gap: 20px;
-}
-
-
-.profile-card {
-    padding: 24px;
-
-    border: 1px solid #292d48;
-    border-radius: 16px;
-
-    background: #101321;
-
-    margin-bottom: 20px;
-}
+        gap: 20px;
+    }
 
 
-.profile-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    .profile-card {
+        padding: 24px;
 
-    margin-bottom: 20px;
-}
+        border: 1px solid #292d48;
+        border-radius: 16px;
 
+        background: #101321;
 
-.profile-card-header i {
-    width: 34px;
-    height: 34px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 9px;
-
-    background: rgba(111, 83, 255, 0.14);
-
-    color: #8c78ff;
-}
+        margin-bottom: 20px;
+    }
 
 
-.profile-card-header h2 {
-    margin: 0;
+    .profile-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
 
-    color: #f5f7ff;
-
-    font-size: 17px;
-}
+        margin-bottom: 20px;
+    }
 
 
-/* =====================================================
+    .profile-card-header i {
+        width: 34px;
+        height: 34px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 9px;
+
+        background: rgba(111, 83, 255, 0.14);
+
+        color: #8c78ff;
+    }
+
+
+    .profile-card-header h2 {
+        margin: 0;
+
+        color: #f5f7ff;
+
+        font-size: 17px;
+    }
+
+
+    /* =====================================================
    PROJECTS
 ===================================================== */
 
-.profile-project {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    .profile-project {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-    gap: 15px;
+        gap: 15px;
 
-    padding: 15px 0;
+        padding: 15px 0;
 
-    border-bottom: 1px solid #25293e;
-}
-
-
-.profile-project:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-}
+        border-bottom: 1px solid #25293e;
+    }
 
 
-.profile-project-info {
-    min-width: 0;
-}
+    .profile-project:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
 
 
-.profile-project-info strong {
-    display: block;
-
-    color: #f3f5ff;
-
-    font-size: 14px;
-}
+    .profile-project-info {
+        min-width: 0;
+    }
 
 
-.profile-project-info span {
-    display: block;
+    .profile-project-info strong {
+        display: block;
 
-    margin-top: 5px;
+        color: #f3f5ff;
 
-    color: #777e98;
-
-    font-size: 12px;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+        font-size: 14px;
+    }
 
 
-.profile-project-link {
-    flex-shrink: 0;
+    .profile-project-info span {
+        display: block;
 
-    width: 34px;
-    height: 34px;
+        margin-top: 5px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        color: #777e98;
 
-    border: 1px solid #303551;
-    border-radius: 9px;
+        font-size: 12px;
 
-    color: #8e7dff;
-
-    text-decoration: none;
-
-    transition: 0.2s ease;
-}
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
 
-.profile-project-link:hover {
-    background: #1c2035;
-}
+    .profile-project-link {
+        flex-shrink: 0;
+
+        width: 34px;
+        height: 34px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border: 1px solid #303551;
+        border-radius: 9px;
+
+        color: #8e7dff;
+
+        text-decoration: none;
+
+        transition: 0.2s ease;
+    }
 
 
-/* =====================================================
+    .profile-project-link:hover {
+        background: #1c2035;
+    }
+
+
+    /* =====================================================
    STREAK
 ===================================================== */
 
-.streak-card {
-    text-align: center;
-}
+    .streak-card {
+        text-align: center;
+    }
 
 
-.streak-icon {
-    width: 60px;
-    height: 60px;
+    .streak-icon {
+        width: 60px;
+        height: 60px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    margin: 0 auto 14px;
+        margin: 0 auto 14px;
 
-    border-radius: 18px;
+        border-radius: 18px;
 
-    background: rgba(255, 153, 58, 0.12);
+        background: rgba(255, 153, 58, 0.12);
 
-    color: #ff9d42;
+        color: #ff9d42;
 
-    font-size: 27px;
-}
-
-
-.streak-card h3 {
-    margin: 0;
-
-    color: #f5f7ff;
-
-    font-size: 25px;
-}
+        font-size: 27px;
+    }
 
 
-.streak-card p {
-    margin: 5px 0 0;
+    .streak-card h3 {
+        margin: 0;
 
-    color: #7e849d;
+        color: #f5f7ff;
 
-    font-size: 12px;
-}
+        font-size: 25px;
+    }
 
 
-/* =====================================================
+    .streak-card p {
+        margin: 5px 0 0;
+
+        color: #7e849d;
+
+        font-size: 12px;
+    }
+
+
+    /* =====================================================
    ABOUT
 ===================================================== */
 
-.profile-info-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    .profile-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-    padding: 13px 0;
+        padding: 13px 0;
 
-    border-bottom: 1px solid #25293e;
-}
-
-
-.profile-info-row:last-child {
-    border-bottom: 0;
-}
+        border-bottom: 1px solid #25293e;
+    }
 
 
-.profile-info-row span {
-    color: #777e98;
-
-    font-size: 12px;
-}
+    .profile-info-row:last-child {
+        border-bottom: 0;
+    }
 
 
-.profile-info-row strong {
-    color: #e9ebf6;
+    .profile-info-row span {
+        color: #777e98;
 
-    font-size: 13px;
-}
+        font-size: 12px;
+    }
 
 
-/* =====================================================
+    .profile-info-row strong {
+        color: #e9ebf6;
+
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
    EMPTY
 ===================================================== */
 
-.profile-empty {
-    padding: 25px 10px;
+    .profile-empty {
+        padding: 25px 10px;
 
-    text-align: center;
+        text-align: center;
 
-    color: #777e98;
+        color: #777e98;
 
-    font-size: 13px;
-}
+        font-size: 13px;
+    }
 
 
-/* =====================================================
+    /* =====================================================
    LIGHT THEME
 ===================================================== */
 
-body.light-theme .user-profile-hero,
-body.light-theme .profile-card {
-    background: #ffffff;
+    body.light-theme .user-profile-hero,
+    body.light-theme .profile-card {
+        background: #ffffff;
 
-    border-color: #e0e3ee;
-}
-
-
-body.light-theme .user-profile-info h1,
-body.light-theme .profile-card-header h2,
-body.light-theme .profile-project-info strong,
-body.light-theme .profile-stat strong,
-body.light-theme .streak-card h3 {
-    color: #171a2a;
-}
+        border-color: #e0e3ee;
+    }
 
 
-body.light-theme .profile-stat {
-    background: #f8f9fc;
-    border-color: #e1e4ed;
-}
+    body.light-theme .user-profile-info h1,
+    body.light-theme .profile-card-header h2,
+    body.light-theme .profile-project-info strong,
+    body.light-theme .profile-stat strong,
+    body.light-theme .streak-card h3 {
+        color: #171a2a;
+    }
 
 
-body.light-theme .profile-project {
-    border-color: #e5e7ee;
-}
+    body.light-theme .profile-stat {
+        background: #f8f9fc;
+        border-color: #e1e4ed;
+    }
 
 
-body.light-theme .profile-info-row {
-    border-color: #e5e7ee;
-}
+    body.light-theme .profile-project {
+        border-color: #e5e7ee;
+    }
 
 
-/* =====================================================
+    body.light-theme .profile-info-row {
+        border-color: #e5e7ee;
+    }
+
+
+    /* =====================================================
    RESPONSIVE
 ===================================================== */
 
-@media (max-width: 850px) {
+    @media (max-width: 850px) {
 
-    .profile-content-grid {
-        grid-template-columns: 1fr;
+        .profile-content-grid {
+            grid-template-columns: 1fr;
+        }
+
     }
 
-}
 
+    @media (max-width: 650px) {
 
-@media (max-width: 650px) {
+        .user-profile-hero {
+            padding: 22px;
+        }
 
-    .user-profile-hero {
-        padding: 22px;
+        .user-profile-main {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-profile-avatar {
+            width: 75px;
+            height: 75px;
+
+            font-size: 28px;
+        }
+
+        .user-profile-info h1 {
+            font-size: 23px;
+        }
+
+        .profile-connect-btn {
+            width: 100%;
+        }
+
+        .profile-stats {
+            grid-template-columns:
+                repeat(2, 1fr);
+        }
+
     }
 
-    .user-profile-main {
-        flex-direction: column;
-        align-items: flex-start;
+    .profile-action-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .user-profile-avatar {
-        width: 75px;
-        height: 75px;
-
-        font-size: 28px;
+    .profile-follow-btn {
+        min-width: 120px;
     }
 
-    .user-profile-info h1 {
-        font-size: 23px;
+    .profile-follow-btn.pending {
+        background: #252a40;
+        color: #b8bfd5;
+        border: 1px solid #3b4160;
     }
 
-    .profile-connect-btn {
-        width: 100%;
+    .profile-follow-btn.following {
+        background: rgba(34, 197, 94, 0.12);
+        color: #5ee58a;
+        border: 1px solid rgba(34, 197, 94, 0.35);
     }
 
-    .profile-stats {
-        grid-template-columns:
-            repeat(2, 1fr);
+    .profile-follow-btn.accept {
+        background: linear-gradient(135deg,
+                #7657ff,
+                #4d73ff);
     }
 
-}
+    .profile-secondary-btn {
+        min-height: 43px;
+        padding: 0 17px;
+        border: 1px solid #3a405b;
+        border-radius: 10px;
+        background: transparent;
+        color: #aeb5c9;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
 
-.profile-action-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.profile-follow-btn {
-    min-width: 120px;
-}
-
-.profile-follow-btn.pending {
-    background: #252a40;
-    color: #b8bfd5;
-    border: 1px solid #3b4160;
-}
-
-.profile-follow-btn.following {
-    background: rgba(34, 197, 94, 0.12);
-    color: #5ee58a;
-    border: 1px solid rgba(34, 197, 94, 0.35);
-}
-
-.profile-follow-btn.accept {
-    background: linear-gradient(
-        135deg,
-        #7657ff,
-        #4d73ff
-    );
-}
-
-.profile-secondary-btn {
-    min-height: 43px;
-    padding: 0 17px;
-    border: 1px solid #3a405b;
-    border-radius: 10px;
-    background: transparent;
-    color: #aeb5c9;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.profile-secondary-btn:hover {
-    border-color: #ef6464;
-    color: #ff7777;
-    background: rgba(239, 68, 68, 0.08);
-}
-
-.profile-follow-btn.pending:hover {
-    transform: none;
-    box-shadow: none;
-}
+    .profile-secondary-btn:hover {
+        border-color: #ef6464;
+        color: #ff7777;
+        background: rgba(239, 68, 68, 0.08);
+    }
 
 
-.profile-stat-link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
+    .profile-stat-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
 
-.profile-stat-link:hover {
-    border-color: #5865f2;
-    transform: translateY(-2px);
-    background: rgba(88, 101, 242, 0.06);
-}
+    .profile-stat-link:hover {
+        border-color: #5865f2;
+        transform: translateY(-2px);
+        background: rgba(88, 101, 242, 0.06);
+    }
 
-.profile-stat-link:hover strong {
-    color: #8c78ff;
-}
+    .profile-stat-link:hover strong {
+        color: #8c78ff;
+    }
 
+    .profile-follow-btn.pending:hover {
+        transform: none;
+        box-shadow: none;
+    }
 </style>
 
 {% endblock %}
@@ -623,7 +613,7 @@ body.light-theme .profile-info-row {
 
                     <i class="bi bi-person-check"></i>
 
-                    CodeLearn Hub Profile
+                    {{ SITE_NAME }} Profile
 
                 </div>
 
@@ -637,7 +627,7 @@ body.light-theme .profile-info-row {
 
                 <p>
 
-                    Developer • Learner • CodeLearn Hub Member
+                    Developer • Learner • {{ SITE_NAME }} Member
 
                 </p>
 
@@ -650,52 +640,36 @@ body.light-theme .profile-info-row {
 
                 {% if is_following %}
 
-                    <button
-                        type="button"
-                        class="profile-connect-btn profile-follow-btn following"
-                        data-action="unfollow"
-                        data-url="{% url 'blog:unfollow_user' profile_user.id %}"
-                    >
-                        <i class="bi bi-person-check-fill"></i>
-                        Following
-                    </button>
+                <button type="button" class="profile-connect-btn profile-follow-btn following" data-action="unfollow"
+                    data-url="{% url 'blog:unfollow_user' profile_user.id %}">
+                    <i class="bi bi-person-check-fill"></i>
+                    Following
+                </button>
 
                 {% elif outgoing_pending %}
 
-                    <button
-                        type="button"
-                        class="profile-connect-btn profile-follow-btn pending"
-                        data-action="cancel"
-                        data-url="{% url 'blog:cancel_follow_request' profile_user.id %}"
-                    >
-                        <i class="bi bi-clock-history"></i>
-                        Pending
-                    </button>
+                <button type="button" class="profile-connect-btn profile-follow-btn pending" data-action="cancel"
+                    data-url="{% url 'blog:cancel_follow_request' profile_user.id %}">
+                    <i class="bi bi-clock-history"></i>
+                    Pending
+                </button>
 
                 {% elif incoming_pending %}
 
-                    <button
-                        type="button"
-                        class="profile-connect-btn profile-follow-btn accept"
-                        data-action="accept"
-                        data-url="{% url 'blog:accept_follow_request' incoming_request_id %}"
-                        title="Follow request received"
-                    >
-                        <i class="bi bi-person-check"></i>
-                        Accept & Chat
-                    </button>
+                <button type="button" class="profile-connect-btn profile-follow-btn accept" data-action="accept"
+                    data-url="{% url 'blog:accept_follow_request' incoming_request_id %}"
+                    title="Follow request received">
+                    <i class="bi bi-person-check"></i>
+                    Accept & Chat
+                </button>
 
                 {% else %}
 
-                    <button
-                        type="button"
-                        class="profile-connect-btn profile-follow-btn"
-                        data-action="follow"
-                        data-url="{% url 'blog:send_follow_request' profile_user.id %}"
-                    >
-                        <i class="bi bi-person-plus-fill"></i>
-                        Follow
-                    </button>
+                <button type="button" class="profile-connect-btn profile-follow-btn" data-action="follow"
+                    data-url="{% url 'blog:send_follow_request' profile_user.id %}">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Follow
+                </button>
 
                 {% endif %}
 
@@ -710,10 +684,7 @@ body.light-theme .profile-info-row {
         <div class="profile-stats">
 
 
-            <a
-                href="{% url 'blog:followers_list' profile_user.id %}"
-                class="profile-stat profile-stat-link"
-            >
+            <a href="{% url 'blog:followers_list' profile_user.id %}" class="profile-stat profile-stat-link">
 
                 <strong>
                     {{ follower_count }}
@@ -725,10 +696,7 @@ body.light-theme .profile-info-row {
 
             </a>
 
-            <a
-                href="{% url 'blog:following_list' profile_user.id %}"
-                class="profile-stat profile-stat-link"
-            >
+            <a href="{% url 'blog:following_list' profile_user.id %}" class="profile-stat profile-stat-link">
                 <strong>
                     {{ following_count }}
                 </strong>
@@ -827,11 +795,8 @@ body.light-theme .profile-info-row {
                     </div>
 
 
-                    <a
-                        href="{% url 'blog:project_detail' project.pk %}"
-                        class="profile-project-link"
-                        title="View Project"
-                    >
+                    <a href="{% url 'blog:project_detail' project.pk %}" class="profile-project-link"
+                        title="View Project">
 
                         <i class="bi bi-arrow-up-right"></i>
 
@@ -998,217 +963,217 @@ body.light-theme .profile-info-row {
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    document.addEventListener("click", async function (event) {
+        document.addEventListener("click", async function (event) {
 
-        const button =
-            event.target.closest(".profile-follow-btn");
+            const button =
+                event.target.closest(".profile-follow-btn");
 
-        if (!button) {
-            return;
-        }
+            if (!button) {
+                return;
+            }
 
-        if (button.disabled) {
-            return;
-        }
+            if (button.disabled) {
+                return;
+            }
 
-        const action =
-            button.dataset.action;
+            const action =
+                button.dataset.action;
 
-        const url =
-            button.dataset.url;
+            const url =
+                button.dataset.url;
 
-        if (!url) {
-            console.error(
-                "Follow URL is missing."
-            );
-            return;
-        }
+            if (!url) {
+                console.error(
+                    "Follow URL is missing."
+                );
+                return;
+            }
 
-        button.disabled = true;
+            button.disabled = true;
 
-        const originalHTML =
-            button.innerHTML;
+            const originalHTML =
+                button.innerHTML;
 
-        button.innerHTML = `
+            button.innerHTML = `
             <i class="bi bi-arrow-repeat"></i>
             Processing...
         `;
 
-        try {
+            try {
 
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "POST",
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: "POST",
 
-                        headers: {
-                            "X-Requested-With":
-                                "XMLHttpRequest",
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest",
 
-                            "X-CSRFToken":
-                                getCookie("csrftoken")
+                                "X-CSRFToken":
+                                    getCookie("csrftoken")
+                            }
                         }
-                    }
-                );
+                    );
 
-            const data =
-                await response.json();
+                const data =
+                    await response.json();
 
-            if (
-                !response.ok ||
-                !data.success
-            ) {
-                throw new Error(
-                    data.error ||
-                    "Something went wrong."
-                );
-            }
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+                    throw new Error(
+                        data.error ||
+                        "Something went wrong."
+                    );
+                }
 
 
-            /* =========================================
-               FOLLOW → PENDING
-            ========================================= */
+                /* =========================================
+                   FOLLOW → PENDING
+                ========================================= */
 
-            if (action === "follow") {
+                if (action === "follow") {
 
-                button.dataset.action =
-                    "cancel";
+                    button.dataset.action =
+                        "cancel";
 
-                button.dataset.url =
-                    "{% url 'blog:cancel_follow_request' profile_user.id %}";
+                    button.dataset.url =
+                        "{% url 'blog:cancel_follow_request' profile_user.id %}";
 
-                button.className =
-                    "profile-connect-btn profile-follow-btn pending";
+                    button.className =
+                        "profile-connect-btn profile-follow-btn pending";
 
-                button.innerHTML = `
+                    button.innerHTML = `
                     <i class="bi bi-clock-history"></i>
                     Pending
                 `;
-            }
+                }
 
 
-            /* =========================================
-               PENDING → FOLLOW
-            ========================================= */
+                /* =========================================
+                   PENDING → FOLLOW
+                ========================================= */
 
-            else if (action === "cancel") {
+                else if (action === "cancel") {
 
-                button.dataset.action =
-                    "follow";
+                    button.dataset.action =
+                        "follow";
 
-                button.dataset.url =
-                    "{% url 'blog:send_follow_request' profile_user.id %}";
+                    button.dataset.url =
+                        "{% url 'blog:send_follow_request' profile_user.id %}";
 
-                button.className =
-                    "profile-connect-btn profile-follow-btn";
+                    button.className =
+                        "profile-connect-btn profile-follow-btn";
 
-                button.innerHTML = `
+                    button.innerHTML = `
                     <i class="bi bi-person-plus-fill"></i>
                     Follow
                 `;
-            }
+                }
 
 
-            /* =========================================
-               FOLLOWING → FOLLOW
-            ========================================= */
+                /* =========================================
+                   FOLLOWING → FOLLOW
+                ========================================= */
 
-            else if (action === "unfollow") {
+                else if (action === "unfollow") {
 
-                button.dataset.action =
-                    "follow";
+                    button.dataset.action =
+                        "follow";
 
-                button.dataset.url =
-                    "{% url 'blog:send_follow_request' profile_user.id %}";
+                    button.dataset.url =
+                        "{% url 'blog:send_follow_request' profile_user.id %}";
 
-                button.className =
-                    "profile-connect-btn profile-follow-btn";
+                    button.className =
+                        "profile-connect-btn profile-follow-btn";
 
-                button.innerHTML = `
+                    button.innerHTML = `
                     <i class="bi bi-person-plus-fill"></i>
                     Follow
                 `;
+                }
+
+                else if (action === "accept") {
+
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Follow request error:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Unable to process request."
+                );
+
+                button.innerHTML =
+                    originalHTML;
+
+            } finally {
+
+                button.disabled = false;
             }
 
-            else if (action === "accept") {
+        });
 
-                window.location.href = data.redirect_url;
-                return;
+
+        /* =========================================
+           CSRF COOKIE
+        ========================================= */
+
+        function getCookie(name) {
+
+            let cookieValue = null;
+
+            if (
+                document.cookie &&
+                document.cookie !== ""
+            ) {
+
+                const cookies =
+                    document.cookie.split(";");
+
+                for (
+                    let cookie of cookies
+                ) {
+
+                    cookie =
+                        cookie.trim();
+
+                    if (
+                        cookie.substring(
+                            0,
+                            name.length + 1
+                        ) ===
+                        name + "="
+                    ) {
+
+                        cookieValue =
+                            decodeURIComponent(
+                                cookie.substring(
+                                    name.length + 1
+                                )
+                            );
+
+                        break;
+                    }
+                }
             }
 
-        } catch (error) {
-
-            console.error(
-                "Follow request error:",
-                error
-            );
-
-            alert(
-                error.message ||
-                "Unable to process request."
-            );
-
-            button.innerHTML =
-                originalHTML;
-
-        } finally {
-
-            button.disabled = false;
+            return cookieValue;
         }
 
     });
-
-
-    /* =========================================
-       CSRF COOKIE
-    ========================================= */
-
-    function getCookie(name) {
-
-        let cookieValue = null;
-
-        if (
-            document.cookie &&
-            document.cookie !== ""
-        ) {
-
-            const cookies =
-                document.cookie.split(";");
-
-            for (
-                let cookie of cookies
-            ) {
-
-                cookie =
-                    cookie.trim();
-
-                if (
-                    cookie.substring(
-                        0,
-                        name.length + 1
-                    ) ===
-                    name + "="
-                ) {
-
-                    cookieValue =
-                        decodeURIComponent(
-                            cookie.substring(
-                                name.length + 1
-                            )
-                        );
-
-                    break;
-                }
-            }
-        }
-
-        return cookieValue;
-    }
-
-});
 
 </script>
 

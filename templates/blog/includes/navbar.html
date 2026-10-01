@@ -1,39 +1,39 @@
+{% load static %}
+
 <nav class="top-navbar">
 
     <div class="top-navbar-left">
-        <a href="{% url 'blog:dashboard' %}" class="navbar-brand">
-            <div class="navbar-brand-icon">
-                <i class="bi bi-code-slash"></i>
-            </div>
-
-           <span>{{ SITE_NAME }}</span>
+        <a href="{% if user.is_authenticated %}{% url 'blog:dashboard' %}{% else %}{% url 'blog:blogpage' %}{% endif %}"
+            class="navbar-brand">
+            <img class="site-logo site-logo--nav" src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
         </a>
     </div>
 
+    <form class="workspace-search" action="{% url 'blog:blogpage' %}" method="get" role="search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" name="search" value="{{ request.GET.search }}"
+            placeholder="Search courses by name or topic" aria-label="Search courses">
+        <button type="submit" aria-label="Search"><i class="bi bi-arrow-return-left" aria-hidden="true"></i></button>
+    </form>
 
     <div class="top-navbar-right">
 
         {% if user.is_authenticated %}
-
-            <div class="navbar-user">
-                <div class="navbar-avatar">
-                    {{ user.email|first|upper }}
-                </div>
-
-                <span>
-                    {{ user.email }}
-                </span>
-            </div>
-
+        <a href="{% url 'blog:notifications' %}" class="navbar-notifications" aria-label="Notifications"
+            title="Notifications">
+            <i class="bi bi-bell" aria-hidden="true"></i>
+        </a>
+        <a href="{% url 'blog:profile' %}" class="navbar-user">
+            <div class="navbar-avatar" aria-hidden="true">{{ user.username|first|upper }}</div>
+            <span>{{ user.username }}</span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <a href="{% url 'blog:login' %}" class="navbar-auth-link">Sign in</a>
+        <a href="{% url 'blog:signup' %}" class="navbar-join-link">Get started</a>
         {% endif %}
 
-        <button
-            type="button"
-            class="theme-toggle"
-            id="themeToggle"
-            onclick="toggleTheme()"
-            aria-label="Toggle theme"
-        >
+        <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
             <i class="bi bi-moon-fill" id="themeIcon"></i>
         </button>
 

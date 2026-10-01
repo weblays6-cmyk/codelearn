@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,15 +6,11 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Choose Your Goal | CodeLearn Hub</title>
+    <title>Choose Your Goal | {{ SITE_NAME }}</title>
 
     <style>
-
         * {
             margin: 0;
             padding: 0;
@@ -42,23 +39,17 @@
 
             background:
 
-                radial-gradient(
-                    circle at 10% 15%,
+                radial-gradient(circle at 10% 15%,
                     rgba(124, 58, 237, 0.24),
-                    transparent 28%
-                ),
+                    transparent 28%),
 
-                radial-gradient(
-                    circle at 90% 15%,
+                radial-gradient(circle at 90% 15%,
                     rgba(37, 99, 235, 0.20),
-                    transparent 28%
-                ),
+                    transparent 28%),
 
-                radial-gradient(
-                    circle at 50% 100%,
+                radial-gradient(circle at 50% 100%,
                     rgba(34, 211, 238, 0.08),
-                    transparent 30%
-                ),
+                    transparent 30%),
 
                 #050711;
 
@@ -109,15 +100,12 @@
             border-radius: 14px;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #8b5cf6,
-                    #2563eb
-                );
+                    #2563eb);
 
             box-shadow:
-                0 0 35px
-                rgba(124, 58, 237, 0.38);
+                0 0 35px rgba(124, 58, 237, 0.38);
 
             font-size: 18px;
         }
@@ -149,8 +137,7 @@
             border-radius: 30px;
 
             border:
-                1px solid
-                rgba(139, 92, 246, 0.20);
+                1px solid rgba(139, 92, 246, 0.20);
 
             background:
                 rgba(139, 92, 246, 0.08);
@@ -185,12 +172,10 @@
         .gradient {
 
             background:
-                linear-gradient(
-                    90deg,
+                linear-gradient(90deg,
                     #a78bfa,
                     #60a5fa,
-                    #22d3ee
-                );
+                    #22d3ee);
 
             -webkit-background-clip: text;
 
@@ -261,17 +246,14 @@
             text-align: center;
 
             border:
-                1px solid
-                rgba(255,255,255,0.08);
+                1px solid rgba(255, 255, 255, 0.08);
 
             border-radius: 22px;
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(255,255,255,0.055),
-                    rgba(255,255,255,0.025)
-                );
+                linear-gradient(145deg,
+                    rgba(255, 255, 255, 0.055),
+                    rgba(255, 255, 255, 0.025));
 
             color: white;
 
@@ -296,11 +278,9 @@
             inset: 0;
 
             background:
-                radial-gradient(
-                    circle at 50% 0%,
-                    rgba(139,92,246,0.20),
-                    transparent 55%
-                );
+                radial-gradient(circle at 50% 0%,
+                    rgba(139, 92, 246, 0.20),
+                    transparent 55%);
 
             opacity: 0;
 
@@ -314,18 +294,15 @@
                 translateY(-9px);
 
             border-color:
-                rgba(139,92,246,0.45);
+                rgba(139, 92, 246, 0.45);
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(139,92,246,0.13),
-                    rgba(255,255,255,0.035)
-                );
+                linear-gradient(145deg,
+                    rgba(139, 92, 246, 0.13),
+                    rgba(255, 255, 255, 0.035));
 
             box-shadow:
-                0 25px 60px
-                rgba(0,0,0,0.32);
+                0 25px 60px rgba(0, 0, 0, 0.32);
         }
 
 
@@ -352,15 +329,12 @@
             border-radius: 21px;
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(124,58,237,0.20),
-                    rgba(37,99,235,0.12)
-                );
+                linear-gradient(135deg,
+                    rgba(124, 58, 237, 0.20),
+                    rgba(37, 99, 235, 0.12));
 
             box-shadow:
-                inset 0 0 0 1px
-                rgba(255,255,255,0.06);
+                inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 
             font-size: 31px;
 
@@ -368,15 +342,12 @@
         }
 
 
-        .goal-button:nth-child(1)
-        .goal-icon {
+        .goal-button:nth-child(1) .goal-icon {
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(124,58,237,0.20),
-                    rgba(37,99,235,0.12)
-                );
+                linear-gradient(135deg,
+                    rgba(124, 58, 237, 0.20),
+                    rgba(37, 99, 235, 0.12));
         }
 
 
@@ -422,15 +393,14 @@
                 8px 14px;
 
             border:
-                1px solid
-                rgba(255,255,255,0.10);
+                1px solid rgba(255, 255, 255, 0.10);
 
             border-radius: 10px;
 
             color: #c4b5fd;
 
             background:
-                rgba(255,255,255,0.035);
+                rgba(255, 255, 255, 0.035);
 
             font-size: 10px;
 
@@ -440,16 +410,15 @@
         }
 
 
-        .goal-button:hover
-        .choose-label {
+        .goal-button:hover .choose-label {
 
             color: white;
 
             border-color:
-                rgba(139,92,246,0.30);
+                rgba(139, 92, 246, 0.30);
 
             background:
-                rgba(139,92,246,0.12);
+                rgba(139, 92, 246, 0.12);
         }
 
 
@@ -549,7 +518,6 @@
             }
 
         }
-
     </style>
 
 </head>
@@ -558,271 +526,222 @@
 <body>
 
 
-<div class="page">
+    <div class="page">
 
 
-    <!-- LOGO -->
+        <!-- LOGO -->
 
-    <div class="logo">
-
-        <div class="logo-icon">
-            &lt;/&gt;
+        <div class="logo">
+            <img class="site-logo site-logo--compact"
+                style="display:block;width:180px;max-width:100%;height:auto;object-fit:contain;padding:2px 4px;border-radius:3px;background:#fff;"
+                src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
         </div>
 
-        <div class="logo-text">
 
-            CodeLearn
-            <span>Hub</span>
+
+        <!-- HEADER -->
+
+        <div class="eyebrow">
+
+            ✦ Personalized Learning
 
         </div>
 
-    </div>
 
+        <h1>
 
+            What do you want to
+            <span class="gradient">
+                achieve?
+            </span>
 
-    <!-- HEADER -->
+        </h1>
 
-    <div class="eyebrow">
 
-        ✦ Personalized Learning
+        <p class="subtitle">
 
-    </div>
+            Hi <strong>{{ username }}</strong> 👋
 
+            Choose your primary goal and we'll
+            personalize your {{ SITE_NAME }} journey
+            around what you want to achieve.
 
-    <h1>
+        </p>
 
-        What do you want to
-        <span class="gradient">
-            achieve?
-        </span>
 
-    </h1>
 
+        <!-- GOALS -->
 
-    <p class="subtitle">
+        <div class="goals">
 
-        Hi <strong>{{ username }}</strong> 👋
 
-        Choose your primary goal and we'll
-        personalize your CodeLearn Hub journey
-        around what you want to achieve.
+            <!-- GET A JOB -->
 
-    </p>
+            <form method="POST" class="goal-form">
 
+                {% csrf_token %}
 
+                <input type="hidden" name="goal" value="job">
 
-    <!-- GOALS -->
 
-    <div class="goals">
+                <button type="submit" class="goal-button">
 
+                    <div class="goal-icon">
+                        💼
+                    </div>
 
-        <!-- GET A JOB -->
 
-        <form
-            method="POST"
-            class="goal-form"
-        >
+                    <div class="goal-title">
+                        Get a Job
+                    </div>
 
-            {% csrf_token %}
 
-            <input
-                type="hidden"
-                name="goal"
-                value="job"
-            >
+                    <div class="goal-description">
 
+                        Become job-ready with practical
+                        skills, projects and career preparation.
 
-            <button
-                type="submit"
-                class="goal-button"
-            >
+                    </div>
 
-                <div class="goal-icon">
-                    💼
-                </div>
 
+                    <div class="choose-label">
+                        Choose Goal →
+                    </div>
 
-                <div class="goal-title">
-                    Get a Job
-                </div>
+                </button>
 
+            </form>
 
-                <div class="goal-description">
 
-                    Become job-ready with practical
-                    skills, projects and career preparation.
 
-                </div>
+            <!-- LEARN NEW SKILLS -->
 
+            <form method="POST" class="goal-form">
 
-                <div class="choose-label">
-                    Choose Goal →
-                </div>
+                {% csrf_token %}
 
-            </button>
+                <input type="hidden" name="goal" value="skill">
 
-        </form>
 
+                <button type="submit" class="goal-button">
 
+                    <div class="goal-icon">
+                        📚
+                    </div>
 
-        <!-- LEARN NEW SKILLS -->
 
-        <form
-            method="POST"
-            class="goal-form"
-        >
+                    <div class="goal-title">
+                        Learn New Skills
+                    </div>
 
-            {% csrf_token %}
 
-            <input
-                type="hidden"
-                name="goal"
-                value="skill"
-            >
+                    <div class="goal-description">
 
+                        Learn programming and modern
+                        technologies step by step.
 
-            <button
-                type="submit"
-                class="goal-button"
-            >
+                    </div>
 
-                <div class="goal-icon">
-                    📚
-                </div>
 
+                    <div class="choose-label">
+                        Choose Goal →
+                    </div>
 
-                <div class="goal-title">
-                    Learn New Skills
-                </div>
+                </button>
 
+            </form>
 
-                <div class="goal-description">
 
-                    Learn programming and modern
-                    technologies step by step.
 
-                </div>
+            <!-- BUILD PROJECTS -->
 
+            <form method="POST" class="goal-form">
 
-                <div class="choose-label">
-                    Choose Goal →
-                </div>
+                {% csrf_token %}
 
-            </button>
+                <input type="hidden" name="goal" value="projects">
 
-        </form>
 
+                <button type="submit" class="goal-button">
 
+                    <div class="goal-icon">
+                        🚀
+                    </div>
 
-        <!-- BUILD PROJECTS -->
 
-        <form
-            method="POST"
-            class="goal-form"
-        >
+                    <div class="goal-title">
+                        Build Projects
+                    </div>
 
-            {% csrf_token %}
 
-            <input
-                type="hidden"
-                name="goal"
-                value="projects"
-            >
+                    <div class="goal-description">
 
+                        Build real-world applications
+                        and strengthen your portfolio.
 
-            <button
-                type="submit"
-                class="goal-button"
-            >
+                    </div>
 
-                <div class="goal-icon">
-                    🚀
-                </div>
 
+                    <div class="choose-label">
+                        Choose Goal →
+                    </div>
 
-                <div class="goal-title">
-                    Build Projects
-                </div>
+                </button>
 
+            </form>
 
-                <div class="goal-description">
 
-                    Build real-world applications
-                    and strengthen your portfolio.
 
-                </div>
+            <!-- INTERVIEW -->
 
+            <form method="POST" class="goal-form">
 
-                <div class="choose-label">
-                    Choose Goal →
-                </div>
+                {% csrf_token %}
 
-            </button>
+                <input type="hidden" name="goal" value="interview">
 
-        </form>
 
+                <button type="submit" class="goal-button">
 
+                    <div class="goal-icon">
+                        🎤
+                    </div>
 
-        <!-- INTERVIEW -->
 
-        <form
-            method="POST"
-            class="goal-form"
-        >
+                    <div class="goal-title">
+                        Prepare for Interviews
+                    </div>
 
-            {% csrf_token %}
 
-            <input
-                type="hidden"
-                name="goal"
-                value="interview"
-            >
+                    <div class="goal-description">
 
+                        Practice technical, HR,
+                        mock interviews and viva.
 
-            <button
-                type="submit"
-                class="goal-button"
-            >
+                    </div>
 
-                <div class="goal-icon">
-                    🎤
-                </div>
 
+                    <div class="choose-label">
+                        Choose Goal →
+                    </div>
 
-                <div class="goal-title">
-                    Prepare for Interviews
-                </div>
+                </button>
 
+            </form>
 
-                <div class="goal-description">
 
-                    Practice technical, HR,
-                    mock interviews and viva.
+        </div>
 
-                </div>
 
 
-                <div class="choose-label">
-                    Choose Goal →
-                </div>
+        <div class="bottom-text">
 
-            </button>
+            You can change your goal anytime from Settings.
 
-        </form>
+        </div>
 
 
     </div>
-
-
-
-    <div class="bottom-text">
-
-        You can change your goal anytime from Settings.
-
-    </div>
-
-
-</div>
 
 
 </body>

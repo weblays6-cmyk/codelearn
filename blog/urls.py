@@ -14,8 +14,8 @@ urlpatterns = [
 
     path(
         "",
-        views.blog,
-        name="blogpage"
+        views.login_view,
+        name="home"
     ),
 
     path(

@@ -1,4 +1,4 @@
-{% load socialaccount %}
+{% load static socialaccount %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,20 +7,13 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CodeLearn Hub | Google Login</title>
+    <title>{{ SITE_NAME }} | Google Login</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-
         * {
             margin: 0;
             padding: 0;
@@ -37,16 +30,12 @@
             color: #f8fafc;
 
             background:
-                radial-gradient(
-                    circle at 15% 10%,
-                    rgba(124,58,237,.18),
-                    transparent 30%
-                ),
-                radial-gradient(
-                    circle at 85% 20%,
-                    rgba(37,99,235,.15),
-                    transparent 30%
-                ),
+                radial-gradient(circle at 15% 10%,
+                    rgba(124, 58, 237, .18),
+                    transparent 30%),
+                radial-gradient(circle at 85% 20%,
+                    rgba(37, 99, 235, .15),
+                    transparent 30%),
                 #050713;
 
             font-family:
@@ -79,19 +68,16 @@
         .card {
             padding: 35px 30px;
 
-            border: 1px solid rgba(255,255,255,.1);
+            border: 1px solid rgba(255, 255, 255, .1);
             border-radius: 22px;
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(25,27,52,.95),
-                    rgba(10,12,27,.96)
-                );
+                linear-gradient(145deg,
+                    rgba(25, 27, 52, .95),
+                    rgba(10, 12, 27, .96));
 
             box-shadow:
-                0 30px 90px
-                rgba(0,0,0,.45);
+                0 30px 90px rgba(0, 0, 0, .45);
 
             text-align: center;
         }
@@ -111,11 +97,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7c3aed,
-                    #2563eb
-                );
+                    #2563eb);
 
             font-size: 25px;
         }
@@ -142,13 +126,12 @@
             margin-bottom: 20px;
 
             border:
-                1px solid
-                rgba(255,255,255,.08);
+                1px solid rgba(255, 255, 255, .08);
 
             border-radius: 10px;
 
             background:
-                rgba(255,255,255,.035);
+                rgba(255, 255, 255, .035);
 
             color: #cbd5e1;
 
@@ -172,11 +155,9 @@
             color: white;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7654ff,
-                    #4775ff
-                );
+                    #4775ff);
 
             font-size: 11px;
             font-weight: 850;
@@ -206,7 +187,6 @@
         .back-link:hover {
             text-decoration: underline;
         }
-
     </style>
 
 </head>
@@ -217,7 +197,9 @@
     <div class="google-page">
 
         <div class="brand">
-            CodeLearn <span>Hub</span>
+            <img class="site-logo site-logo--auth"
+                style="display:block;width:220px;max-width:100%;height:auto;object-fit:contain;padding:2px 4px;border-radius:3px;background:#fff;"
+                src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
         </div>
 
 
@@ -236,45 +218,39 @@
             <p class="subtitle">
 
                 You are about to sign in to
-                CodeLearn Hub using your Google account.
+                {{ SITE_NAME }} using your Google account.
 
             </p>
 
 
             {% if process == "connect" %}
 
-                <p class="subtitle">
-                    Connect your Google account with CodeLearn Hub.
-                </p>
+            <p class="subtitle">
+                Connect your Google account with {{ SITE_NAME }}.
+            </p>
 
             {% endif %}
 
 
             {% if account %}
 
-                <div class="account-box">
+            <div class="account-box">
 
-                    Continue as
-                    <strong>
-                        {{ account }}
-                    </strong>
+                Continue as
+                <strong>
+                    {{ account }}
+                </strong>
 
-                </div>
+            </div>
 
             {% endif %}
 
 
-            <form
-                method="post"
-                action=""
-            >
+            <form method="post" action="">
 
                 {% csrf_token %}
 
-                <button
-                    type="submit"
-                    class="continue-btn"
-                >
+                <button type="submit" class="continue-btn">
 
                     <i class="bi bi-google"></i>
 
@@ -285,10 +261,7 @@
             </form>
 
 
-            <a
-                href="{% url 'blog:login' %}"
-                class="back-link"
-            >
+            <a href="{% url 'blog:login' %}" class="back-link">
 
                 ← Back to Login
 

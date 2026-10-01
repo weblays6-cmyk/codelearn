@@ -181,4 +181,4 @@ SITE_ID = 1
 # WEBSITE BRAND NAME
 # =========================================================
 
-SITE_NAME = "CodeLearn Hub"
+SITE_NAME = "vGrowHub"
