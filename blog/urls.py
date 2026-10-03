@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 from django.contrib.auth import views as auth_views
 
@@ -14,7 +15,7 @@ urlpatterns = [
 
     path(
         "",
-        views.login_view,
+        RedirectView.as_view(pattern_name="blog:login"),
         name="home"
     ),
 
@@ -25,25 +26,25 @@ urlpatterns = [
     ),
 
     path(
-        "course/<int:pk>/",
+        "course/<slug:slug>/",
         views.post_detail,
         name="post_detail"
     ),
 
     path(
-        "course/<int:course_pk>/lesson/<int:lesson_pk>/start/",
+        "course/<slug:course_slug>/lesson/<slug:lesson_slug>/start/",
         views.start_lesson_view,
         name="start_lesson"
     ),
 
     path(
-        "lesson/<int:pk>/",
+        "lesson/<slug:slug>/",
         views.lesson_detail,
         name="lesson_detail"
     ),
 
     path(
-        "lesson/<int:pk>/complete/",
+        "lesson/<slug:slug>/complete/",
         views.complete_lesson,
         name="complete_lesson"
     ),
@@ -125,8 +126,8 @@ urlpatterns = [
     ),
 
     path(
-        "logout/", 
-        auth_views.LogoutView.as_view(),
+        "logout/",
+        auth_views.LogoutView.as_view(next_page="/"),
         name="logout"),
 
     path(
@@ -158,31 +159,25 @@ urlpatterns = [
     ),
 
     path(
-    "profile/<int:user_id>/",
-    views.user_profile,
-    name="user_profile"
-    ),  
-
-    path(
-    "profile/<int:user_id>/followers/",
-    views.followers_list,
-    name="followers_list"
+        "profile/<str:username>/followers/",
+        views.followers_list,
+        name="followers_list"
     ),
 
     path(
-    "profile/<int:user_id>/following/",
-    views.following_list,
-    name="following_list"
+        "profile/<str:username>/following/",
+        views.following_list,
+        name="following_list"
     ),
 
-        path(
-        "profile/<int:user_id>/follow/",
+    path(
+        "profile/<str:username>/follow/",
         views.send_follow_request,
         name="send_follow_request"
     ),
 
     path(
-        "profile/<int:user_id>/follow/cancel/",
+        "profile/<str:username>/follow/cancel/",
         views.cancel_follow_request,
         name="cancel_follow_request"
     ),
@@ -200,15 +195,33 @@ urlpatterns = [
     ),
 
     path(
-        "profile/<int:user_id>/unfollow/",
+        "profile/<str:username>/unfollow/",
         views.unfollow_user,
         name="unfollow_user"
     ),
 
     path(
-    "profile/<int:user_id>/connect/",
-    views.start_personal_chat,
-    name="start_personal_chat"
+        "profile/<str:username>/block/",
+        views.block_user,
+        name="block_user"
+    ),
+
+    path(
+        "profile/<str:username>/unblock/",
+        views.unblock_user,
+        name="unblock_user"
+    ),
+
+    path(
+        "profile/<str:username>/",
+        views.user_profile,
+        name="user_profile"
+    ),
+
+    path(
+        "profile/<str:username>/connect/",
+        views.start_personal_chat,
+        name="start_personal_chat"
     ),
 
 
@@ -216,6 +229,30 @@ urlpatterns = [
         "settings/",
         views.settings_view,
         name="settings"
+    ),
+
+    path(
+        "settings/password/",
+        views.change_password,
+        name="change_password"
+    ),
+
+    path(
+        "account/deactivate/",
+        views.deactivate_account,
+        name="deactivate_account"
+    ),
+
+    path(
+        "account/delete/",
+        views.request_account_deletion,
+        name="request_account_deletion"
+    ),
+
+    path(
+        "account/recovery/",
+        views.account_recovery,
+        name="account_recovery"
     ),
 
     path(
@@ -232,6 +269,26 @@ urlpatterns = [
         "ai-tutor/",
         views.ai_tutor,
         name="ai_tutor"
+    ),
+    path(
+        "ai-tutor/new/",
+        views.ai_tutor_new_chat,
+        name="ai_tutor_new",
+    ),
+    path(
+        "ai-tutor/history/",
+        views.ai_tutor_history,
+        name="ai_tutor_history",
+    ),
+    path(
+        "ai-tutor/history/clear/",
+        views.ai_tutor_clear_history,
+        name="ai_tutor_clear_history",
+    ),
+    path(
+        "ai-tutor/history/<int:conversation_id>/",
+        views.ai_tutor_conversation,
+        name="ai_tutor_conversation",
     ),
 
     # =========================================================
@@ -465,6 +522,12 @@ path(
     "messages/",
     views.messages_list,
     name="messages"
+),
+
+path(
+    "people/",
+    views.discover_users,
+    name="discover_users"
 ),
 
 path(

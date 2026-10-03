@@ -1,15 +1,32 @@
 import os
 import secrets
 import json
+import logging
 from datetime import timedelta
 
 from django.conf import settings
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.shortcuts import render, get_object_or_404, redirect
 from google import genai
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import (
+    HttpResponsePermanentRedirect,
+    JsonResponse,
+    Http404,
+    HttpResponseForbidden,
+)
+from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import send_mail
 
+from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout as auth_logout,
+    update_session_auth_hash,
+)
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -18,7 +35,7 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .models import MessageAttachment
 from .services.course_progress import (
     can_access_lesson,
@@ -27,6 +44,13 @@ from .services.course_progress import (
 )
 
 from .gmail_service import send_gmail
+from .forms import (
+    CommentForm,
+    EmailSignupForm,
+    PostForm,
+    ProfilePictureForm,
+    ProjectForm,
+)
 
 from .models import (
     Post,
@@ -63,6 +87,9 @@ from .models import (
     MockTestAttempt,
     FollowRequest,
     Notification,
+    UserBlock,
+    AITutorConversation,
+    AITutorMessage,
 )
 
 from .services.code_execution import (
@@ -74,12 +101,125 @@ from .services.code_execution import (
 )
 from .services.leaderboard import leaderboard_rows
 
-from .forms import (
-    PostForm,
-    CommentForm,
-    EmailSignupForm,
-    ProjectForm,
-)
+logger = logging.getLogger(__name__)
+
+
+def _can_view_user_content(profile_user, viewer):
+    if viewer.is_authenticated and profile_user == viewer:
+        return True
+
+    profile = UserProfile.objects.get_or_create(user=profile_user)[0]
+    if profile.is_deactivated or profile.scheduled_deletion_at:
+        return False
+    if not profile.is_private:
+        return True
+
+    return viewer.is_authenticated and FollowRequest.objects.filter(
+        sender=viewer,
+        receiver=profile_user,
+        status='ACCEPTED',
+    ).exists()
+
+
+def _users_blocked(user_a, user_b):
+    return UserBlock.objects.filter(
+        Q(blocker=user_a, blocked=user_b)
+        | Q(blocker=user_b, blocked=user_a)
+    ).exists()
+
+
+def _account_unavailable(user):
+    return UserProfile.objects.filter(
+        user=user,
+    ).filter(
+        Q(is_deactivated=True) | Q(scheduled_deletion_at__isnull=False)
+    ).exists()
+
+
+def _get_user_by_username(username):
+    user = User.objects.filter(
+        username__iexact=username
+    ).order_by('pk').first()
+    if user is None:
+        raise Http404
+    return user
+
+
+def _can_message_between(user_a, user_b):
+    if (
+        user_a == user_b
+        or _users_blocked(user_a, user_b)
+        or _account_unavailable(user_a)
+        or _account_unavailable(user_b)
+    ):
+        return False
+
+    return (
+        FollowRequest.objects.filter(
+            sender=user_a,
+            receiver=user_b,
+            status='ACCEPTED',
+        ).exists()
+        and FollowRequest.objects.filter(
+            sender=user_b,
+            receiver=user_a,
+            status='ACCEPTED',
+        ).exists()
+    )
+
+
+def _learning_streak_for_user(user):
+    activity_days = set(
+        PracticeSubmission.objects.filter(user=user).dates(
+            'submitted_at',
+            'day',
+            order='DESC',
+        )
+    )
+    activity_days.update(
+        MockTestAttempt.objects.filter(
+            user=user,
+            status__in=('COMPLETED', 'EXPIRED'),
+        ).exclude(
+            submitted_at__isnull=True
+        ).dates(
+            'submitted_at',
+            'day',
+            order='DESC',
+        )
+    )
+    today = timezone.localdate()
+    streak_day = today if today in activity_days else today - timedelta(days=1)
+    streak = 0
+    while streak_day in activity_days:
+        streak += 1
+        streak_day -= timedelta(days=1)
+    return streak
+
+
+def _user_content_visibility_filter(owner_field, viewer):
+    available_profiles = (
+        Q(**{f'{owner_field}__profile_data__is_deactivated': False})
+        & Q(**{f'{owner_field}__profile_data__scheduled_deletion_at__isnull': True})
+    )
+    public_profiles = Q(**{f'{owner_field}__profile_data__is_private': False})
+    if viewer.is_authenticated:
+        blocked_user_ids = UserBlock.objects.filter(
+            blocker=viewer
+        ).values_list('blocked_id', flat=True).union(
+            UserBlock.objects.filter(
+                blocked=viewer
+            ).values_list('blocker_id', flat=True)
+        )
+        visible_followees = FollowRequest.objects.filter(
+            sender=viewer,
+            status='ACCEPTED',
+        ).values_list('receiver_id', flat=True)
+        public_profiles = (
+            public_profiles
+            | Q(**{f'{owner_field}_id__in': visible_followees})
+        ) & ~Q(**{f'{owner_field}_id__in': blocked_user_ids})
+    return public_profiles & available_profiles
 
 
 # =========================================================
@@ -91,7 +231,9 @@ def blog(request):
     search = request.GET.get('search', '').strip()
     category = request.GET.get('category', '').strip()
 
-    posts = Post.objects.all().order_by('-created_at')
+    posts = Post.objects.filter(
+        _user_content_visibility_filter('author', request.user)
+    ).order_by('-created_at')
 
     if search:
         posts = posts.filter(
@@ -136,8 +278,12 @@ def dashboard(request):
     profile, created = UserProfile.objects.get_or_create(
         user=request.user
     )
+    if not profile.goal and not profile.onboarding_completed:
+        return redirect('blog:choose_goal')
 
-    recent_posts = Post.objects.all().order_by(
+    recent_posts = Post.objects.filter(
+        _user_content_visibility_filter('author', request.user)
+    ).order_by(
         '-created_at'
     )[:4]
 
@@ -210,21 +356,38 @@ def choose_goal(request):
 
         selected_goal = request.POST.get("goal")
 
-        if selected_goal in [
-            "job",
-            "skill",
-            "projects",
-            "interview"
-        ]:
-
+        if selected_goal in dict(UserProfile.GOAL_CHOICES):
             profile.goal = selected_goal
-            profile.save()
+            profile.onboarding_completed = True
+            profile.save(update_fields=['goal', 'onboarding_completed', 'updated_at'])
 
             return redirect("blog:dashboard")
 
     context = {
         "username": request.user.username,
         "user_profile": profile,
+        "goal_options": [
+            {
+                'value': value,
+                'label': label,
+                'icon': icon,
+                'description': description,
+            }
+            for (value, label), icon, description in zip(
+                UserProfile.GOAL_CHOICES[:8],
+                ['🐍', '💻', '🌐', '🧠', '🎤', '🚀', '💼', '✨'],
+                [
+                    'Build a solid programming foundation with Python.',
+                    'Learn the tools to build complete web applications.',
+                    'Create powerful web applications with Django.',
+                    'Strengthen problem-solving and data structures skills.',
+                    'Prepare for technical and behavioral interviews.',
+                    'Build real-world applications for your portfolio.',
+                    'Develop practical skills for your next career step.',
+                    'Set a learning goal that is personal to you.',
+                ],
+            )
+        ],
     }
 
     return render(
@@ -239,12 +402,15 @@ def choose_goal(request):
 # =========================================================
 
 @login_required
-def post_detail(request, pk):
+def post_detail(request, slug):
 
-    post = get_object_or_404(
-        Post,
-        pk=pk
-    )
+    post = Post.objects.filter(slug=slug).first()
+    if post is None and slug.isdecimal():
+        return legacy_post_detail(request, int(slug))
+    if post is None:
+        raise Http404
+    if not _can_view_user_content(post.author, request.user):
+        return HttpResponseForbidden('This profile content is private.')
 
     comments = Comment.objects.filter(
         post=post
@@ -287,7 +453,7 @@ def post_detail(request, pk):
 
             return redirect(
                 'blog:post_detail',
-                pk=post.pk
+                slug=post.slug
             )
 
         if action == "comment":
@@ -306,10 +472,49 @@ def post_detail(request, pk):
                 comment.author = request.user
                 comment.save()
 
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+                    return JsonResponse({
+                        'success': True,
+                        'count': Comment.objects.filter(post=post).count(),
+                        'comment': {
+                            'id': comment.pk,
+                            'username': request.user.username,
+                            'profile_url': reverse(
+                                'blog:user_profile',
+                                kwargs={'username': request.user.username},
+                            ),
+                            'avatar_url': (
+                                profile.profile_picture.url
+                                if profile.profile_picture
+                                else ''
+                            ),
+                            'initial': request.user.username[:1].upper(),
+                            'content': comment.content,
+                            'created_at': timezone.localtime(
+                                comment.created_at
+                            ).strftime('%d %b %Y, %H:%M'),
+                            'edit_url': reverse(
+                                'blog:update_comment',
+                                args=[comment.pk],
+                            ),
+                            'delete_url': reverse(
+                                'blog:delete_comment',
+                                args=[comment.pk],
+                            ),
+                        },
+                    }, status=201)
+
                 return redirect(
                     'blog:post_detail',
-                    pk=post.pk
+                    slug=post.slug
                 )
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Please enter a valid comment.',
+                    'field_errors': form.errors.get_json_data(),
+                }, status=400)
 
         else:
 
@@ -332,6 +537,13 @@ def post_detail(request, pk):
         request,
         'blog/post_detail.html',
         context
+    )
+
+
+def legacy_post_detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    return HttpResponsePermanentRedirect(
+        reverse('blog:post_detail', kwargs={'slug': post.slug})
     )
 
 
@@ -388,32 +600,79 @@ def _can_access_assignment(user, assignment):
 
 
 @login_required
-def start_lesson_view(request, course_pk, lesson_pk):
-    lesson = get_object_or_404(Lesson, pk=lesson_pk, course_id=course_pk)
+def start_lesson_view(request, course_slug, lesson_slug):
+    lesson = Lesson.objects.filter(
+        slug=lesson_slug,
+        course__slug=course_slug,
+    ).select_related('course').first()
+    if lesson is None and course_slug.isdecimal() and lesson_slug.isdecimal():
+        return legacy_start_lesson(
+            request,
+            int(course_slug),
+            int(lesson_slug),
+        )
+    if lesson is None:
+        raise Http404
     if not can_access_lesson(request.user, lesson):
         return HttpResponseForbidden('Enroll in the course and complete earlier lessons first.')
 
     start_lesson(request.user, lesson)
-    return redirect('blog:lesson_detail', pk=lesson.pk)
+    return redirect('blog:lesson_detail', slug=lesson.slug)
 
 
 @login_required
 @require_POST
-def complete_lesson(request, pk):
-    lesson = get_object_or_404(Lesson, pk=pk)
+def complete_lesson(request, slug):
+    lesson = Lesson.objects.filter(slug=slug).select_related('course').first()
+    if lesson is None and slug.isdecimal():
+        return legacy_complete_lesson(request, int(slug))
+    if lesson is None:
+        raise Http404
     if not can_access_lesson(request.user, lesson):
         return HttpResponseForbidden('Enroll in the course and complete earlier lessons first.')
 
     mark_lesson_completed(request.user, lesson)
-    return redirect('blog:lesson_detail', pk=lesson.pk)
+    return redirect('blog:lesson_detail', slug=lesson.slug)
 
 
-def lesson_detail(request, pk):
-
-    lesson = get_object_or_404(
-        Lesson,
-        pk=pk
+def legacy_start_lesson(request, course_pk, lesson_pk):
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, course_id=course_pk)
+    response = HttpResponsePermanentRedirect(
+        reverse(
+            'blog:start_lesson',
+            kwargs={
+                'course_slug': lesson.course.slug,
+                'lesson_slug': lesson.slug,
+            },
+        )
     )
+    response.status_code = 308
+    return response
+
+
+def legacy_lesson_detail(request, pk):
+    lesson = get_object_or_404(Lesson, pk=pk)
+    return HttpResponsePermanentRedirect(
+        reverse('blog:lesson_detail', kwargs={'slug': lesson.slug})
+    )
+
+
+def legacy_complete_lesson(request, pk):
+    lesson = get_object_or_404(Lesson, pk=pk)
+    response = HttpResponsePermanentRedirect(
+        reverse('blog:complete_lesson', kwargs={'slug': lesson.slug})
+    )
+    response.status_code = 308
+    return response
+
+
+def lesson_detail(request, slug):
+
+    lesson = Lesson.objects.filter(slug=slug).select_related('course').first()
+    if lesson is None and slug.isdecimal():
+        return legacy_lesson_detail(request, int(slug))
+    if lesson is None:
+        raise Http404
 
     if not request.user.is_authenticated:
         return redirect('blog:login')
@@ -593,35 +852,38 @@ def signup(request):
 
     if request.method == "POST":
 
-        form = EmailSignupForm(request.POST)
+        form = EmailSignupForm(request.POST, request.FILES)
 
         if form.is_valid():
 
             user = form.save()
 
             try:
-
                 send_gmail(
                     user.email,
-                    f"{settings.SITE_NAME} - Account Created Successfully",
-                    f"""Hi,
+                    "Welcome to vGrowHub 🎉",
+                    f"""Hello @{user.username},
 
-Your {settings.SITE_NAME} account has been created successfully.
+Welcome to vGrowHub!
 
-You can now log in and start learning.
+Your account has been successfully created.
 
-Welcome to {settings.SITE_NAME}!
+Username:
+@{user.username}
+
+You can now start learning, practicing, building projects and growing your skills on vGrowHub.
+
+Login to vGrowHub:
+{request.build_absolute_uri(reverse('blog:login'))}
 
 Regards,
-{settings.SITE_NAME} Team
+vGrowHub Team
 """
                 )
-
-            except Exception as error:
-
-                print(
-                    "Registration email failed:",
-                    error
+            except Exception:
+                logger.exception(
+                    "vGrowHub welcome email delivery failed for user %s.",
+                    user.pk,
                 )
 
             return redirect(
@@ -662,14 +924,18 @@ def forgot_password(request):
                 secrets.randbelow(900000) + 100000
             )
 
-            request.session["reset_email"] = user.email
-            request.session["reset_otp"] = otp
-            request.session["otp_verified"] = False
+            request.session.pop("reset_email", None)
+            request.session.pop("reset_otp", None)
+            request.session.pop("otp_verified", None)
 
-            send_gmail(
-                user.email,
-                f"{settings.SITE_NAME} - Password Reset OTP",
-                f"""Hi,
+            if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+                raise ImproperlyConfigured(
+                    "EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must be configured."
+                )
+
+            send_mail(
+                subject=f"{settings.SITE_NAME} - Password Reset OTP",
+                message=f"""Hi,
 
 We received a request to reset your {settings.SITE_NAME} password.
 
@@ -683,8 +949,15 @@ If you did not request a password reset, you can safely ignore this email.
 
 Regards,
 {settings.SITE_NAME} Team
-"""
+""",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
             )
+
+            request.session["reset_email"] = user.email
+            request.session["reset_otp"] = otp
+            request.session["otp_verified"] = False
 
             return render(
                 request,
@@ -709,17 +982,23 @@ Regards,
 
         except Exception as error:
 
-            print(
-                "Forgot password email failed:",
-                error
-            )
+            logger.exception("vGrowHub password reset email delivery failed.")
+
+            error_message = "Unable to send the vGrowHub password reset OTP. Please try again."
+            if settings.DEBUG:
+                details = str(error)
+                if settings.EMAIL_HOST_PASSWORD:
+                    details = details.replace(settings.EMAIL_HOST_PASSWORD, "[redacted]")
+                error_message = (
+                    f"{error_message} ({type(error).__name__}: {details[:500]})"
+                )
 
             return render(
                 request,
                 "blog/login.html",
                 {
                     "show_forgot": True,
-                    "error": "Unable to send OTP. Please try again."
+                    "error": error_message
                 }
             )
 
@@ -929,22 +1208,23 @@ def login_view(request):
 
     if request.method == "POST":
 
-        email = request.POST.get(
-            "email",
+        identifier = request.POST.get(
+            "username",
             ""
-        ).strip().lower()
+        ).strip()
 
         password = request.POST.get(
             "password",
             ""
         )
 
-        try:
+        users = User.objects.filter(
+            Q(username__iexact=identifier) |
+            Q(email__iexact=identifier)
+        )
 
-            user = User.objects.get(
-                email__iexact=email
-            )
-
+        authenticated_user = None
+        for user in users:
             authenticated_user = authenticate(
                 request,
                 username=user.username,
@@ -952,56 +1232,26 @@ def login_view(request):
             )
 
             if authenticated_user is not None:
+                break
 
-                login(
-                    request,
-                    authenticated_user
-                )
-
-                try:
-
-                    send_gmail(
-                        authenticated_user.email,
-                        f"{settings.SITE_NAME} - Login Successful",
-                        f"""Hi,
-
-You have successfully logged in to your {settings.SITE_NAME} account.
-
-If this was not you, please secure your account immediately.
-
-Regards,
-{settings.SITE_NAME} Team
-"""
-                    )
-
-                except Exception as error:
-
-                    print(
-                        "Login email failed:",
-                        error
-                    )
-
-                return redirect(
-                    "blog:dashboard"
-                )
-
-            return render(
+        if authenticated_user is not None:
+            request.session['_vgh_login_method'] = 'Password'
+            login(
                 request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
+                authenticated_user
             )
 
-        except User.DoesNotExist:
-
-            return render(
-                request,
-                "blog/login.html",
-                {
-                    "error": "Invalid email or password."
-                }
+            return redirect(
+                "blog:dashboard"
             )
+
+        return render(
+            request,
+            "blog/login.html",
+            {
+                "error": "Invalid username/email or password."
+            }
+        )
 
     return render(
         request,
@@ -1029,13 +1279,13 @@ def delete_comment(request, pk):
 
     if request.method == "POST":
 
-        post_pk = comment.post.pk
+        post_slug = comment.post.slug
 
         comment.delete()
 
         return redirect(
             'blog:post_detail',
-            pk=post_pk
+            slug=post_slug
         )
 
     context = {
@@ -1080,7 +1330,7 @@ def update_comment(request, pk):
 
             return redirect(
                 'blog:post_detail',
-                pk=comment.post.pk
+                slug=comment.post.slug
             )
 
     else:
@@ -1106,6 +1356,64 @@ def update_comment(request, pk):
 
 @login_required
 def profile(request):
+    profile_picture_form = ProfilePictureForm()
+
+    profile, created = UserProfile.objects.get_or_create(
+        user=request.user
+    )
+
+    if request.method == "POST":
+        profile_picture_form = ProfilePictureForm(
+            request.POST,
+            request.FILES,
+        )
+        remove_picture = request.POST.get('remove_picture') == '1'
+        if profile_picture_form.is_valid():
+            new_picture = profile_picture_form.cleaned_data.get('profile_picture')
+            if remove_picture and new_picture:
+                profile_picture_form.add_error(
+                    None,
+                    'Choose a new photo or remove the current photo, not both.',
+                )
+            elif remove_picture:
+                old_picture = profile.profile_picture
+                old_name = old_picture.name if old_picture else None
+                old_storage = old_picture.storage if old_picture else None
+                profile.profile_picture = None
+                profile.save(update_fields=['profile_picture', 'updated_at'])
+                if old_name:
+                    try:
+                        old_storage.delete(old_name)
+                    except Exception as error:
+                        logger.error(
+                            "Old profile picture cleanup failed (%s).",
+                            type(error).__name__,
+                        )
+                return redirect('blog:profile')
+            elif new_picture:
+                old_picture = profile.profile_picture
+                old_name = old_picture.name if old_picture else None
+                old_storage = old_picture.storage if old_picture else None
+                profile.profile_picture.save(
+                    new_picture.name,
+                    new_picture,
+                    save=False,
+                )
+                profile.save(update_fields=['profile_picture', 'updated_at'])
+                if old_name and old_name != profile.profile_picture.name:
+                    try:
+                        old_storage.delete(old_name)
+                    except Exception as error:
+                        logger.error(
+                            "Old profile picture cleanup failed (%s).",
+                            type(error).__name__,
+                        )
+                return redirect('blog:profile')
+            else:
+                profile_picture_form.add_error(
+                    None,
+                    'Choose a photo or select Remove photo.',
+                )
 
     posts = Post.objects.filter(
         author=request.user
@@ -1115,15 +1423,17 @@ def profile(request):
         owner=request.user
     ).order_by('-created_at')
 
-    profile, created = UserProfile.objects.get_or_create(
-        user=request.user
-    )
-
     context = {
         'posts': posts,
         'projects': projects,
         'username': request.user.username,
         'user_profile': profile,
+        'display_name': (
+            profile.display_name
+            or request.user.get_full_name()
+            or request.user.username
+        ),
+        'profile_picture_form': profile_picture_form,
     }
 
     return render(
@@ -1136,79 +1446,119 @@ def profile(request):
 # USER PROFILE
 # =========================================================
 
-@login_required
-def user_profile(request, user_id):
+@require_GET
+def user_profile(request, username):
 
-    profile_user = get_object_or_404(
-        User,
-        id=user_id
+    profile_user = User.objects.filter(
+        username__iexact=username
+    ).order_by('pk').first()
+    if profile_user is None:
+        if username.isdecimal():
+            return legacy_user_profile(request, int(username))
+        raise Http404
+    is_owner = request.user.is_authenticated and request.user == profile_user
+    blocked_by_viewer = (
+        request.user.is_authenticated
+        and not is_owner
+        and UserBlock.objects.filter(
+            blocker=request.user,
+            blocked=profile_user,
+        ).exists()
     )
-
-    posts = Post.objects.filter(
-        author=profile_user
-    ).order_by("-created_at")
-
-    projects = Project.objects.filter(
-        owner=profile_user
-    ).order_by("-created_at")
+    if (
+        request.user.is_authenticated
+        and not is_owner
+        and UserBlock.objects.filter(
+            blocker=profile_user,
+            blocked=request.user,
+        ).exists()
+    ):
+        raise Http404
 
     user_profile, created = UserProfile.objects.get_or_create(
         user=profile_user
     )
+    if user_profile.is_deactivated or user_profile.scheduled_deletion_at:
+        raise Http404
 
-    # Followers
     follower_count = FollowRequest.objects.filter(
         receiver=profile_user,
         status="ACCEPTED"
     ).count()
 
-    # Following
     following_count = FollowRequest.objects.filter(
         sender=profile_user,
         status="ACCEPTED"
     ).count()
 
-    is_owner = request.user == profile_user
-
-    # Current user's relationship with this profile
-    is_following = FollowRequest.objects.filter(
-        sender=request.user,
-        receiver=profile_user,
-        status="ACCEPTED"
-    ).exists()
-
-    outgoing_pending = FollowRequest.objects.filter(
-        sender=request.user,
-        receiver=profile_user,
-        status="PENDING"
-    ).exists()
-
-    incoming_request = FollowRequest.objects.filter(
+    is_following = False
+    follows_viewer = False
+    outgoing_pending = False
+    incoming_request = None
+    if request.user.is_authenticated and not is_owner:
+        is_following = FollowRequest.objects.filter(
+            sender=request.user,
+            receiver=profile_user,
+            status="ACCEPTED"
+        ).exists()
+        outgoing_pending = FollowRequest.objects.filter(
+            sender=request.user,
+            receiver=profile_user,
+            status="PENDING"
+        ).exists()
+        follows_viewer = FollowRequest.objects.filter(
+            sender=profile_user,
+            receiver=request.user,
+            status="ACCEPTED"
+        ).exists()
+        incoming_request = FollowRequest.objects.filter(
             sender=profile_user,
             receiver=request.user,
             status="PENDING"
-    ).first()
+        ).first()
 
-    incoming_pending = incoming_request is not None 
-
+    can_view_content = not blocked_by_viewer and (
+        is_owner
+        or not user_profile.is_private
+        or is_following
+    )
+    posts = Post.objects.filter(
+        author=profile_user
+    ).order_by("-created_at") if can_view_content else Post.objects.none()
+    projects = Project.objects.filter(
+        owner=profile_user
+    ).order_by("-created_at") if can_view_content else Project.objects.none()
 
 
     context = {
         "profile_user": profile_user,
         "user_profile": user_profile,
+        "display_name": (
+            user_profile.display_name
+            or profile_user.get_full_name()
+            or profile_user.username
+        ),
         "posts": posts,
         "projects": projects,
-
-        # Basic statistics
+        "is_private": user_profile.is_private,
+        "can_view_content": can_view_content,
+        "is_following": is_following,
+        "follows_viewer": follows_viewer,
+        "can_message": (
+            request.user.is_authenticated
+            and _can_message_between(request.user, profile_user)
+        ),
+        "outgoing_pending": outgoing_pending,
+        "incoming_request_id": incoming_request.id if incoming_request else None,
+        "incoming_pending": incoming_request is not None,
+        "follower_count": follower_count,
+        "following_count": following_count,
         "post_count": posts.count(),
         "project_count": projects.count(),
-
-        # Temporary values until follower/like system is added
-        "follower_count": 0,
         "profile_like_count": 0,
-
-        # Current user's relationship
-        "is_owner": request.user == profile_user,
+        "learning_streak": _learning_streak_for_user(profile_user),
+        "is_owner": is_owner,
+        "blocked_by_viewer": blocked_by_viewer,
     }
 
     return render(
@@ -1217,14 +1567,42 @@ def user_profile(request, user_id):
         context
     )
 
+
+def legacy_user_profile(request, user_id):
+    profile_user = get_object_or_404(User, pk=user_id)
+    return HttpResponsePermanentRedirect(
+        reverse(
+            'blog:user_profile',
+            kwargs={'username': profile_user.username},
+        )
+    )
+
+
 @login_required
-def followers_list(request, user_id):
-    profile_user = get_object_or_404(User, id=user_id)
+def followers_list(request, username):
+    profile_user = _get_user_by_username(username)
+    if _account_unavailable(profile_user):
+        raise Http404
+    if _users_blocked(request.user, profile_user):
+        raise Http404
+    blocked_user_ids = UserBlock.objects.filter(
+        blocker=request.user
+    ).values_list('blocked_id', flat=True).union(
+        UserBlock.objects.filter(
+            blocked=request.user
+        ).values_list('blocker_id', flat=True)
+    )
 
     followers = FollowRequest.objects.filter(
         receiver=profile_user,
         status="ACCEPTED"
-    ).select_related("sender")
+    ).exclude(
+        sender__profile_data__is_deactivated=True
+    ).filter(
+        sender__profile_data__scheduled_deletion_at__isnull=True
+    ).exclude(
+        sender_id__in=blocked_user_ids
+    ).select_related("sender", "sender__profile_data")
 
     return render(
         request,
@@ -1237,13 +1615,30 @@ def followers_list(request, user_id):
 
 
 @login_required
-def following_list(request, user_id):
-    profile_user = get_object_or_404(User, id=user_id)
+def following_list(request, username):
+    profile_user = _get_user_by_username(username)
+    if _account_unavailable(profile_user):
+        raise Http404
+    if _users_blocked(request.user, profile_user):
+        raise Http404
+    blocked_user_ids = UserBlock.objects.filter(
+        blocker=request.user
+    ).values_list('blocked_id', flat=True).union(
+        UserBlock.objects.filter(
+            blocked=request.user
+        ).values_list('blocker_id', flat=True)
+    )
 
     following = FollowRequest.objects.filter(
         sender=profile_user,
         status="ACCEPTED"
-    ).select_related("receiver")
+    ).exclude(
+        receiver__profile_data__is_deactivated=True
+    ).filter(
+        receiver__profile_data__scheduled_deletion_at__isnull=True
+    ).exclude(
+        receiver_id__in=blocked_user_ids
+    ).select_related("receiver", "receiver__profile_data")
 
     return render(
         request,
@@ -1260,48 +1655,59 @@ def following_list(request, user_id):
 
 
 @login_required
-def send_follow_request(request, user_id):
+def send_follow_request(request, username):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
 
-    receiver = get_object_or_404(User, id=user_id)
+    receiver = _get_user_by_username(username)
     if request.user == receiver:
         return JsonResponse({'success': False, 'error': 'You cannot follow yourself.'}, status=400)
+    if _account_unavailable(receiver):
+        return JsonResponse({'success': False, 'error': 'This account is unavailable.'}, status=404)
+    if _users_blocked(request.user, receiver):
+        return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
 
-    follow_request = FollowRequest.objects.filter(
-        sender=request.user,
-        receiver=receiver,
-    ).first()
-    if follow_request and follow_request.status == 'ACCEPTED':
-        return JsonResponse({'success': False, 'error': 'You are already following this user.'}, status=400)
-    if follow_request and follow_request.status == 'PENDING':
-        return JsonResponse({'success': False, 'error': 'Follow request already pending.'}, status=400)
-
-    if follow_request:
-        follow_request.status = 'PENDING'
-        follow_request.save(update_fields=['status', 'updated_at'])
-    else:
-        follow_request = FollowRequest.objects.create(
+    with transaction.atomic():
+        follow_request = FollowRequest.objects.select_for_update().filter(
             sender=request.user,
             receiver=receiver,
-            status='PENDING',
+        ).first()
+        if follow_request and follow_request.status == 'PENDING':
+            return JsonResponse({
+                'success': False,
+                'status': 'PENDING',
+                'error': 'Follow request already pending.',
+            }, status=409)
+        if follow_request and follow_request.status == 'ACCEPTED':
+            return JsonResponse({
+                'success': False,
+                'status': 'ACCEPTED',
+                'error': 'You are already following this user.',
+            }, status=409)
+
+        if follow_request:
+            follow_request.status = 'PENDING'
+            follow_request.save(update_fields=['status', 'updated_at'])
+        else:
+            follow_request = FollowRequest.objects.create(
+                sender=request.user,
+                receiver=receiver,
+                status='PENDING',
+            )
+
+        sender_profile = UserProfile.objects.get_or_create(user=request.user)[0]
+        sender_name = (
+            sender_profile.display_name
+            or request.user.get_full_name()
+            or request.user.username
+        )
+        Notification.objects.create(
+            recipient=receiver,
+            sender=request.user,
+            notification_type='FOLLOW_REQUEST',
+            message=f'{sender_name} (@{request.user.username}) sent you a follow request.',
         )
 
-    is_follow_back = FollowRequest.objects.filter(
-        sender=receiver,
-        receiver=request.user,
-        status='ACCEPTED',
-    ).exists()
-    Notification.objects.create(
-        recipient=receiver,
-        sender=request.user,
-        notification_type='FOLLOW_BACK' if is_follow_back else 'FOLLOW_REQUEST',
-        message=(
-            f'@{request.user.username} wants to follow you back.'
-            if is_follow_back
-            else f'@{request.user.username} sent you a follow request.'
-        ),
-    )
     return JsonResponse({
         'success': True,
         'status': 'PENDING',
@@ -1311,18 +1717,33 @@ def send_follow_request(request, user_id):
 
 
 @login_required
-def cancel_follow_request(request, user_id):
+def cancel_follow_request(request, username):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
-    receiver = get_object_or_404(User, id=user_id)
-    follow_request = FollowRequest.objects.filter(
-        sender=request.user,
-        receiver=receiver,
-        status='PENDING',
-    ).first()
-    if not follow_request:
-        return JsonResponse({'success': False, 'error': 'No pending follow request found.'}, status=404)
-    follow_request.delete()
+    receiver = _get_user_by_username(username)
+    if _users_blocked(request.user, receiver):
+        return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
+    with transaction.atomic():
+        follow_request = FollowRequest.objects.select_for_update().filter(
+            sender=request.user,
+            receiver=receiver,
+        ).first()
+        if not follow_request or follow_request.status != 'PENDING':
+            message = 'That follow request has already been processed.'
+            if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+                return redirect('blog:user_profile', username=receiver.username)
+            return JsonResponse({
+                'success': False,
+                'status': follow_request.status if follow_request else 'NONE',
+                'error': message,
+            }, status=409)
+        follow_request.delete()
+        Notification.objects.filter(
+            recipient=receiver,
+            sender=request.user,
+            notification_type='FOLLOW_REQUEST',
+            is_read=False,
+        ).update(is_read=True)
     return JsonResponse({'success': True, 'status': 'NONE', 'message': 'Follow request cancelled.'})
 
 
@@ -1330,35 +1751,69 @@ def cancel_follow_request(request, user_id):
 def accept_follow_request(request, request_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
-    follow_request = get_object_or_404(
-        FollowRequest,
-        id=request_id,
-        receiver=request.user,
-        status='PENDING',
-    )
-    follow_request.status = 'ACCEPTED'
-    follow_request.save(update_fields=['status', 'updated_at'])
-    Notification.objects.create(
-        recipient=follow_request.sender,
-        sender=request.user,
-        notification_type='FOLLOW_ACCEPTED',
-        message=f'@{request.user.username} accepted your follow request.',
-    )
-    conversation = Conversation.objects.filter(project__isnull=True).filter(
-        Q(project_owner=request.user, participant=follow_request.sender)
-        | Q(project_owner=follow_request.sender, participant=request.user)
-    ).first()
-    if conversation is None:
-        conversation = Conversation.objects.create(
-            project=None,
-            project_owner=request.user,
-            participant=follow_request.sender,
+    with transaction.atomic():
+        follow_request = FollowRequest.objects.select_for_update().filter(
+            id=request_id,
+            receiver=request.user,
+        ).select_related('sender').first()
+        if not follow_request or follow_request.status != 'PENDING':
+            message = 'That follow request has already been processed.'
+            if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+                return redirect('blog:notifications')
+            return JsonResponse({
+                'success': False,
+                'status': follow_request.status if follow_request else 'NONE',
+                'error': message,
+            }, status=409)
+        if _users_blocked(request.user, follow_request.sender):
+            return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
+
+        follow_request.status = 'ACCEPTED'
+        follow_request.save(update_fields=['status', 'updated_at'])
+        Notification.objects.filter(
+            recipient=request.user,
+            sender=follow_request.sender,
+            notification_type__in=['FOLLOW_REQUEST', 'FOLLOW_BACK'],
+        ).update(is_read=True)
+        receiver_profile = UserProfile.objects.get_or_create(user=request.user)[0]
+        receiver_name = (
+            receiver_profile.display_name
+            or request.user.get_full_name()
+            or request.user.username
         )
+        Notification.objects.create(
+            recipient=follow_request.sender,
+            sender=request.user,
+            notification_type='FOLLOW_ACCEPTED',
+            message=f'{receiver_name} (@{request.user.username}) accepted your follow request.',
+        )
+
+    if _can_message_between(request.user, follow_request.sender):
+        conversation = Conversation.objects.filter(project__isnull=True).filter(
+            Q(project_owner=request.user, participant=follow_request.sender)
+            | Q(project_owner=follow_request.sender, participant=request.user)
+        ).first()
+        if conversation is None:
+            conversation = Conversation.objects.create(
+                project=None,
+                project_owner=request.user,
+                participant=follow_request.sender,
+            )
+        redirect_url = reverse(
+            'blog:conversation_detail',
+            args=[conversation.id],
+        )
+    else:
+        redirect_url = reverse(
+            'blog:user_profile',
+            kwargs={'username': follow_request.sender.username},
+        )
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return redirect('blog:notifications')
     return JsonResponse({
         'success': True,
         'status': 'ACCEPTED',
-        'conversation_id': conversation.id,
-        'redirect_url': reverse('blog:conversation_detail', args=[conversation.id]),
+        'redirect_url': redirect_url,
         'message': 'Follow request accepted.',
     })
 
@@ -1367,30 +1822,44 @@ def accept_follow_request(request, request_id):
 def reject_follow_request(request, request_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
-    follow_request = get_object_or_404(
-        FollowRequest,
-        id=request_id,
-        receiver=request.user,
-        status='PENDING',
-    )
-    follow_request.status = 'REJECTED'
-    follow_request.save(update_fields=['status', 'updated_at'])
-    Notification.objects.create(
-        recipient=follow_request.sender,
-        sender=request.user,
-        notification_type='FOLLOW_REJECTED',
-        message=f'@{request.user.username} declined your follow request.',
-    )
+    with transaction.atomic():
+        follow_request = FollowRequest.objects.select_for_update().filter(
+            id=request_id,
+            receiver=request.user,
+        ).select_related('sender').first()
+        if not follow_request or follow_request.status != 'PENDING':
+            message = 'That follow request has already been processed.'
+            if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+                return redirect('blog:notifications')
+            return JsonResponse({
+                'success': False,
+                'status': follow_request.status if follow_request else 'NONE',
+                'error': message,
+            }, status=409)
+        if _users_blocked(request.user, follow_request.sender):
+            return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
+
+        follow_request.status = 'REJECTED'
+        follow_request.save(update_fields=['status', 'updated_at'])
+        Notification.objects.filter(
+            recipient=request.user,
+            sender=follow_request.sender,
+            notification_type__in=['FOLLOW_REQUEST', 'FOLLOW_BACK'],
+        ).update(is_read=True)
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return redirect('blog:notifications')
     return JsonResponse({'success': True, 'status': 'REJECTED', 'message': 'Follow request rejected.'})
 
 
 @login_required
-def unfollow_user(request, user_id):
+def unfollow_user(request, username):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
-    target_user = get_object_or_404(User, id=user_id)
+    target_user = _get_user_by_username(username)
     if request.user == target_user:
         return JsonResponse({'success': False, 'error': 'You cannot unfollow yourself.'}, status=400)
+    if _users_blocked(request.user, target_user):
+        return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
     follow_request = FollowRequest.objects.filter(
         sender=request.user,
         receiver=target_user,
@@ -1403,7 +1872,7 @@ def unfollow_user(request, user_id):
 
 
 @login_required
-def start_personal_chat(request, user_id):
+def start_personal_chat(request, username):
 
     if request.method != "POST":
 
@@ -1414,7 +1883,7 @@ def start_personal_chat(request, user_id):
 
     profile_user = get_object_or_404(
         User,
-        id=user_id
+        username__iexact=username
     )
 
     if request.user == profile_user:
@@ -1423,6 +1892,11 @@ def start_personal_chat(request, user_id):
             "success": False,
             "error": "You cannot connect with yourself."
         }, status=400)
+    if not _can_message_between(request.user, profile_user):
+        return JsonResponse({
+            'success': False,
+            'error': 'You can message only people who follow you back.',
+        }, status=403)
 
     conversation = Conversation.objects.filter(
         project__isnull=True
@@ -1456,12 +1930,194 @@ def start_personal_chat(request, user_id):
         "message": "Conversation ready."
     })
 
+
+@login_required
+def block_user(request, username):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
+    target = _get_user_by_username(username)
+    if target == request.user:
+        return JsonResponse({'success': False, 'error': 'You cannot block yourself.'}, status=400)
+
+    UserBlock.objects.get_or_create(blocker=request.user, blocked=target)
+    FollowRequest.objects.filter(
+        Q(sender=request.user, receiver=target)
+        | Q(sender=target, receiver=request.user)
+    ).delete()
+    Notification.objects.filter(
+        Q(recipient=request.user, sender=target)
+        | Q(recipient=target, sender=request.user),
+        notification_type__in=['FOLLOW_REQUEST', 'FOLLOW_BACK'],
+    ).delete()
+    return redirect('blog:user_profile', username=target.username)
+
+
+@login_required
+def unblock_user(request, username):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
+    target = _get_user_by_username(username)
+    UserBlock.objects.filter(blocker=request.user, blocked=target).delete()
+    return redirect('blog:user_profile', username=target.username)
+
+
 @login_required
 def settings_view(request):
 
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    if request.method == 'POST':
+        profile.is_private = request.POST.get('is_private') == 'on'
+        profile.save(update_fields=['is_private', 'updated_at'])
+        return redirect('blog:settings')
+
     return render(
         request,
-        'blog/settings.html'
+        'blog/settings.html',
+        {
+            'user_profile': profile,
+            'goal_display': profile.get_goal_display() if profile.goal else 'Not selected',
+            'has_usable_password': request.user.has_usable_password(),
+        }
+    )
+
+
+@login_required
+def change_password(request):
+    if not request.user.has_usable_password():
+        return render(
+            request,
+            'blog/password_change.html',
+            {'password_unavailable': True},
+        )
+
+    form = PasswordChangeForm(
+        user=request.user,
+        data=request.POST if request.method == 'POST' else None,
+    )
+    if request.method == 'POST' and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        django_messages.success(request, 'Your password was changed successfully.')
+        return redirect('blog:settings')
+
+    return render(
+        request,
+        'blog/password_change.html',
+        {'form': form},
+    )
+
+
+def _account_action_confirmed(request):
+    if request.user.has_usable_password():
+        return request.user.check_password(request.POST.get('password', ''))
+    expected_email = (request.user.email or '').strip().casefold()
+    submitted_email = request.POST.get('email', '').strip().casefold()
+    return bool(expected_email and submitted_email == expected_email)
+
+
+@login_required
+@require_POST
+def deactivate_account(request):
+    if request.POST.get('confirmation') != 'DEACTIVATE' or not _account_action_confirmed(request):
+        django_messages.error(
+            request,
+            'Confirm with your password (or account email) and type DEACTIVATE.',
+        )
+        return redirect('blog:settings')
+
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    now = timezone.now()
+    profile.is_deactivated = True
+    profile.deactivated_at = now
+    profile.deletion_requested_at = None
+    profile.scheduled_deletion_at = None
+    profile.save(update_fields=[
+        'is_deactivated',
+        'deactivated_at',
+        'deletion_requested_at',
+        'scheduled_deletion_at',
+        'updated_at',
+    ])
+    auth_logout(request)
+    return redirect('blog:account_recovery')
+
+
+@login_required
+@require_POST
+def request_account_deletion(request):
+    if request.POST.get('confirmation') != 'DELETE' or not _account_action_confirmed(request):
+        django_messages.error(
+            request,
+            'Confirm with your password (or account email) and type DELETE.',
+        )
+        return redirect('blog:settings')
+
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    now = timezone.now()
+    profile.is_deactivated = True
+    profile.deactivated_at = now
+    profile.deletion_requested_at = now
+    profile.scheduled_deletion_at = now + timedelta(days=30)
+    profile.save(update_fields=[
+        'is_deactivated',
+        'deactivated_at',
+        'deletion_requested_at',
+        'scheduled_deletion_at',
+        'updated_at',
+    ])
+    auth_logout(request)
+    return redirect('blog:account_recovery')
+
+
+def account_recovery(request):
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            'blog/account_recovery.html',
+            {'needs_login': True},
+        )
+
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    if not profile.is_deactivated and not profile.scheduled_deletion_at:
+        return redirect('blog:dashboard')
+
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('action') not in {'reactivate', 'cancel_deletion'}:
+            error = 'Choose a valid account recovery action.'
+        elif not _account_action_confirmed(request):
+            error = 'Your password or account email did not match.'
+        else:
+            now = timezone.now()
+            restore_until = profile.scheduled_deletion_at
+            if restore_until is None and profile.deactivated_at:
+                restore_until = profile.deactivated_at + timedelta(days=30)
+            if restore_until is None or now > restore_until:
+                error = 'The 30-day account recovery period has expired.'
+            else:
+                profile.is_deactivated = False
+                profile.deactivated_at = None
+                profile.deletion_requested_at = None
+                profile.scheduled_deletion_at = None
+                profile.save(update_fields=[
+                    'is_deactivated',
+                    'deactivated_at',
+                    'deletion_requested_at',
+                    'scheduled_deletion_at',
+                    'updated_at',
+                ])
+                django_messages.success(request, 'Your account is active again.')
+                return redirect('blog:settings')
+
+    return render(
+        request,
+        'blog/account_recovery.html',
+        {
+            'needs_login': False,
+            'user_profile': profile,
+            'error': error,
+            'has_usable_password': request.user.has_usable_password(),
+        },
     )
 
 
@@ -1471,74 +2127,307 @@ def settings_view(request):
 
 @login_required
 def notifications(request):
+    if request.method == 'POST':
+        notification_id = request.POST.get('notification_id')
+        if notification_id:
+            Notification.objects.filter(
+                id=notification_id,
+                recipient=request.user,
+            ).update(is_read=True)
+        else:
+            Notification.objects.filter(
+                recipient=request.user,
+                is_read=False,
+            ).update(is_read=True)
+        return redirect('blog:notifications')
 
-    return render(
-        request,
-        'blog/notifications.html'
+    blocked_user_ids = UserBlock.objects.filter(
+        blocker=request.user
+    ).values_list('blocked_id', flat=True).union(
+        UserBlock.objects.filter(
+            blocked=request.user
+        ).values_list('blocker_id', flat=True)
     )
+    notifications_list = list(
+        Notification.objects.filter(
+            recipient=request.user,
+        ).exclude(
+            sender_id__in=blocked_user_ids,
+        ).select_related(
+            'sender',
+            'sender__profile_data',
+        )
+    )
+    pending_requests = {}
+    for follow_request in FollowRequest.objects.filter(
+        receiver=request.user,
+        status='PENDING',
+    ).order_by('created_at'):
+        pending_requests[follow_request.sender_id] = follow_request
+    for notification in notifications_list:
+        if notification.notification_type in {'FOLLOW_REQUEST', 'FOLLOW_BACK'}:
+            pending_request = pending_requests.get(notification.sender_id)
+            notification.pending_follow_request = pending_requests.get(
+                notification.sender_id
+            ) if (
+                pending_request
+                and notification.created_at >= pending_request.created_at
+            ) else None
+
+    return render(request, 'blog/notifications.html', {
+        'notifications': notifications_list,
+    })
 
 
 # =========================================================
 # AI TUTOR
 # =========================================================
 
+AI_TUTOR_SESSION_KEY = "ai_tutor_active_conversation_id"
+AI_TUTOR_SESSION_TIMEOUT = timedelta(minutes=30)
+AI_TUTOR_PAGE_SIZE = 100
+
+
 @login_required
 def ai_tutor(request):
+    if request.method == "POST":
+        question = request.POST.get("question", "").strip()
+        if not question:
+            return JsonResponse(
+                {"error": "Enter a question before sending."},
+                status=400,
+            )
 
-    answer = None
-    question = ""
-    error = None
+        requested_id = request.POST.get("conversation_id")
+        session_id = request.session.get(AI_TUTOR_SESSION_KEY)
+        conversation = None
+        if requested_id:
+            if str(session_id or "") != requested_id:
+                return JsonResponse(
+                    {"error": "This conversation is no longer active. Select it from history and try again."},
+                    status=409,
+                )
+            conversation = AITutorConversation.objects.filter(
+                pk=requested_id,
+                user=request.user,
+            ).first()
+            if conversation is None:
+                request.session.pop(AI_TUTOR_SESSION_KEY, None)
+                return JsonResponse(
+                    {"error": "This conversation is unavailable."},
+                    status=404,
+                )
+        elif session_id:
+            conversation = AITutorConversation.objects.filter(
+                pk=session_id,
+                user=request.user,
+            ).first()
+
+        now = timezone.now()
+        if conversation and now - conversation.last_active_at > AI_TUTOR_SESSION_TIMEOUT:
+            conversation = None
+            request.session.pop(AI_TUTOR_SESSION_KEY, None)
+
+        context_messages = []
+        if conversation:
+            previous_messages = list(
+                conversation.messages.order_by("-id")[:20]
+            )
+            context_messages = list(reversed(previous_messages))
+
+        conversation_text = []
+        for message in context_messages:
+            speaker = "Student" if message.role == "user" else "AI Tutor"
+            conversation_text.append(
+                f"{speaker}: {message.content[-4000:]}"
+            )
+        conversation_text.append(f"Student: {question}")
+        prompt = (
+            f"You are {settings.SITE_NAME} AI Tutor. "
+            "Help students learn programming step by step. "
+            "Give clear, beginner-friendly explanations.\n\n"
+            "Conversation so far:\n"
+            + "\n".join(conversation_text)[-24000:]
+        )
+
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+            )
+            answer = (response.text or "").strip()
+            if not answer:
+                raise ValueError("The AI provider returned an empty response.")
+        except Exception as provider_error:
+            logger.error(
+                "vGrowHub AI Tutor request failed (%s).",
+                type(provider_error).__name__,
+                exc_info=True,
+            )
+            return JsonResponse(
+                {"error": "Something went wrong while generating a reply. Please try again."},
+                status=502,
+            )
+
+        if conversation is None:
+            with transaction.atomic():
+                conversation = AITutorConversation.objects.create(
+                    user=request.user,
+                    title=question[:120],
+                    last_active_at=now,
+                )
+                AITutorMessage.objects.bulk_create([
+                    AITutorMessage(
+                        conversation=conversation,
+                        role="user",
+                        content=question,
+                    ),
+                    AITutorMessage(
+                        conversation=conversation,
+                        role="assistant",
+                        content=answer,
+                    ),
+                ])
+        else:
+            with transaction.atomic():
+                conversation.last_active_at = now
+                conversation.save(update_fields=["last_active_at", "updated_at"])
+                AITutorMessage.objects.bulk_create([
+                    AITutorMessage(
+                        conversation=conversation,
+                        role="user",
+                        content=question,
+                    ),
+                    AITutorMessage(
+                        conversation=conversation,
+                        role="assistant",
+                        content=answer,
+                    ),
+                ])
+        request.session[AI_TUTOR_SESSION_KEY] = conversation.pk
+        return JsonResponse({
+            "answer": answer,
+            "conversation_id": conversation.pk,
+            "title": conversation.title,
+        })
+
+    conversation_id = request.session.get(AI_TUTOR_SESSION_KEY)
+    conversation = None
+    if conversation_id:
+        conversation = AITutorConversation.objects.filter(
+            pk=conversation_id,
+            user=request.user,
+        ).first()
+        if (
+            conversation is None
+            or timezone.now() - conversation.last_active_at > AI_TUTOR_SESSION_TIMEOUT
+        ):
+            request.session.pop(AI_TUTOR_SESSION_KEY, None)
+            conversation = None
+
+    current_messages = []
+    has_older_messages = False
+    if conversation:
+        latest = list(conversation.messages.order_by("-id")[:AI_TUTOR_PAGE_SIZE + 1])
+        has_older_messages = len(latest) > AI_TUTOR_PAGE_SIZE
+        current_messages = list(reversed(latest[:AI_TUTOR_PAGE_SIZE]))
+
+    return render(request, "blog/ai_tutor.html", {
+        "conversation": conversation,
+        "current_messages": current_messages,
+        "has_older_messages": has_older_messages,
+    })
+
+
+@login_required
+@require_POST
+def ai_tutor_new_chat(request):
+    request.session.pop(AI_TUTOR_SESSION_KEY, None)
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_GET
+def ai_tutor_history(request):
+    search = request.GET.get("search", "").strip()
+    conversations = AITutorConversation.objects.filter(user=request.user)
+    if search:
+        conversations = conversations.filter(
+            Q(title__icontains=search)
+            | Q(pk__in=AITutorMessage.objects.filter(
+                conversation__user=request.user,
+                content__icontains=search,
+            ).values("conversation_id"))
+        )
+
+    page = Paginator(
+        conversations.annotate(message_count=Count("messages")).order_by("-updated_at", "-id"),
+        50,
+    ).get_page(request.GET.get("page", 1))
+    return JsonResponse({
+        "items": [{
+            "id": item.pk,
+            "title": item.title,
+            "message_count": item.message_count,
+            "updated_at": item.updated_at.isoformat(),
+        } for item in page.object_list],
+        "page": page.number,
+        "num_pages": page.paginator.num_pages,
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST", "DELETE"])
+def ai_tutor_conversation(request, conversation_id):
+    conversation = AITutorConversation.objects.filter(
+        pk=conversation_id,
+        user=request.user,
+    ).first()
+    if conversation is None:
+        return JsonResponse({"error": "This conversation is unavailable."}, status=404)
+
+    if request.method == "DELETE":
+        conversation.delete()
+        if str(request.session.get(AI_TUTOR_SESSION_KEY, "")) == str(conversation_id):
+            request.session.pop(AI_TUTOR_SESSION_KEY, None)
+        return JsonResponse({"ok": True})
 
     if request.method == "POST":
+        conversation.last_active_at = timezone.now()
+        conversation.save(update_fields=["last_active_at", "updated_at"])
+        request.session[AI_TUTOR_SESSION_KEY] = conversation.pk
 
-        question = request.POST.get(
-            "question",
-            ""
-        ).strip()
+    before_id = request.GET.get("before")
+    messages = conversation.messages.all()
+    if before_id:
+        try:
+            messages = messages.filter(pk__lt=int(before_id))
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "Invalid message cursor."}, status=400)
 
-        if question:
+    latest = list(messages.order_by("-id")[:AI_TUTOR_PAGE_SIZE + 1])
+    has_older_messages = len(latest) > AI_TUTOR_PAGE_SIZE
+    selected_messages = list(reversed(latest[:AI_TUTOR_PAGE_SIZE]))
+    return JsonResponse({
+        "conversation_id": conversation.pk,
+        "title": conversation.title,
+        "messages": [{
+            "id": message.pk,
+            "role": message.role,
+            "content": message.content,
+        } for message in selected_messages],
+        "has_older_messages": has_older_messages,
+        "before_id": selected_messages[0].pk if selected_messages else None,
+    })
 
-            try:
 
-                client = genai.Client(
-                    api_key=os.getenv(
-                        "GEMINI_API_KEY"
-                    )
-                )
-
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=(
-                        f"You are {settings.SITE_NAME} AI Tutor. "
-                        "Help students learn programming step by step. "
-                        "Give clear, beginner-friendly explanations.\n\n"
-                        f"Student question: {question}"
-                    ),
-                )
-
-                answer = response.text
-
-            except Exception as e:
-
-                print(
-                    "AI Tutor Error:",
-                    e
-                )
-
-                error = (
-                    "AI Tutor is temporarily busy. "
-                    "Please try again in a few seconds."
-                )
-
-    return render(
-        request,
-        "blog/ai_tutor.html",
-        {
-            "question": question,
-            "answer": answer,
-            "error": error,
-        },
-    )
+@login_required
+@require_http_methods(["DELETE"])
+def ai_tutor_clear_history(request):
+    AITutorConversation.objects.filter(user=request.user).delete()
+    request.session.pop(AI_TUTOR_SESSION_KEY, None)
+    return JsonResponse({"ok": True})
 
 
 # =========================================================
@@ -1617,14 +2506,7 @@ def _practice_stats_for_user(user):
         .values('problem__difficulty')
         .annotate(total=Count('id'))
     }
-    activity_days = set(PracticeSubmission.objects.filter(user=user).dates('submitted_at', 'day', order='DESC'))
-    activity_days.update(completed_tests.exclude(submitted_at__isnull=True).dates('submitted_at', 'day', order='DESC'))
-    today = timezone.localdate()
-    streak = 0
-    streak_day = today if today in activity_days else today - timedelta(days=1)
-    while streak_day in activity_days:
-        streak += 1
-        streak_day -= timedelta(days=1)
+    streak = _learning_streak_for_user(user)
 
     recent_activity = [
         {
@@ -2410,7 +3292,7 @@ def assignment_attempt(request, pk):
                 answer=attempt.source_code or response,
             )
             if uploaded_file:
-                submission.file = uploaded_file
+                submission.file.save(uploaded_file.name, uploaded_file, save=False)
                 answer_data['file_name'] = uploaded_file.name
                 attempt.answer_data = answer_data
             submission.save()
@@ -2464,6 +3346,8 @@ def projects(request):
         'images'
     ).order_by(
         '-created_at'
+    ).filter(
+        _user_content_visibility_filter('owner', request.user)
     )
 
     if search:
@@ -2916,6 +3800,8 @@ def project_connect(request, pk):
             "success": False,
             "error": "You cannot connect with yourself."
         }, status=400)
+    if _users_blocked(request.user, project.owner):
+        return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
 
     conversation = Conversation.objects.filter(
         project=project,
@@ -2950,13 +3836,36 @@ def messages_list(request):
         Q(participant=request.user)
     ).select_related(
         "project",
-        "project_owner",
-        "participant"
+        "project_owner__profile_data",
+        "participant__profile_data"
     ).prefetch_related(
         "messages__sender"
     ).order_by(
         "-updated_at"
     )
+    blocked_user_ids = UserBlock.objects.filter(
+        blocker=request.user
+    ).values_list('blocked_id', flat=True).union(
+        UserBlock.objects.filter(
+            blocked=request.user
+        ).values_list('blocker_id', flat=True)
+    )
+    conversations = conversations.exclude(
+        project_owner_id__in=blocked_user_ids
+    ).exclude(
+        participant_id__in=blocked_user_ids
+    )
+    conversations = [
+        conversation
+        for conversation in conversations
+        if conversation.project_id is not None
+        or _can_message_between(
+            request.user,
+            conversation.participant
+            if conversation.project_owner_id == request.user.id
+            else conversation.project_owner,
+        )
+    ]
 
     for conversation in conversations:
 
@@ -2984,11 +3893,22 @@ def messages_list(request):
 
             conversation.last_message_time = ""
 
-    available_users = User.objects.exclude(
-        id=request.user.id
+    accepted_following_ids = FollowRequest.objects.filter(
+        sender=request.user,
+        status='ACCEPTED',
+    ).values_list('receiver_id', flat=True)
+    mutual_contact_ids = FollowRequest.objects.filter(
+        sender_id__in=accepted_following_ids,
+        receiver=request.user,
+        status='ACCEPTED',
+    ).values_list('sender_id', flat=True)
+    available_users = User.objects.filter(
+        id__in=mutual_contact_ids,
+    ).exclude(
+        id__in=blocked_user_ids,
     ).order_by(
         "username"
-    )
+    ).select_related("profile_data")
 
     return render(
         request,
@@ -3000,6 +3920,69 @@ def messages_list(request):
     )
 
 
+@login_required
+def discover_users(request):
+    query = request.GET.get('q', '').strip()
+    username_query = query.removeprefix('@').strip()
+    blocked_user_ids = UserBlock.objects.filter(
+        blocker=request.user
+    ).values_list('blocked_id', flat=True).union(
+        UserBlock.objects.filter(
+            blocked=request.user
+        ).values_list('blocker_id', flat=True)
+    )
+    users = []
+    if username_query:
+        users = list(User.objects.filter(
+            Q(username__icontains=username_query)
+            | Q(profile_data__display_name__icontains=username_query)
+        ).filter(
+            profile_data__is_deactivated=False,
+            profile_data__scheduled_deletion_at__isnull=True,
+        ).exclude(
+            id=request.user.id
+        ).exclude(
+            id__in=blocked_user_ids
+        ).select_related(
+            'profile_data'
+        ).order_by(
+            'username'
+        )[:50])
+
+        user_ids = [person.id for person in users]
+        following_ids = set(FollowRequest.objects.filter(
+            sender=request.user,
+            receiver_id__in=user_ids,
+            status='ACCEPTED',
+        ).values_list('receiver_id', flat=True))
+        follower_ids = set(FollowRequest.objects.filter(
+            sender_id__in=user_ids,
+            receiver=request.user,
+            status='ACCEPTED',
+        ).values_list('sender_id', flat=True))
+        pending_ids = set(FollowRequest.objects.filter(
+            sender=request.user,
+            receiver_id__in=user_ids,
+            status='PENDING',
+        ).values_list('receiver_id', flat=True))
+
+        for person in users:
+            person.can_message = (
+                person.id in following_ids and person.id in follower_ids
+            )
+            person.relationship_status = (
+                'following' if person.id in following_ids
+                else 'requested' if person.id in pending_ids
+                else 'follow_back' if person.id in follower_ids
+                else 'follow'
+            )
+
+    return render(request, 'blog/discover_users.html', {
+        'query': query,
+        'users': users,
+    })
+
+
 # @login_required
 @login_required
 def conversation_detail(request, conversation_id):
@@ -3007,10 +3990,11 @@ def conversation_detail(request, conversation_id):
     conversation = get_object_or_404(
         Conversation.objects.select_related(
             "project",
-            "project_owner",
-            "participant"
+            "project_owner__profile_data",
+            "participant__profile_data"
         ).prefetch_related(
             "messages__sender",
+            "messages__sender__profile_data",
             "messages__attachments"
         ),
         id=conversation_id
@@ -3049,6 +4033,20 @@ def conversation_detail(request, conversation_id):
     else:
 
         chat_user = conversation.project_owner
+
+    if _users_blocked(request.user, chat_user):
+        return JsonResponse({
+            'success': False,
+            'error': 'This conversation is unavailable.',
+        }, status=403)
+    if (
+        conversation.project_id is None
+        and not _can_message_between(request.user, chat_user)
+    ):
+        return JsonResponse({
+            'success': False,
+            'error': 'This conversation is available to mutual followers only.',
+        }, status=403)
 
 
     # =====================================================
@@ -3115,6 +4113,20 @@ def conversation_detail(request, conversation_id):
                 "updated_at"
             ]
         )
+
+        try:
+            async_to_sync(get_channel_layer().group_send)(
+                f'conversation_{conversation.id}',
+                {
+                    'type': 'chat.message',
+                    'message_id': message.id,
+                },
+            )
+        except Exception:
+            logger.exception(
+                'Could not broadcast persisted message %s to its conversation.',
+                message.id,
+            )
 
 
         # -------------------------------------------------
@@ -3200,7 +4212,8 @@ def conversation_detail(request, conversation_id):
     # =====================================================
 
     messages = conversation.messages.select_related(
-    "sender"
+    "sender",
+    "sender__profile_data"
         ).prefetch_related(
             "attachments"
         ).exclude(
@@ -3258,6 +4271,20 @@ def delete_message(request, message_id):
         return JsonResponse({
             "success": False,
             "error": "You are not allowed to delete this message."
+        }, status=403)
+
+    chat_user = (
+        message.conversation.participant
+        if request.user == message.conversation.project_owner
+        else message.conversation.project_owner
+    )
+    if _users_blocked(request.user, chat_user) or (
+        message.conversation.project_id is None
+        and not _can_message_between(request.user, chat_user)
+    ):
+        return JsonResponse({
+            "success": False,
+            "error": "This conversation is unavailable."
         }, status=403)
 
     delete_type = request.POST.get(
@@ -3340,6 +4367,20 @@ def conversation_status(request, conversation_id):
             "error": "You are not allowed to access this conversation."
         }, status=403)
 
+    chat_user = (
+        conversation.participant
+        if request.user == conversation.project_owner
+        else conversation.project_owner
+    )
+    if _users_blocked(request.user, chat_user) or (
+        conversation.project_id is None
+        and not _can_message_between(request.user, chat_user)
+    ):
+        return JsonResponse({
+            "success": False,
+            "error": "This conversation is unavailable."
+        }, status=403)
+
     conversation.messages.filter(
         is_delivered=False
     ).exclude(
@@ -3356,16 +4397,41 @@ def conversation_status(request, conversation_id):
         is_read=True
     )
 
-    messages = conversation.messages.exclude(
-    deleted_for_users=request.user
-        ).values(
-            "id",
-            "sender_id",
-            "content",
-            "is_delivered",
-            "is_read",
-            "deleted_for_everyone"
-)
+    message_records = conversation.messages.select_related(
+        'sender__profile_data',
+    ).prefetch_related(
+        'attachments',
+    ).exclude(
+        deleted_for_users=request.user,
+    )
+    messages = []
+    for message in message_records:
+        profile = message.sender.profile_data
+        messages.append({
+            'id': message.id,
+            'sender_id': message.sender_id,
+            'sender_username': message.sender.username,
+            'sender_display_name': profile.display_name or message.sender.username,
+            'sender_profile_picture': (
+                profile.profile_picture.url
+                if profile.profile_picture
+                else ''
+            ),
+            'content': message.content,
+            'is_delivered': message.is_delivered,
+            'is_read': message.is_read,
+            'deleted_for_everyone': message.deleted_for_everyone,
+            'created_at': timezone.localtime(message.created_at).strftime(
+                '%d %b %Y, %I:%M %p'
+            ),
+            'attachments': [
+                {
+                    'url': attachment.file.url,
+                    'name': attachment.original_name,
+                }
+                for attachment in message.attachments.all()
+            ],
+        })
 
     return JsonResponse({
         "success": True,
@@ -3447,6 +4513,15 @@ def community(request):
         request,
         'blog/community.html',
         {
-            'username': request.user.username
+            'username': request.user.username,
+            'display_name': (
+                getattr(
+                    getattr(request.user, 'profile_data', None),
+                    'display_name',
+                    ''
+                )
+                or request.user.get_full_name()
+                or request.user.username
+            ),
         }
     )
