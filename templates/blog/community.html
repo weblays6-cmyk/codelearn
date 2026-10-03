@@ -29,7 +29,7 @@ Community | {{ SITE_NAME }}
     <div>
         <div class="post-box">
             <div class="post-box-top">
-                <div class="mini-avatar">{{ username|first|upper }}</div>
+                <div class="mini-avatar">{{ display_name|first|upper }}</div>
                 <a class="post-input" href="{% url 'blog:create_project' %}">Share a project with the community...</a>
             </div>
             <div class="post-actions">
@@ -42,9 +42,10 @@ Community | {{ SITE_NAME }}
         <article class="community-post">
             <div class="post-header">
                 <div class="mini-avatar" style="background: linear-gradient(135deg, #8b5cf6, #2563eb);">{{
-                    project.owner.username|first|upper }}</div>
+                    project.owner.profile_data.display_name|default:project.owner.username|first|upper }}</div>
                 <div class="post-user">
-                    <strong>{{ project.owner.username }}</strong>
+                    <strong>{{ project.owner.profile_data.display_name|default:project.owner.username }}</strong>
+                    <small>@{{ project.owner.username|lower }}</small>
                     <span>{{ project.category }} • {{ project.created_at|timesince }} ago</span>
                 </div>
                 <i class="bi bi-three-dots more"></i>
@@ -104,9 +105,10 @@ Community | {{ SITE_NAME }}
             </div>
             {% for project in projects|slice:':3' %}
             <div class="member">
-                <div class="member-avatar">{{ project.owner.username|first|upper }}</div>
+                <div class="member-avatar">{{ project.owner.profile_data.display_name|default:project.owner.username|first|upper }}</div>
                 <div>
-                    <strong>{{ project.owner.username }}</strong>
+                    <strong>{{ project.owner.profile_data.display_name|default:project.owner.username }}</strong>
+                    <small>@{{ project.owner.username|lower }}</small>
                     <span>{{ project.title }}</span>
                 </div>
             </div>

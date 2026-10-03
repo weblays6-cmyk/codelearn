@@ -2189,7 +2189,7 @@
 
                     <div class="avatar">
 
-                        {{ username|first|upper }}
+                        {{ request.user.profile_data.display_name|default:username|first|upper }}
 
                     </div>
 
@@ -2197,7 +2197,7 @@
                     <div class="user-info">
 
                         <strong>
-                            {{ username }}
+                            {{ request.user.profile_data.display_name|default:username }} · @{{ username|lower }}
                         </strong>
 
                         <span>
@@ -2248,7 +2248,7 @@
 
                 <p>
 
-                    Hi <strong>{{ username }}</strong> 👋
+                    Hi <strong>{{ request.user.profile_data.display_name|default:username }}</strong> · @{{ username|lower }} 👋
 
                     Welcome back to {{ SITE_NAME }}.
 
@@ -2568,7 +2568,7 @@
                 {% with post=enrollment.course %}
 
 
-                <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
+                <a href="{% url 'blog:post_detail' post.slug %}" class="course-card">
 
 
                     <div class="course-icon">

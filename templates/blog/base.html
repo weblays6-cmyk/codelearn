@@ -8,6 +8,21 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <script>
+        (function () {
+            let theme = "light";
+            try {
+                const savedTheme = localStorage.getItem("codelearn-theme");
+                if (savedTheme === "light" || savedTheme === "dark") {
+                    theme = savedTheme;
+                }
+            } catch (error) {
+                // Keep the existing light-theme default when storage is unavailable.
+            }
+            document.documentElement.classList.toggle("light-theme", theme === "light");
+        })();
+    </script>
+
     <title>
         {% block title %}
         {{ SITE_NAME }}
@@ -27,14 +42,24 @@
     <!-- Page Specific CSS -->
     {% block extra_css %}
     {% endblock %}
-    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}?v=7">
 
 </head>
 
-<body class="light-theme">
+<body>
+    <script>
+        document.body.classList.toggle(
+            "light-theme",
+            document.documentElement.classList.contains("light-theme")
+        );
+        document.documentElement.classList.remove("light-theme");
+    </script>
 
     <!-- Navbar -->
     {% include "blog/includes/navbar.html" %}
+
+    <button class="mobile-drawer-overlay" id="mobileDrawerOverlay" type="button" aria-label="Close navigation"
+        aria-controls="sidebar" hidden></button>
 
     <!-- Sidebar -->
     {% include "blog/includes/sidebar.html" %}
@@ -53,10 +78,16 @@
             class="mobile-nav-link {% if 'practice' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-code-slash" aria-hidden="true"></i><span>Practice</span>
         </a>
-        <a href="{% url 'blog:assignments' %}"
-            class="mobile-nav-link {% if request.resolver_match.url_name == 'assignments' or request.resolver_match.url_name == 'assignment_attempt' %}active{% endif %}">
-            <i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Tasks</span>
+        {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
+        <a href="{% url 'blog:messages' %}"
+            class="mobile-nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
+            <span class="mobile-nav-icon-wrap">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                {% if unread_count > 0 %}<span class="mobile-message-unread-count" aria-label="{{ unread_count }} unread messages">{% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}</span>{% endif %}
+            </span>
+            <span>Messages</span>
         </a>
+        {% endwith %}
         <a href="{% url 'blog:profile' %}"
             class="mobile-nav-link {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'user_profile' %}active{% endif %}">
             <i class="bi bi-person" aria-hidden="true"></i><span>Profile</span>
@@ -86,7 +117,8 @@
     {% include "blog/includes/footer.html" %}
 
     <!-- Theme JavaScript -->
-    <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}?v=2"></script>
+    <script src="{% static 'js/password_toggle.js' %}?v=4"></script>
 
     <!-- Page Specific JavaScript -->
     {% block extra_js %}

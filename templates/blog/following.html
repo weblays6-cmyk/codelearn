@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    Following | {{ profile_user.username }}
+    Following | @{{ profile_user.username|lower }}
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
     <div class="following-header">
 
         <a
-            href="{% url 'blog:user_profile' profile_user.id %}"
+            href="{% url 'blog:user_profile' profile_user.username %}"
             class="back-btn"
         >
             <i class="bi bi-arrow-left"></i>
@@ -31,22 +31,28 @@
         {% for follow in following %}
 
             <a
-                href="{% url 'blog:user_profile' follow.receiver.id %}"
+                href="{% url 'blog:user_profile' follow.receiver.username %}"
                 class="following-card"
             >
 
+                {% if follow.receiver.profile_data.profile_picture %}
+                <img class="following-avatar" src="{{ follow.receiver.profile_data.profile_picture.url }}"
+                    alt="{{ follow.receiver.profile_data.display_name|default:follow.receiver.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="following-avatar">
-                    {{ follow.receiver.username|first|upper }}
+                    {{ follow.receiver.profile_data.display_name|default:follow.receiver.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="following-info">
 
                     <strong>
-                        {{ follow.receiver.username }}
+                        {{ follow.receiver.profile_data.display_name|default:follow.receiver.username }}
                     </strong>
 
                     <span>
-                        CodeLearn Hub Member
+                        @{{ follow.receiver.username|lower }}
                     </span>
 
                 </div>
@@ -66,7 +72,7 @@
                 <h3>Not following anyone yet</h3>
 
                 <p>
-                    {{ profile_user.username }} isn't following
+                    @{{ profile_user.username|lower }} isn't following
                     anyone yet.
                 </p>
 

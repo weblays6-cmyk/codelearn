@@ -1,0 +1,410 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Find People | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="people-page" aria-labelledby="people-title">
+    <style>
+        .people-page {
+            max-width: 1000px;
+            margin: 34px auto;
+            padding: 0 22px 48px;
+            color: var(--ui-text, #e7edf7);
+        }
+
+        .people-heading {
+            margin-bottom: 24px;
+        }
+
+        .people-heading h1 {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 38px);
+            letter-spacing: -.04em;
+        }
+
+        .people-heading p {
+            margin: 9px 0 0;
+            color: var(--ui-muted, #a8b5c8);
+            font-size: 15px;
+        }
+
+        .people-search-card {
+            padding: 22px;
+            border: 1px solid var(--ui-border, #28364c);
+            border-radius: 18px;
+            background: var(--ui-surface, #111b2b);
+            box-shadow: var(--ui-shadow, 0 12px 32px rgba(0, 0, 0, .2));
+        }
+
+        .people-search {
+            display: flex;
+            gap: 12px;
+        }
+
+        .people-search-field {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .people-search-field > i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            color: var(--ui-dim, #8190a6);
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .people-search input {
+            width: 100%;
+            min-height: 48px;
+            padding: 0 15px 0 44px;
+            border: 1px solid var(--ui-border, #28364c);
+            border-radius: 11px;
+            outline: none;
+            background: var(--ui-surface-soft, #172338);
+            color: var(--ui-text, #e7edf7);
+            font: inherit;
+        }
+
+        .people-search input:focus {
+            border-color: #7187ff;
+            box-shadow: 0 0 0 3px rgba(113, 135, 255, .18);
+        }
+
+        .people-search button,
+        .people-action {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 16px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #7657ff, #4d73ff);
+            color: #fff;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .16s ease, filter .16s ease;
+        }
+
+        .people-search button:hover,
+        .people-action:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .people-results-heading {
+            margin: 27px 0 13px;
+            font-size: 16px;
+            font-weight: 750;
+        }
+
+        .people-results {
+            display: grid;
+            gap: 12px;
+        }
+
+        .person-result {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            padding: 15px;
+            border: 1px solid var(--ui-border, #28364c);
+            border-radius: 15px;
+            background: var(--ui-surface, #111b2b);
+            transition: border-color .16s ease, transform .16s ease;
+        }
+
+        .person-result:hover {
+            border-color: rgba(113, 135, 255, .7);
+            transform: translateY(-1px);
+        }
+
+        .person-profile-link {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 13px;
+            min-width: 0;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .person-avatar {
+            display: grid;
+            width: 54px;
+            height: 54px;
+            flex: 0 0 54px;
+            place-items: center;
+            overflow: hidden;
+            border: 2px solid rgba(137, 121, 255, .55);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7657ff, #4d73ff);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 750;
+            object-fit: cover;
+        }
+
+        .person-details {
+            min-width: 0;
+        }
+
+        .person-details strong,
+        .person-details small,
+        .person-bio {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .person-details strong {
+            font-size: 15px;
+        }
+
+        .person-details small,
+        .person-bio {
+            margin-top: 4px;
+            color: var(--ui-muted, #a8b5c8);
+            font-size: 12px;
+        }
+
+        .person-bio {
+            max-width: 500px;
+            white-space: nowrap;
+        }
+
+        .person-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .person-action-form {
+            margin: 0;
+        }
+
+        .people-action.secondary {
+            border-color: var(--ui-border, #28364c);
+            background: var(--ui-surface-soft, #172338);
+            color: var(--ui-text, #e7edf7);
+        }
+
+        .people-action:disabled {
+            opacity: .78;
+            cursor: default;
+            transform: none;
+        }
+
+        .people-feedback {
+            min-height: 1.3em;
+            margin: 12px 0 0;
+            color: #ff9aaa;
+            font-size: 13px;
+        }
+
+        .people-empty {
+            padding: 28px 18px;
+            border: 1px dashed var(--ui-border, #28364c);
+            border-radius: 14px;
+            color: var(--ui-muted, #a8b5c8);
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .people-page {
+                margin-top: 22px;
+                padding-right: 15px;
+                padding-left: 15px;
+            }
+
+            .people-search-card {
+                padding: 16px;
+            }
+
+            .people-search {
+                flex-wrap: wrap;
+            }
+
+            .people-search button {
+                width: 100%;
+            }
+
+            .person-result {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .person-profile-link {
+                flex-basis: 100%;
+            }
+
+            .person-actions {
+                width: 100%;
+                padding-left: 67px;
+            }
+
+            .person-actions .people-action {
+                flex: 1;
+            }
+        }
+    </style>
+
+    <header class="people-heading">
+        <h1 id="people-title">Find People</h1>
+        <p>Discover learners, developers and creators on vGrowHub.</p>
+    </header>
+
+    <div class="people-search-card">
+        <form class="people-search" method="get" role="search">
+            <label class="people-search-field">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ query }}"
+                    placeholder="Search by name or @username"
+                    aria-label="Search people by display name or username" autocomplete="off">
+            </label>
+            <button type="submit"><i class="bi bi-search" aria-hidden="true"></i>Search</button>
+        </form>
+
+        {% if query %}
+        <h2 class="people-results-heading">Search results</h2>
+        <div class="people-results">
+            {% for person in users %}
+            <article class="person-result">
+                <a class="person-profile-link" href="{% url 'blog:user_profile' person.username %}">
+                    {% if person.profile_data.profile_picture %}
+                    <img class="person-avatar" src="{{ person.profile_data.profile_picture.url }}"
+                        alt="{{ person.profile_data.display_name|default:person.username }}">
+                    {% else %}
+                    <span class="person-avatar" aria-hidden="true">
+                        {{ person.profile_data.display_name|default:person.username|first|upper }}
+                    </span>
+                    {% endif %}
+                    <span class="person-details">
+                        <strong>{{ person.profile_data.display_name|default:person.username }}</strong>
+                        <small>@{{ person.username|lower }}</small>
+                        {% if person.bio %}<span class="person-bio">{{ person.bio }}</span>{% endif %}
+                    </span>
+                </a>
+
+                <div class="person-actions">
+                    {% if person.can_message %}
+                    <form class="person-action-form" method="post"
+                        action="{% url 'blog:start_personal_chat' person.username %}" data-social-action="message">
+                        {% csrf_token %}
+                        <button class="people-action" type="submit">
+                            <i class="bi bi-chat-dots" aria-hidden="true"></i>Message
+                        </button>
+                    </form>
+                    {% elif person.relationship_status == 'following' %}
+                    <button class="people-action secondary" type="button" disabled>
+                        <i class="bi bi-check2" aria-hidden="true"></i>Following
+                    </button>
+                    {% elif person.relationship_status == 'requested' %}
+                    <form class="person-action-form" method="post"
+                        action="{% url 'blog:cancel_follow_request' person.username %}" data-social-action="cancel">
+                        {% csrf_token %}
+                        <button class="people-action secondary" type="submit">
+                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>Requested
+                        </button>
+                    </form>
+                    {% elif person.relationship_status == 'follow_back' %}
+                    <form class="person-action-form" method="post"
+                        action="{% url 'blog:send_follow_request' person.username %}"
+                        data-cancel-url="{% url 'blog:cancel_follow_request' person.username %}"
+                        data-social-action="follow">
+                        {% csrf_token %}
+                        <button class="people-action" type="submit">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>Follow Back
+                        </button>
+                    </form>
+                    {% else %}
+                    <form class="person-action-form" method="post"
+                        action="{% url 'blog:send_follow_request' person.username %}"
+                        data-cancel-url="{% url 'blog:cancel_follow_request' person.username %}"
+                        data-social-action="follow">
+                        {% csrf_token %}
+                        <button class="people-action" type="submit">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>Follow
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <p class="people-empty">No matching people found. Try another name or username.</p>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="people-empty">Enter a name or username to discover people.</p>
+        {% endif %}
+        <p class="people-feedback" id="peopleFeedback" role="status" aria-live="polite"></p>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("submit", async function (event) {
+        const form = event.target.closest("form[data-social-action]");
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        const feedback = document.getElementById("peopleFeedback");
+        const button = form.querySelector("button");
+        const originalLabel = button.textContent.trim();
+        button.disabled = true;
+        feedback.textContent = "";
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                credentials: "same-origin",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                if (response.status === 409) {
+                    feedback.textContent = result.error || "That follow request has already been processed.";
+                    window.setTimeout(function () { window.location.reload(); }, 1200);
+                    return;
+                }
+                throw new Error(result.error || "This action could not be completed.");
+            }
+
+            if (form.dataset.socialAction === "message") {
+                window.location.assign(result.redirect_url);
+                return;
+            }
+
+            const action = form.dataset.socialAction;
+            if (action === "follow") {
+                const requested = result.status === "PENDING";
+                form.action = form.dataset.cancelUrl;
+                form.dataset.socialAction = "cancel";
+                button.textContent = requested ? "Requested" : "Following";
+                button.classList.add("secondary");
+                button.disabled = !requested;
+                if (!requested) {
+                    form.removeAttribute("data-social-action");
+                }
+            } else {
+                window.location.reload();
+            }
+        } catch (error) {
+            feedback.textContent = error.message || "Unable to complete this action. Please try again.";
+            button.disabled = false;
+            button.textContent = originalLabel;
+        }
+    });
+</script>
+{% endblock %}

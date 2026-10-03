@@ -34,7 +34,7 @@ Dashboard | {{ SITE_NAME }}
         </h1>
 
         <p>
-            Hi <strong>{{ username }}</strong> 👋
+            Hi <strong>{{ request.user.profile_data.display_name|default:username }}</strong> · @{{ username|lower }} 👋
             Welcome back to {{ SITE_NAME }}.
             Learn new skills, practice coding,
             build real-world projects and become
@@ -278,9 +278,9 @@ Dashboard | {{ SITE_NAME }}
         {% with post=enrollment.course %}
 
         {% if enrollment.next_lesson %}
-        <a href="{% url 'blog:start_lesson' post.pk enrollment.next_lesson.pk %}" class="course-card">
+        <a href="{% url 'blog:start_lesson' post.slug enrollment.next_lesson.slug %}" class="course-card">
             {% else %}
-            <a href="{% url 'blog:post_detail' post.pk %}" class="course-card">
+            <a href="{% url 'blog:post_detail' post.slug %}" class="course-card">
                 {% endif %}
 
                 <div class="course-icon">

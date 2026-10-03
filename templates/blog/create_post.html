@@ -922,7 +922,7 @@
 
                     <div class="avatar">
 
-                        {{ request.user.username|first|upper }}
+                        {{ request.user.profile_data.display_name|default:request.user.username|first|upper }}
 
                     </div>
 
@@ -930,11 +930,11 @@
                     <div class="user-info">
 
                         <strong>
-                            {{ request.user.username }}
+                            {{ request.user.profile_data.display_name|default:request.user.username }}
                         </strong>
 
                         <small>
-                            Learner
+                            @{{ request.user.username|lower }} · Learner
                         </small>
 
                     </div>

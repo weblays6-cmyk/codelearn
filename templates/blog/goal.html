@@ -560,11 +560,15 @@
 
         <p class="subtitle">
 
-            Hi <strong>{{ username }}</strong> 👋
+            Hi <strong>{{ request.user.profile_data.display_name|default:username }}</strong> · @{{ username|lower }} 👋
 
+            {% if user_profile.goal %}
+            You can update your current learning goal below.
+            {% else %}
             Choose your primary goal and we'll
             personalize your {{ SITE_NAME }} journey
             around what you want to achieve.
+            {% endif %}
 
         </p>
 
@@ -573,162 +577,21 @@
         <!-- GOALS -->
 
         <div class="goals">
-
-
-            <!-- GET A JOB -->
-
+            {% for option in goal_options %}
             <form method="POST" class="goal-form">
-
                 {% csrf_token %}
-
-                <input type="hidden" name="goal" value="job">
-
-
-                <button type="submit" class="goal-button">
-
-                    <div class="goal-icon">
-                        💼
-                    </div>
-
-
-                    <div class="goal-title">
-                        Get a Job
-                    </div>
-
-
-                    <div class="goal-description">
-
-                        Become job-ready with practical
-                        skills, projects and career preparation.
-
-                    </div>
-
-
+                <input type="hidden" name="goal" value="{{ option.value }}">
+                <button type="submit" class="goal-button"
+                    {% if user_profile.goal == option.value %}aria-current="true"{% endif %}>
+                    <div class="goal-icon">{{ option.icon }}</div>
+                    <div class="goal-title">{{ option.label }}</div>
+                    <div class="goal-description">{{ option.description }}</div>
                     <div class="choose-label">
-                        Choose Goal →
+                        {% if user_profile.goal == option.value %}Current Goal{% else %}Choose Goal →{% endif %}
                     </div>
-
                 </button>
-
             </form>
-
-
-
-            <!-- LEARN NEW SKILLS -->
-
-            <form method="POST" class="goal-form">
-
-                {% csrf_token %}
-
-                <input type="hidden" name="goal" value="skill">
-
-
-                <button type="submit" class="goal-button">
-
-                    <div class="goal-icon">
-                        📚
-                    </div>
-
-
-                    <div class="goal-title">
-                        Learn New Skills
-                    </div>
-
-
-                    <div class="goal-description">
-
-                        Learn programming and modern
-                        technologies step by step.
-
-                    </div>
-
-
-                    <div class="choose-label">
-                        Choose Goal →
-                    </div>
-
-                </button>
-
-            </form>
-
-
-
-            <!-- BUILD PROJECTS -->
-
-            <form method="POST" class="goal-form">
-
-                {% csrf_token %}
-
-                <input type="hidden" name="goal" value="projects">
-
-
-                <button type="submit" class="goal-button">
-
-                    <div class="goal-icon">
-                        🚀
-                    </div>
-
-
-                    <div class="goal-title">
-                        Build Projects
-                    </div>
-
-
-                    <div class="goal-description">
-
-                        Build real-world applications
-                        and strengthen your portfolio.
-
-                    </div>
-
-
-                    <div class="choose-label">
-                        Choose Goal →
-                    </div>
-
-                </button>
-
-            </form>
-
-
-
-            <!-- INTERVIEW -->
-
-            <form method="POST" class="goal-form">
-
-                {% csrf_token %}
-
-                <input type="hidden" name="goal" value="interview">
-
-
-                <button type="submit" class="goal-button">
-
-                    <div class="goal-icon">
-                        🎤
-                    </div>
-
-
-                    <div class="goal-title">
-                        Prepare for Interviews
-                    </div>
-
-
-                    <div class="goal-description">
-
-                        Practice technical, HR,
-                        mock interviews and viva.
-
-                    </div>
-
-
-                    <div class="choose-label">
-                        Choose Goal →
-                    </div>
-
-                </button>
-
-            </form>
-
+            {% endfor %}
 
         </div>
 

@@ -5,7 +5,7 @@
     {% if conversation.project %}
         {{ conversation.project.title }} | Messages | {{ SITE_NAME }}
     {% else %}
-        Chat with {{ chat_user.username }} | Messages | {{ SITE_NAME }}
+        Chat with {{ chat_user.profile_data.display_name|default:chat_user.username }} | Messages | {{ SITE_NAME }}
     {% endif %}
 {% endblock %}
 
@@ -25,6 +25,7 @@
 <div
     class="conversation-page"
     data-conversation-id="{{ conversation.id }}"
+    data-current-user-id="{{ request.user.id }}"
 >
 
     <section class="chat-card">
@@ -47,13 +48,19 @@
 
 
             <a
-                href="{% url 'blog:user_profile' chat_user.id %}"
+                href="{% url 'blog:user_profile' chat_user.username %}"
                 class="chat-user-link"
             >
 
+                {% if chat_user.profile_data.profile_picture %}
+                <img class="chat-user-avatar" src="{{ chat_user.profile_data.profile_picture.url }}"
+                    alt="{{ chat_user.profile_data.display_name|default:chat_user.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="chat-user-avatar">
-                    {{ chat_user.username|first|upper }}
+                    {{ chat_user.profile_data.display_name|default:chat_user.username|first|upper }}
                 </div>
+                {% endif %}
 
 
                 <div class="chat-header-info">
@@ -61,11 +68,12 @@
                     <div class="chat-name-row">
 
                         <h1>
-                            {{ chat_user.username }}
+                            {{ chat_user.profile_data.display_name|default:chat_user.username }}
                         </h1>
 
                     </div>
 
+                    <span class="chat-username">@{{ chat_user.username|lower }}</span>
 
                     {% if conversation.project %}
 
@@ -100,7 +108,7 @@
                 <!-- PROFILE -->
 
                 <a
-                    href="{% url 'blog:user_profile' chat_user.id %}"
+                    href="{% url 'blog:user_profile' chat_user.username %}"
                     class="chat-action-btn"
                     title="View profile"
                 >
@@ -167,11 +175,16 @@
 
                         {% if message.sender != request.user %}
 
+                            {% if message.sender.profile_data.profile_picture %}
+                            <img class="chat-small-avatar"
+                                src="{{ message.sender.profile_data.profile_picture.url }}"
+                                alt="{{ message.sender.profile_data.display_name|default:message.sender.username }}"
+                                style="object-fit:cover;">
+                            {% else %}
                             <div class="chat-small-avatar">
-
-                                {{ message.sender.username|first|upper }}
-
+                                {{ message.sender.profile_data.display_name|default:message.sender.username|first|upper }}
                             </div>
+                            {% endif %}
 
                         {% endif %}
 
@@ -584,7 +597,7 @@
                 <strong>
 
                     Replying to
-                    {{ chat_user.username }}
+                    {{ chat_user.profile_data.display_name|default:chat_user.username }} · @{{ chat_user.username|lower }}
 
                 </strong>
 

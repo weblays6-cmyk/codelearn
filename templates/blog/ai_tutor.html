@@ -12,7 +12,15 @@
 
 {% block content %}
 
-<div class="ai-tutor-page">
+<div
+    class="ai-tutor-page"
+    data-send-url="{% url 'blog:ai_tutor' %}"
+    data-new-chat-url="{% url 'blog:ai_tutor_new' %}"
+    data-history-url="{% url 'blog:ai_tutor_history' %}"
+    data-clear-history-url="{% url 'blog:ai_tutor_clear_history' %}"
+    data-conversation-url="{% url 'blog:ai_tutor_conversation' 0 %}"
+    data-site-name="{{ SITE_NAME }}"
+>
 
     <!-- =========================
          HERO
@@ -25,15 +33,18 @@
         </div>
 
         <h1>
-            Learn smarter.<br>
-            Build faster.
+            vGrowHub AI Tutor
         </h1>
 
         <p>
-            Your personal AI coding mentor for Python,
-            Django, databases, HTML, CSS, JavaScript
-            and real-world development.
+            Your personal AI coding mentor
         </p>
+
+        <div class="hero-highlights" aria-label="AI tutor highlights">
+            <span>Learn faster.</span>
+            <span>Debug smarter.</span>
+            <span>Build with confidence.</span>
+        </div>
 
     </section>
 
@@ -71,9 +82,34 @@
         <button
             type="button"
             class="quick-btn"
-            onclick="setPrompt('Give me a Python coding practice question')"
+            onclick="setPrompt('Explain SQL joins with a simple example')"
         >
-            💻 Coding Practice
+            🗄 SQL
+        </button>
+
+        <button type="button" class="quick-btn"
+            onclick="setPrompt('Explain the difference between HTML and CSS with examples')">
+            🎨 HTML/CSS
+        </button>
+
+        <button type="button" class="quick-btn"
+            onclick="setPrompt('Explain JavaScript promises with a simple example')">
+            🟨 JavaScript
+        </button>
+
+        <button type="button" class="quick-btn"
+            onclick="setPrompt('Help me debug this code or error: ')">
+            🐞 Debug Code
+        </button>
+
+        <button type="button" class="quick-btn"
+            onclick="setPrompt('Give me a data structures and algorithms practice question')">
+            🧩 DSA
+        </button>
+
+        <button type="button" class="quick-btn"
+            onclick="setPrompt('Ask me a programming interview question and explain the answer')">
+            💼 Interview Prep
         </button>
 
     </div>
@@ -100,7 +136,7 @@
                 </strong>
 
                 <span>
-                    Ready to help you learn
+                    Your personal AI coding mentor
                 </span>
 
             </div>
@@ -131,6 +167,13 @@
         <i class="bi bi-plus-lg"></i>
         New Chat
     </button>
+
+    {% if current_messages %}
+    <button type="button" class="regenerate-btn" id="regenerateButton">
+        <i class="bi bi-arrow-clockwise"></i>
+        Regenerate
+    </button>
+    {% endif %}
 
 
     <!-- HISTORY -->
@@ -163,10 +206,11 @@
         <div
             class="messages"
             id="messages"
+            data-chat-id="{{ conversation.pk|default:'' }}"
+            data-has-older="{{ has_older_messages|yesno:'true,false' }}"
+            data-before-id="{% if current_messages %}{{ current_messages.0.pk }}{% endif %}"
         >
-
-            <!-- DEFAULT MESSAGE -->
-
+            {% if not current_messages %}
             <div
                 class="message ai-message"
                 id="defaultMessage"
@@ -185,64 +229,27 @@
                 give examples and help you practice.
 
             </div>
-
-
-            <!-- CURRENT USER QUESTION -->
-
-            {% if question %}
-
-            <div class="message user-message">
-
-                <span class="message-label">
-                    👤 You
-                </span>
-
-                {{ question }}
-
-            </div>
-
+            {% else %}
+                {% if has_older_messages %}
+                <button type="button" class="load-earlier-btn" id="loadEarlierButton">
+                    Load earlier messages
+                </button>
+                {% endif %}
+                {% for message in current_messages %}
+                <div class="message {% if message.role == 'user' %}user-message{% else %}ai-message{% endif %}" data-role="{{ message.role }}">
+                    <span class="message-label">{% if message.role == 'user' %}👤 You{% else %}✦ AI Tutor{% endif %}</span>
+                    <span class="message-content">{{ message.content }}</span>
+                </div>
+                {% endfor %}
             {% endif %}
-
-
-            <!-- CURRENT AI ANSWER -->
-
-            {% if answer %}
-
-            <div class="message ai-message">
-
-                <span class="message-label">
-                    ✦ AI Tutor
-                </span>
-
-                {{ answer|linebreaksbr }}
-
-            </div>
-
-            {% endif %}
-
-
-            <!-- ERROR -->
-
-            {% if error %}
-
-            <div class="message ai-message error-message">
-
-                <span class="message-label">
-                    ⚠️ AI Tutor
-                </span>
-
-                {{ error }}
-
-            </div>
-
-            {% endif %}
-
 
             <!-- THINKING -->
 
             <div
                 class="thinking"
                 id="thinking"
+                role="status"
+                aria-live="polite"
             >
 
                 ✦ Thinking
@@ -276,7 +283,7 @@
                     <textarea
                         id="questionInput"
                         name="question"
-                        placeholder="Ask your coding question..."
+                        placeholder="Ask vGrowHub AI..."
                         required
                         rows="1"
                     ></textarea>
@@ -286,7 +293,7 @@
                         class="ask-btn"
                         id="askButton"
                     >
-                        Ask AI ✦
+                        Send
                     </button>
 
                 </div>
@@ -309,711 +316,71 @@
      HISTORY MODAL
 ========================= -->
 
-<div
-    class="history-modal"
-    id="historyModal"
->
-
-    <div class="history-panel">
-
-        <div class="history-header">
-
-            <div>
-                <h3>
+<div class="history-modal" id="historyModal" hidden>
+    <div class="history-panel" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+        <header class="history-header">
+            <div class="history-heading">
+                <span class="history-heading-icon" aria-hidden="true">
                     <i class="bi bi-clock-history"></i>
-                    AI Tutor History
-                </h3>
-
-                <p>
-                    Your conversations saved on this browser
-                </p>
+                </span>
+                <div>
+                    <h3 id="historyTitle">AI Tutor History</h3>
+                    <p>Your conversations are saved to your account</p>
+                </div>
             </div>
-
             <button
                 type="button"
                 class="history-close"
-                onclick="closeHistory()"
+                id="historyCloseButton"
+                aria-label="Close history"
             >
-                ✕
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
+        </header>
 
+        <div class="history-search-wrap">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <label class="visually-hidden" for="historySearch">Search conversations</label>
+            <input
+                id="historySearch"
+                class="history-search"
+                type="search"
+                placeholder="Search conversations..."
+                autocomplete="off"
+            >
         </div>
 
+        <div class="history-list" id="historyList" aria-live="polite"></div>
+        <p id="historyFeedback" class="history-feedback" role="status" aria-live="polite"></p>
 
-        <div
-            class="history-list"
-            id="historyList"
-        >
-
-        </div>
-
+        <footer class="history-pagination" aria-label="Conversation pages">
+            <button type="button" id="historyPrevious" disabled>
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span>Previous</span>
+            </button>
+            <span id="historyPageLabel" aria-live="polite">1 / 1</span>
+            <button type="button" id="historyNext" disabled>
+                <span>Next</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </button>
+        </footer>
     </div>
+</div>
 
+<div class="history-confirm-modal" id="historyConfirmModal" hidden>
+    <div class="history-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="historyConfirmTitle" aria-describedby="historyConfirmText">
+        <h3 id="historyConfirmTitle">Delete conversation?</h3>
+        <p id="historyConfirmText">This action cannot be undone.</p>
+        <div class="history-confirm-actions">
+            <button type="button" id="historyConfirmCancel">Cancel</button>
+            <button type="button" id="historyConfirmAccept">Delete</button>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
 
 
 {% block extra_js %}
-
-<script>
-
-    /* =====================================================
-       ELEMENTS
-    ===================================================== */
-
-    const form =
-        document.getElementById("aiForm");
-
-    const textarea =
-        document.getElementById("questionInput");
-
-    const button =
-        document.getElementById("askButton");
-
-    const thinking =
-        document.getElementById("thinking");
-
-    const messages =
-        document.getElementById("messages");
-
-    const historyModal =
-        document.getElementById("historyModal");
-
-    const historyList =
-        document.getElementById("historyList");
-
-
-    /* =====================================================
-       STORAGE KEY
-    ===================================================== */
-
-    const HISTORY_KEY =
-        "codelearn_ai_tutor_history";
-
-
-    /* =====================================================
-       GET HISTORY
-    ===================================================== */
-
-    function getHistory() {
-
-        try {
-
-            return JSON.parse(
-                localStorage.getItem(HISTORY_KEY) || "[]"
-            );
-
-        } catch (error) {
-
-            console.error(
-                "History loading error:",
-                error
-            );
-
-            return [];
-
-        }
-
-    }
-
-
-    /* =====================================================
-       SAVE HISTORY
-    ===================================================== */
-
-    function saveHistory(question, answer) {
-
-        if (!question || !answer) {
-            return;
-        }
-
-
-        let history = getHistory();
-
-
-        const newChat = {
-
-            id: Date.now(),
-
-            question: question,
-
-            answer: answer,
-
-            date: new Date().toLocaleString()
-
-        };
-
-
-        history.push(newChat);
-
-
-        /*
-         * Keep latest 100 conversations
-         */
-
-        if (history.length > 100) {
-
-            history =
-                history.slice(-100);
-
-        }
-
-
-        localStorage.setItem(
-            HISTORY_KEY,
-            JSON.stringify(history)
-        );
-
-    }
-
-
-    /* =====================================================
-       QUICK PROMPT
-    ===================================================== */
-
-    function setPrompt(text) {
-
-        textarea.value = text;
-
-        textarea.focus();
-
-        textarea.style.height = "auto";
-
-        textarea.style.height =
-            Math.min(
-                textarea.scrollHeight,
-                130
-            ) + "px";
-
-    }
-
-
-    /* =====================================================
-       AUTO RESIZE
-    ===================================================== */
-
-    textarea.addEventListener(
-        "input",
-        function () {
-
-            this.style.height =
-                "auto";
-
-            this.style.height =
-                Math.min(
-                    this.scrollHeight,
-                    130
-                ) + "px";
-
-        }
-    );
-
-
-    /* =====================================================
-       ENTER TO SEND
-    ===================================================== */
-
-    textarea.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Enter" &&
-                !event.shiftKey
-            ) {
-
-                event.preventDefault();
-
-                form.requestSubmit();
-
-            }
-
-        }
-    );
-
-
-    /* =====================================================
-       FORM SUBMIT
-    ===================================================== */
-
-    form.addEventListener(
-        "submit",
-        function () {
-
-            const question =
-                textarea.value.trim();
-
-
-            if (!question) {
-                return;
-            }
-
-
-            sessionStorage.setItem(
-                "aiTutorScrollY",
-                String(window.scrollY)
-            );
-
-            button.disabled = true;
-
-            button.innerHTML =
-                "Thinking...";
-
-
-            thinking.classList.add(
-                "active"
-            );
-
-
-            messages.scrollTop =
-                messages.scrollHeight;
-
-        }
-    );
-
-
-    /* =====================================================
-       SAVE CURRENT RESPONSE
-    ===================================================== */
-
-    function saveCurrentResponse() {
-
-        const question =
-            "{{ question|escapejs }}";
-
-        const answer =
-            "{{ answer|escapejs }}";
-
-
-        if (
-            question &&
-            answer
-        ) {
-
-            const history =
-                getHistory();
-
-
-            /*
-             * Prevent duplicate save
-             * after browser refresh.
-             */
-
-            const alreadySaved =
-                history.some(
-                    item =>
-                        item.question === question &&
-                        item.answer === answer
-                );
-
-
-            if (!alreadySaved) {
-
-                saveHistory(
-                    question,
-                    answer
-                );
-
-            }
-
-        }
-
-    }
-
-
-    /* =====================================================
-       SHOW HISTORY
-    ===================================================== */
-function showHistory() {
-
-    const history = getHistory();
-
-    historyList.innerHTML = "";
-
-    if (history.length === 0) {
-
-        historyList.innerHTML = `
-
-            <div class="empty-history">
-
-                <i class="bi bi-chat-square-text"></i>
-
-                <h4>
-                    No conversations yet
-                </h4>
-
-                <p>
-                    Your AI Tutor questions will appear here.
-                </p>
-
-            </div>
-
-        `;
-
-    } else {
-
-        const reversedHistory =
-            [...history].reverse();
-
-
-        reversedHistory.forEach(item => {
-
-            const historyItem =
-                document.createElement("button");
-
-            historyItem.type = "button";
-
-            historyItem.className =
-                "history-item";
-
-
-            historyItem.innerHTML = `
-
-                <div class="history-date">
-
-                    <i class="bi bi-clock"></i>
-
-                    ${escapeHtml(item.date)}
-
-                </div>
-
-
-                <div class="history-question">
-
-                    <span>
-                        👤 You
-                    </span>
-
-                    ${escapeHtml(item.question)}
-
-                </div>
-
-            `;
-
-
-            historyItem.addEventListener(
-                "click",
-                function () {
-
-                    loadHistoryItem(item);
-
-                }
-            );
-
-
-            historyList.appendChild(
-                historyItem
-            );
-
-        });
-
-    }
-
-
-    historyModal.classList.add("active");
-
-}
-
-    /* =====================================================
-       LOAD A SAVED CHAT
-    ===================================================== */
-
-    function loadHistoryItem(item) {
-
-        const url = new URL(window.location.href);
-
-        url.searchParams.set("chat", item.id);
-
-        window.history.pushState({}, "", url);
-
-        messages.innerHTML = `
-
-            <div class="message user-message">
-
-                <span class="message-label">
-                    👤 You
-                </span>
-
-                ${escapeHtml(item.question)}
-
-            </div>
-
-            <div class="message ai-message">
-
-                <span class="message-label">
-                    ✦ AI Tutor
-                </span>
-
-                ${escapeHtml(item.answer).replace(
-                    /\n/g,
-                    "<br>"
-                )}
-
-            </div>
-
-        `;
-
-        textarea.value = "";
-        textarea.style.height = "auto";
-
-        button.disabled = false;
-        button.innerHTML = "Ask AI ✦";
-
-        thinking.classList.remove("active");
-
-        closeHistory();
-
-        messages.scrollTop = messages.scrollHeight;
-    }
-
-
-    /* =====================================================
-       NEW CHAT
-    ===================================================== */
-
-    function newChat() {
-
-        const cleanUrl =
-            window.location.pathname;
-
-        window.history.replaceState(
-            {},
-            "",
-            cleanUrl
-        );
-
-        messages.innerHTML = `
-
-            <div
-                class="message ai-message"
-                id="defaultMessage"
-            >
-
-                <span class="message-label">
-                    ✦ AI Tutor
-                </span>
-
-                👋 Hey! I'm your {{ SITE_NAME }} AI Tutor.
-
-                <br><br>
-
-                Ask me anything about programming.
-                I can explain concepts, debug your code,
-                give examples and help you practice.
-
-            </div>
-
-        `;
-
-        textarea.value = "";
-        textarea.style.height = "auto";
-
-        button.disabled = false;
-        button.innerHTML = "Ask AI ✦";
-
-        thinking.classList.remove("active");
-
-        closeHistory();
-
-        messages.scrollTop = 0;
-
-        textarea.focus();
-    }
-
-
-    /* =====================================================
-       CLOSE HISTORY
-    ===================================================== */
-
-    function closeHistory() {
-
-        historyModal.classList.remove("active");
-    }
-
-
-    /* =====================================================
-       CLEAR HISTORY
-    ===================================================== */
-
-    function clearHistory() {
-
-        const history = getHistory();
-
-        if (history.length === 0) {
-
-            alert(
-                "No AI Tutor history to clear."
-            );
-
-            return;
-        }
-
-        const confirmed = confirm(
-            "Clear all AI Tutor history from this browser?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        localStorage.removeItem(
-            HISTORY_KEY
-        );
-
-        showHistory();
-    }
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ===================================================== */
-
-    function escapeHtml(text) {
-
-        const div =
-            document.createElement("div");
-
-        div.textContent = text;
-
-        return div.innerHTML;
-    }
-
-
-    /* =====================================================
-       BUTTON EVENTS
-    ===================================================== */
-
-    const newChatButton =
-        document.getElementById("newChatButton");
-
-    const historyButton =
-        document.getElementById("historyButton");
-
-    const clearHistoryButton =
-        document.getElementById("clearHistoryButton");
-
-
-    if (newChatButton) {
-
-        newChatButton.addEventListener(
-            "click",
-            newChat
-        );
-    }
-
-
-    if (historyButton) {
-
-        historyButton.addEventListener(
-            "click",
-            showHistory
-        );
-    }
-
-
-    if (clearHistoryButton) {
-
-        clearHistoryButton.addEventListener(
-            "click",
-            clearHistory
-        );
-    }
-
-
-    /* =====================================================
-       CLOSE MODAL
-    ===================================================== */
-
-    historyModal.addEventListener(
-        "click",
-        function (event) {
-
-            if (
-                event.target === historyModal
-            ) {
-
-                closeHistory();
-            }
-        }
-    );
-
-
-    /* =====================================================
-       ESC KEY
-    ===================================================== */
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Escape" &&
-                historyModal.classList.contains("active")
-            ) {
-
-                closeHistory();
-            }
-        }
-    );
-
-
-    /* =====================================================
-       PAGE LOAD
-    ===================================================== */
-
-    window.addEventListener(
-        "load",
-        function () {
-
-            saveCurrentResponse();
-
-            const hasResponse =
-                "{{ answer|escapejs }}" ||
-                "{{ error|escapejs }}";
-
-            if (hasResponse) {
-
-                thinking.classList.remove(
-                    "active"
-                );
-            }
-
-
-            const savedScroll =
-                sessionStorage.getItem(
-                    "aiTutorScrollY"
-                );
-
-
-            if (savedScroll !== null) {
-
-                requestAnimationFrame(
-                    function () {
-
-                        window.scrollTo(
-                            0,
-                            parseInt(
-                                savedScroll,
-                                10
-                            )
-                        );
-                    }
-                );
-
-                sessionStorage.removeItem(
-                    "aiTutorScrollY"
-                );
-
-            } else {
-
-                messages.scrollTop =
-                    messages.scrollHeight;
-            }
-
-        }
-    );
-
-</script>
-
+<script src="{% static 'js/ai_tutor.js' %}" defer></script>
 {% endblock %}

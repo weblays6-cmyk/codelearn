@@ -162,6 +162,14 @@
             letter-spacing: -1px;
         }
 
+        .lesson-header h1,
+        .lesson-header h2,
+        .lesson-content h2,
+        .lesson-content h3,
+        .lesson-content h4 {
+            color: #f8fafc;
+        }
+
         /* CONTENT */
 
         .lesson-content {
@@ -186,13 +194,90 @@
         }
 
         .lesson-text {
-            color: #cbd5e1;
+            color: #e2e8f0;
 
-            font-size: 16px;
+            font-size: 17px;
 
-            line-height: 1.9;
+            line-height: 1.85;
 
             white-space: pre-line;
+        }
+
+        .lesson-text p,
+        .lesson-text li {
+            color: #e2e8f0;
+        }
+
+        .lesson-text h2,
+        .lesson-text h3,
+        .lesson-text h4,
+        .lesson-text strong {
+            color: #f8fafc;
+        }
+
+        .lesson-text a {
+            color: #a5b4fc;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .lesson-text ul,
+        .lesson-text ol {
+            padding-left: 1.6em;
+        }
+
+        .lesson-text li + li {
+            margin-top: .35em;
+        }
+
+        .lesson-text pre {
+            overflow-x: auto;
+            padding: 16px 18px;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            background: #0b1220;
+            color: #e2e8f0;
+            white-space: pre;
+        }
+
+        .lesson-text code {
+            padding: .12em .35em;
+            border-radius: 5px;
+            background: rgba(99, 102, 241, .18);
+            color: #c7d2fe;
+            font-size: .92em;
+        }
+
+        .lesson-text pre code {
+            padding: 0;
+            background: transparent;
+            color: inherit;
+        }
+
+        .lesson-text blockquote {
+            margin-left: 0;
+            padding: 10px 16px;
+            border-left: 3px solid #818cf8;
+            background: rgba(99, 102, 241, .08);
+            color: #dbe4f0;
+        }
+
+        .lesson-text table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #e2e8f0;
+        }
+
+        .lesson-text th,
+        .lesson-text td {
+            padding: 9px 12px;
+            border: 1px solid #334155;
+            text-align: left;
+        }
+
+        .lesson-text th {
+            background: #172338;
+            color: #f8fafc;
         }
 
         /* VIDEO */
@@ -227,7 +312,7 @@
         .video-description {
             margin-bottom: 18px;
 
-            color: #64748b;
+            color: #a8b5c8;
 
             font-size: 13px;
         }
@@ -312,7 +397,7 @@
 
             text-align: center;
 
-            color: #64748b;
+            color: #a8b5c8;
 
             font-size: 13px;
         }
@@ -367,7 +452,7 @@
             </a>
 
 
-            <a href="{% url 'blog:post_detail' course.pk %}" class="back-link">
+            <a href="{% url 'blog:post_detail' course.slug %}" class="back-link">
 
                 <i class="bi bi-arrow-left"></i>
 
@@ -507,7 +592,7 @@
 
             <div class="lesson-footer">
 
-                <a href="{% url 'blog:post_detail' course.pk %}" class="course-btn">
+                <a href="{% url 'blog:post_detail' course.slug %}" class="course-btn">
 
                     <i class="bi bi-arrow-left"></i>
 

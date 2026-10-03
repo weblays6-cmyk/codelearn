@@ -198,6 +198,7 @@ Courses | {{ SITE_NAME }}
                 #0c0e1b);
         border: 1px solid #292c43;
         border-radius: 18px;
+        cursor: pointer;
         transition: .25s ease;
     }
 
@@ -283,7 +284,8 @@ Courses | {{ SITE_NAME }}
         padding: 19px;
     }
 
-    .course-title {
+    .course-title,
+    .course-title-link {
         margin-bottom: 9px;
         color: #f7f8ff;
         font-size: 16px;
@@ -291,12 +293,24 @@ Courses | {{ SITE_NAME }}
         line-height: 1.35;
     }
 
+    .course-title-link {
+        display: block;
+        color: #f7f8ff;
+        text-decoration: none;
+        cursor: pointer;
+        transition: color .2s ease;
+    }
+
+    .course-title-link:hover {
+        color: #d7ddff;
+    }
+
     .course-description {
         min-height: 42px;
         margin-bottom: 16px;
-        color: #737a94;
-        font-size: 11px;
-        line-height: 1.65;
+        color: #5b647b;
+        font-size: 13px;
+        line-height: 1.7;
     }
 
     .course-meta {
@@ -304,8 +318,8 @@ Courses | {{ SITE_NAME }}
         align-items: center;
         gap: 14px;
         margin-bottom: 16px;
-        color: #656c84;
-        font-size: 10px;
+        color: #5b647b;
+        font-size: 12px;
     }
 
     .course-meta span {
@@ -345,9 +359,10 @@ Courses | {{ SITE_NAME }}
                 #7654ff,
                 #4b74ff);
         color: white;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         text-decoration: none;
+        cursor: pointer;
         transition: .2s;
     }
 
@@ -569,7 +584,7 @@ Courses | {{ SITE_NAME }}
                 <select name="category" aria-label="Filter by course topic">
                     <option value="">All topics</option>
                     {% for course_category in categories %}
-                    <option value="{{ course_category }}" {% if category==course_category %}selected{% endif %}>
+                    <option value="{{ course_category }}" {% if category == course_category %}selected{% endif %}>
                         {{ course_category }}</option>
                     {% endfor %}
                 </select>
@@ -634,9 +649,9 @@ Courses | {{ SITE_NAME }}
             <!-- BODY -->
             <div class="course-body">
 
-                <div class="course-title">
+                <a href="{% url 'blog:post_detail' post.slug %}" class="course-title-link" aria-label="View course: {{ post.title }}">
                     {{ post.title }}
-                </div>
+                    </a>
 
 
                 <div class="course-description">
@@ -680,11 +695,12 @@ Courses | {{ SITE_NAME }}
                     <div class="instructor">
                         By
                         <strong>
-                            {{ post.author.username }}
+                            {{ post.author.profile_data.display_name|default:post.author.username }}
+                            <small>@{{ post.author.username|lower }}</small>
                         </strong>
                     </div>
 
-                    <a href="{% url 'blog:post_detail' post.pk %}" class="view-course">
+                    <a href="{% url 'blog:post_detail' post.slug %}" class="view-course">
                         View Course
                         <i class="bi bi-arrow-right"></i>
                     </a>

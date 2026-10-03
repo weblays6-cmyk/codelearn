@@ -9,6 +9,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <script>
+        (function () {
+            let theme = "light";
+            try {
+                const savedTheme = localStorage.getItem("codelearn-theme");
+                if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+            } catch (error) {
+                // Keep the current light-theme default when storage is unavailable.
+            }
+            document.documentElement.classList.toggle("light-theme", theme === "light");
+        })();
+    </script>
+
     <title>{{ SITE_NAME }} | Learn. Practice. Build.</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -905,7 +918,17 @@
         @media (max-width: 650px) {
 
             .navbar {
-                padding: 0 20px;
+                padding: 0 14px;
+                gap: 8px;
+            }
+
+            .navbar .site-logo--auth {
+                width: 150px !important;
+                max-height: 40px;
+            }
+
+            .nav-right {
+                gap: 6px;
             }
 
             .nav-link {
@@ -950,14 +973,30 @@
             }
 
             .login-card {
+                width: 100%;
+                min-width: 0;
                 padding: 22px;
+            }
+
+            .login-area,
+            .input-wrap,
+            .input-wrap input {
+                min-width: 0;
+                max-width: 100%;
             }
         }
     </style>
     <link rel="stylesheet" href="{% static 'css/auth_theme.css' %}?v=2">
 </head>
 
-<body class="light-theme">
+<body>
+    <script>
+        document.body.classList.toggle(
+            "light-theme",
+            document.documentElement.classList.contains("light-theme")
+        );
+        document.documentElement.classList.remove("light-theme");
+    </script>
 
     <!-- ================= NAVBAR ================= -->
 
@@ -981,7 +1020,8 @@
                 How It Works
             </a>
 
-            <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
+                aria-label="Toggle theme">
                 <i class="bi bi-moon-fill" id="themeIcon"></i>
             </button>
 
@@ -1260,7 +1300,7 @@
 
                             <button type="button" class="password-toggle" data-target="resetPassword1"
                                 aria-label="Show password" title="Show password">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
 
                         </div>
@@ -1285,7 +1325,7 @@
 
                             <button type="button" class="password-toggle" data-target="resetPassword2"
                                 aria-label="Show password" title="Show password">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
 
                         </div>
@@ -1364,7 +1404,7 @@
 
                             <button type="button" class="password-toggle" data-target="loginPassword"
                                 aria-label="Show password" title="Show password">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
 
                         </div>
@@ -1801,126 +1841,12 @@
            RESTORE THEME
         ===================================================== */
 
-        const savedTheme =
-            localStorage.getItem("codelearn-theme") || "light";
+        document.getElementById("themeIcon").className =
+            document.body.classList.contains("light-theme") ? "bi bi-sun-fill" : "bi bi-moon-fill";
 
-        if (savedTheme === "light") {
-
-            document.body.classList.add("light-theme");
-
-            document.getElementById(
-                "themeIcon"
-            ).className = "bi bi-sun-fill";
-        }
-
-
-        /* =====================================================
-           PASSWORD SHOW / HIDE
-        ===================================================== */
-
-        document
-            .querySelectorAll(".password-toggle")
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        const targetId =
-                            button.dataset.target;
-
-                        const input =
-                            document.getElementById(targetId);
-
-                        if (!input) return;
-
-                        const icon =
-                            button.querySelector("i");
-
-                        if (input.type === "password") {
-
-                            input.type = "text";
-
-                            icon.className =
-                                "bi bi-eye-slash";
-
-                            button.setAttribute(
-                                "aria-label",
-                                "Hide password"
-                            );
-
-                            button.setAttribute(
-                                "title",
-                                "Hide password"
-                            );
-
-                        } else {
-
-                            input.type = "password";
-
-                            icon.className =
-                                "bi bi-eye";
-
-                            button.setAttribute(
-                                "aria-label",
-                                "Show password"
-                            );
-
-                            button.setAttribute(
-                                "title",
-                                "Show password"
-                            );
-                        }
-                    }
-                );
-            });
-
-
-        /* =====================================================
-           HIDE PASSWORD WHEN FOCUS/CURSOR LEAVES
-        ===================================================== */
-
-        document
-            .querySelectorAll(".password-wrap input")
-            .forEach(function (input) {
-
-                input.addEventListener(
-                    "blur",
-                    function () {
-
-                        if (input.type === "text") {
-
-                            input.type = "password";
-
-                            const button =
-                                input.parentElement
-                                    .querySelector(
-                                        ".password-toggle"
-                                    );
-
-                            if (!button) return;
-
-                            const icon =
-                                button.querySelector("i");
-
-                            icon.className =
-                                "bi bi-eye";
-
-                            button.setAttribute(
-                                "aria-label",
-                                "Show password"
-                            );
-
-                            button.setAttribute(
-                                "title",
-                                "Show password"
-                            );
-                        }
-                    }
-                );
-            });
 
     </script>
+    <script src="{% static 'js/password_toggle.js' %}"></script>
 
 </body>
 

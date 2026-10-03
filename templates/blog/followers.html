@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    Followers | {{ profile_user.username }}
+    Followers | @{{ profile_user.username|lower }}
 {% endblock %}
 
 {% block content %}
@@ -11,7 +11,7 @@
 
     <div class="followers-header">
         <a
-            href="{% url 'blog:user_profile' profile_user.id %}"
+            href="{% url 'blog:user_profile' profile_user.username %}"
             class="back-btn"
         >
             <i class="bi bi-arrow-left"></i>
@@ -29,21 +29,27 @@
         {% for follow in followers %}
 
             <a
-                href="{% url 'blog:user_profile' follow.sender.id %}"
+                href="{% url 'blog:user_profile' follow.sender.username %}"
                 class="follower-card"
             >
 
+                {% if follow.sender.profile_data.profile_picture %}
+                <img class="follower-avatar" src="{{ follow.sender.profile_data.profile_picture.url }}"
+                    alt="{{ follow.sender.profile_data.display_name|default:follow.sender.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="follower-avatar">
-                    {{ follow.sender.username|first|upper }}
+                    {{ follow.sender.profile_data.display_name|default:follow.sender.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="follower-info">
                     <strong>
-                        {{ follow.sender.username }}
+                        {{ follow.sender.profile_data.display_name|default:follow.sender.username }}
                     </strong>
 
                     <span>
-                        CodeLearn Hub Member
+                        @{{ follow.sender.username|lower }}
                     </span>
                 </div>
 
@@ -62,7 +68,7 @@
                 <h3>No followers yet</h3>
 
                 <p>
-                    {{ profile_user.username }} doesn't have any
+                    @{{ profile_user.username|lower }} doesn't have any
                     followers yet.
                 </p>
 
