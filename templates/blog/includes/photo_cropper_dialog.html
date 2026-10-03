@@ -1,0 +1,20 @@
+<div class="photo-crop-backdrop" id="photoCropDialog" hidden>
+    <section class="photo-crop-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="photoCropTitle" aria-describedby="photoCropInstructions">
+        <h2 id="photoCropTitle">Crop your photo</h2>
+        <p id="photoCropInstructions">Drag to reposition, then adjust zoom. The crop is square.</p>
+        <div class="photo-crop-canvas-wrap">
+            <canvas class="photo-crop-canvas" id="photoCropCanvas" width="640" height="640"
+                aria-label="Photo crop area"></canvas>
+        </div>
+        <label class="photo-crop-zoom" for="photoCropZoom">
+            <span>Zoom out</span>
+            <input id="photoCropZoom" type="range" min="1" max="3" step="0.01" value="1">
+            <span>Zoom in</span>
+        </label>
+        <div class="photo-crop-actions">
+            <button type="button" id="photoCropCancel">Cancel</button>
+            <button type="button" class="photo-crop-use" id="photoCropUse">Crop &amp; Use Photo</button>
+        </div>
+    </section>
+</div>

@@ -6,7 +6,7 @@ Settings | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+<link rel="stylesheet" href="{% static 'css/settings.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -42,7 +42,7 @@ Settings | {{ SITE_NAME }}
 
                 <div class="account-item">
                     <span class="label">Username</span>
-                    <span class="value">{{ request.user.username }}</span>
+                    <span class="value">{{ request.user.profile_data.display_name|default:request.user.username }} (@{{ request.user.username|lower }})</span>
                 </div>
 
                 <div class="account-item">
@@ -52,6 +52,200 @@ Settings | {{ SITE_NAME }}
 
             </div>
 
+        </div>
+
+
+        <div class="settings-card">
+            <div class="section-title">
+                <h2>Account Privacy</h2>
+                <p>Choose whether your posts and projects are public.</p>
+            </div>
+
+            <form method="post" action="{% url 'blog:settings' %}" class="setting-row">
+                {% csrf_token %}
+                <label class="setting-info" for="accountPrivacy">
+                    <span class="setting-icon"><i class="bi bi-shield-lock"></i></span>
+                    <span class="setting-text">
+                        <strong>Private account</strong>
+                        <span>Only approved followers can see your posts and projects.</span>
+                    </span>
+                </label>
+                <input id="accountPrivacy" type="checkbox" name="is_private"
+                    {% if user_profile.is_private %}checked{% endif %}>
+                <button type="submit" class="action-btn">Save</button>
+            </form>
+        </div>
+
+        <div class="settings-card">
+            <div class="section-title">
+                <h2>Learning Goal</h2>
+                <p>Your current focus: {{ goal_display }}</p>
+            </div>
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-icon"><i class="bi bi-bullseye"></i></span>
+                    <span class="setting-text">
+                        <strong>Personalize your learning</strong>
+                        <span>Choose or update the goal guiding your vGrowHub journey.</span>
+                    </span>
+                </div>
+                <a class="action-btn" href="{% url 'blog:choose_goal' %}">Change Goal</a>
+            </div>
+        </div>
+
+        <div class="settings-card danger-zone">
+            <div class="section-title">
+                <h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Danger Zone</h2>
+                <p>Account recovery is available for 30 days after deactivation or a deletion request.</p>
+            </div>
+
+            <div class="danger-action-row">
+                <div class="setting-info">
+                    <span class="setting-icon"><i class="bi bi-pause-circle"></i></span>
+                    <span class="setting-text">
+                        <strong>Temporarily Deactivate Account</strong>
+                        <span>Your account becomes unavailable while your data is preserved.</span>
+                    </span>
+                </div>
+                <button class="danger-btn danger-trigger danger-deactivate-trigger" type="button" data-modal="deactivate-modal">
+                    <i class="bi bi-pause-circle" aria-hidden="true"></i>
+                    Temporarily Deactivate Account
+                </button>
+            </div>
+
+            <div class="danger-action-row">
+                <div class="setting-info">
+                    <span class="setting-icon"><i class="bi bi-trash3"></i></span>
+                    <span class="setting-text">
+                        <strong>Permanently Delete Account</strong>
+                        <span>Deletion is scheduled 30 days from your request. You can cancel during this period.</span>
+                    </span>
+                </div>
+                <button class="danger-btn danger-trigger danger-delete-trigger" type="button" data-modal="delete-modal">
+                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                    Permanently Delete Account
+                </button>
+            </div>
+        </div>
+
+        <div class="danger-modal-backdrop" id="deactivate-modal" hidden>
+            <div class="danger-modal" role="dialog" aria-modal="true" aria-labelledby="deactivate-modal-title">
+                <div class="danger-modal-header">
+                    <div>
+                        <span class="danger-modal-kicker">Account safety</span>
+                        <h3 id="deactivate-modal-title">Temporarily Deactivate Account</h3>
+                    </div>
+                    <button type="button" class="close-danger-modal" aria-label="Close temporary deactivation dialog">×</button>
+                </div>
+
+                <div class="danger-modal-body">
+                    <form method="post" action="{% url 'blog:deactivate_account' %}" id="deactivate-form" class="danger-modal-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="deactivation_reason" id="deactivation-reason" value="">
+                        <div class="danger-steps step-current" data-step="reason-select">
+                            <h4>Why are you leaving?</h4>
+                            <div class="danger-choice-list">
+                                <label class="danger-choice"><input type="radio" name="reason" value="I have another account"> <span>I have another account</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="I need a temporary break"> <span>I need a temporary break</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="I am not using vGrowHub right now"> <span>I am not using vGrowHub right now</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="I want to focus on something else"> <span>I want to focus on something else</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="I am facing a technical issue"> <span>I am facing a technical issue</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="Privacy concerns"> <span>Privacy concerns</span></label>
+                                <label class="danger-choice"><input type="radio" name="reason" value="other"> <span>Other</span></label>
+                            </div>
+                            <div class="danger-other-field" hidden>
+                                <label for="deactivate-other-reason">Tell us more</label>
+                                <textarea id="deactivate-other-reason" name="other_reason" rows="3" placeholder="Optional details"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="danger-steps" data-step="confirm-deactivate" hidden>
+                            <div class="danger-warning-box">
+                                <h4>Your account will be temporarily deactivated.</h4>
+                                <p>Your data will be preserved and you can recover your account within 30 days.</p>
+                            </div>
+                            {% if has_usable_password %}
+                            <div class="modal-field">
+                                <label for="deactivatePassword">Password</label>
+                                <div class="password-field-wrap">
+                                    <input class="form-control" id="deactivatePassword" type="password" name="password"
+                                        autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" data-target="deactivatePassword"
+                                        aria-label="Show password" title="Show password">
+                                        <i class="bi bi-eye-slash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% else %}
+                            <label class="modal-field">Account email
+                                <input class="form-control" type="email" name="email" placeholder="Account email" required>
+                            </label>
+                            {% endif %}
+                            <label class="modal-field">Type DEACTIVATE
+                                <input class="form-control" name="confirmation" placeholder="DEACTIVATE" required>
+                            </label>
+                        </div>
+
+                        <div class="danger-modal-actions">
+                            <button type="button" class="secondary-btn danger-cancel"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</button>
+                            <button type="button" class="primary-btn danger-continue" data-next-step="confirm-deactivate">Continue</button>
+                            <button class="danger-btn danger-submit" type="submit" hidden>
+                                <i class="bi bi-pause-circle" aria-hidden="true"></i>
+                                Deactivate Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="danger-modal-backdrop" id="delete-modal" hidden>
+            <div class="danger-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+                <div class="danger-modal-header">
+                    <div>
+                        <span class="danger-modal-kicker">Account deletion</span>
+                        <h3 id="delete-modal-title">Permanently Delete Account</h3>
+                    </div>
+                    <button type="button" class="close-danger-modal" aria-label="Close permanent deletion dialog">×</button>
+                </div>
+
+                <div class="danger-modal-body">
+                    <form method="post" action="{% url 'blog:request_account_deletion' %}" id="delete-form" class="danger-modal-form">
+                        {% csrf_token %}
+                        <div class="danger-warning-box">
+                            <h4>Deletion is scheduled.</h4>
+                            <p>Your account and content will be permanently removed after the 30-day recovery period ends, unless you cancel the request before then.</p>
+                        </div>
+                        {% if has_usable_password %}
+                        <div class="modal-field">
+                            <label for="deletePassword">Password</label>
+                            <div class="password-field-wrap">
+                                <input class="form-control" id="deletePassword" type="password" name="password"
+                                    autocomplete="current-password" required>
+                                <button type="button" class="password-toggle" data-target="deletePassword"
+                                    aria-label="Show password" title="Show password">
+                                    <i class="bi bi-eye-slash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <label class="modal-field">Account email
+                            <input class="form-control" type="email" name="email" placeholder="Account email" required>
+                        </label>
+                        {% endif %}
+                        <label class="modal-field">Type DELETE to confirm
+                            <input class="form-control" name="confirmation" placeholder="DELETE" required>
+                        </label>
+                        <div class="danger-modal-actions">
+                            <button type="button" class="secondary-btn danger-cancel"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</button>
+                            <button class="danger-btn danger-delete-submit" type="submit" disabled>
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                                Schedule Permanent Deletion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
 
@@ -162,9 +356,9 @@ Settings | {{ SITE_NAME }}
 
                 </div>
 
-                <button class="action-btn">
+                <a class="action-btn" href="{% url 'blog:change_password' %}">
                     Change
-                </button>
+                </a>
 
             </div>
 
@@ -196,4 +390,119 @@ Settings | {{ SITE_NAME }}
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalBackdrops = document.querySelectorAll('.danger-modal-backdrop');
+            const triggerButtons = document.querySelectorAll('.danger-trigger');
+            const closeButtons = document.querySelectorAll('.close-danger-modal, .danger-cancel');
+
+            function closeModal(modal) {
+                if (!modal) return;
+                modal.hidden = true;
+            }
+
+            function openModal(modalId) {
+                modalBackdrops.forEach(function (modal) {
+                    modal.hidden = modal.id !== modalId;
+                });
+            }
+
+            triggerButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const modalId = button.dataset.modal;
+                    openModal(modalId);
+                });
+            });
+
+            closeButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const modal = button.closest('.danger-modal-backdrop');
+                    closeModal(modal);
+                });
+            });
+
+            modalBackdrops.forEach(function (modal) {
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    modalBackdrops.forEach(function (modal) {
+                        if (!modal.hidden) closeModal(modal);
+                    });
+                }
+            });
+
+            const deactivateModal = document.getElementById('deactivate-modal');
+            const deactivateReasonField = document.getElementById('deactivation-reason');
+            const deactivateOtherInput = document.getElementById('deactivate-other-reason');
+            const otherReasonToggle = document.querySelector('.danger-other-field');
+            const continueButton = document.querySelector('.danger-continue');
+            const confirmStep = document.querySelector('[data-step="confirm-deactivate"]');
+            const reasonStep = document.querySelector('[data-step="reason-select"]');
+            const deactivateSubmit = document.querySelector('#deactivate-form .danger-submit');
+            const deleteForm = document.getElementById('delete-form');
+            const deleteConfirmation = deleteForm && deleteForm.querySelector('[name="confirmation"]');
+            const deleteSubmit = deleteForm && deleteForm.querySelector('.danger-delete-submit');
+
+            function updateDeleteSubmitState() {
+                if (deleteForm && deleteConfirmation && deleteSubmit) {
+                    deleteSubmit.disabled = !deleteForm.checkValidity() || deleteConfirmation.value !== 'DELETE';
+                }
+            }
+
+            if (deleteForm) {
+                deleteForm.addEventListener('input', updateDeleteSubmitState);
+                deleteForm.addEventListener('change', updateDeleteSubmitState);
+                updateDeleteSubmitState();
+            }
+
+            if (deactivateModal) {
+                document.querySelectorAll('input[name="reason"]').forEach(function (radio) {
+                    radio.addEventListener('change', function () {
+                        const selected = radio.value;
+                        if (selected === 'other') {
+                            otherReasonToggle.hidden = false;
+                            deactivateReasonField.value = deactivateOtherInput && deactivateOtherInput.value ? deactivateOtherInput.value : 'Other';
+                        } else {
+                            otherReasonToggle.hidden = true;
+                            deactivateReasonField.value = selected;
+                        }
+                    });
+                });
+
+                if (deactivateOtherInput) {
+                    deactivateOtherInput.addEventListener('input', function () {
+                        const selected = document.querySelector('input[name="reason"]:checked');
+                        if (selected && selected.value === 'other') {
+                            deactivateReasonField.value = deactivateOtherInput.value || 'Other';
+                        }
+                    });
+                }
+
+                if (continueButton) {
+                    continueButton.addEventListener('click', function () {
+                        const selected = document.querySelector('input[name="reason"]:checked');
+                        if (!selected) {
+                            return;
+                        }
+                        if (selected.value === 'other') {
+                            deactivateReasonField.value = deactivateOtherInput && deactivateOtherInput.value ? deactivateOtherInput.value : 'Other';
+                        } else {
+                            deactivateReasonField.value = selected.value;
+                        }
+                        reasonStep.hidden = true;
+                        confirmStep.hidden = false;
+                        continueButton.hidden = true;
+                        deactivateSubmit.hidden = false;
+                    });
+                }
+            }
+        });
+    </script>
     {% endblock %}

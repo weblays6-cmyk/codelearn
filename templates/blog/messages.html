@@ -47,6 +47,11 @@ Messages | {{ SITE_NAME }}
 
         <div class="messages-header-actions">
 
+            <a href="{% url 'blog:discover_users' %}" class="new-message-btn">
+                <i class="bi bi-people"></i>
+                Find People
+            </a>
+
             <button type="button" class="new-message-btn" id="newMessageBtn">
                 <i class="bi bi-pencil-square"></i>
                 New Message
@@ -94,19 +99,26 @@ Messages | {{ SITE_NAME }}
             {% with chat_user=conversation.participant %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
-                data-conversation-search="{{ chat_user.username }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
+                data-conversation-search="{{ chat_user.profile_data.display_name|default:chat_user.username }} @{{ chat_user.username|lower }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
+                {% if chat_user.profile_data.profile_picture %}
+                <img class="conversation-avatar" src="{{ chat_user.profile_data.profile_picture.url }}"
+                    alt="{{ chat_user.profile_data.display_name|default:chat_user.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="conversation-avatar">
-                    {{ chat_user.username|first|upper }}
+                    {{ chat_user.profile_data.display_name|default:chat_user.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="conversation-info">
 
                     <div class="conversation-top">
 
                         <strong>
-                            {{ chat_user.username }}
+                            {{ chat_user.profile_data.display_name|default:chat_user.username }}
                         </strong>
+                        <small>@{{ chat_user.username|lower }}</small>
 
                         {% if conversation.unread_count %}
                         <span class="unread-badge">
@@ -149,19 +161,27 @@ Messages | {{ SITE_NAME }}
             {% else %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
-                data-conversation-search="{{ conversation.project_owner.username }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
+                data-conversation-search="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }} @{{ conversation.project_owner.username|lower }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
+                {% if conversation.project_owner.profile_data.profile_picture %}
+                <img class="conversation-avatar"
+                    src="{{ conversation.project_owner.profile_data.profile_picture.url }}"
+                    alt="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="conversation-avatar">
-                    {{ conversation.project_owner.username|first|upper }}
+                    {{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="conversation-info">
 
                     <div class="conversation-top">
 
                         <strong>
-                            {{ conversation.project_owner.username }}
+                            {{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }}
                         </strong>
+                        <small>@{{ conversation.project_owner.username|lower }}</small>
 
                         {% if conversation.unread_count %}
                         <span class="unread-badge">
@@ -208,19 +228,26 @@ Messages | {{ SITE_NAME }}
             {% with chat_user=conversation.participant %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
-                data-conversation-search="{{ chat_user.username }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
+                data-conversation-search="{{ chat_user.profile_data.display_name|default:chat_user.username }} @{{ chat_user.username|lower }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
+                {% if chat_user.profile_data.profile_picture %}
+                <img class="conversation-avatar" src="{{ chat_user.profile_data.profile_picture.url }}"
+                    alt="{{ chat_user.profile_data.display_name|default:chat_user.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="conversation-avatar">
-                    {{ chat_user.username|first|upper }}
+                    {{ chat_user.profile_data.display_name|default:chat_user.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="conversation-info">
 
                     <div class="conversation-top">
 
                         <strong>
-                            {{ chat_user.username }}
+                            {{ chat_user.profile_data.display_name|default:chat_user.username }}
                         </strong>
+                        <small>@{{ chat_user.username|lower }}</small>
 
                         {% if conversation.unread_count %}
                         <span class="unread-badge">
@@ -263,19 +290,27 @@ Messages | {{ SITE_NAME }}
             {% else %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
-                data-conversation-search="{{ conversation.project_owner.username }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
+                data-conversation-search="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }} @{{ conversation.project_owner.username|lower }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
+                {% if conversation.project_owner.profile_data.profile_picture %}
+                <img class="conversation-avatar"
+                    src="{{ conversation.project_owner.profile_data.profile_picture.url }}"
+                    alt="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <div class="conversation-avatar">
-                    {{ conversation.project_owner.username|first|upper }}
+                    {{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username|first|upper }}
                 </div>
+                {% endif %}
 
                 <div class="conversation-info">
 
                     <div class="conversation-top">
 
                         <strong>
-                            {{ conversation.project_owner.username }}
+                            {{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }}
                         </strong>
+                        <small>@{{ conversation.project_owner.username|lower }}</small>
 
                         {% if conversation.unread_count %}
                         <span class="unread-badge">
@@ -392,7 +427,7 @@ Messages | {{ SITE_NAME }}
                 </h2>
 
                 <p>
-                    Search a developer and start a private conversation.
+                    Message people who follow you back.
                 </p>
             </div>
 
@@ -416,21 +451,27 @@ Messages | {{ SITE_NAME }}
 
             {% for available_user in available_users %}
 
-            <button type="button" class="user-search-item" data-username="{{ available_user.username|lower }}"
-                data-connect-url="{% url 'blog:start_personal_chat' available_user.id %}">
+            <button type="button" class="user-search-item" data-username="{{ available_user.profile_data.display_name|default:available_user.username }} @{{ available_user.username|lower }}"
+                data-connect-url="{% url 'blog:start_personal_chat' available_user.username %}">
 
+                {% if available_user.profile_data.profile_picture %}
+                <img class="user-search-avatar" src="{{ available_user.profile_data.profile_picture.url }}"
+                    alt="{{ available_user.profile_data.display_name|default:available_user.username }}"
+                    style="object-fit:cover;">
+                {% else %}
                 <span class="user-search-avatar">
-                    {{ available_user.username|first|upper }}
+                    {{ available_user.profile_data.display_name|default:available_user.username|first|upper }}
                 </span>
+                {% endif %}
 
                 <span class="user-search-info">
 
                     <strong>
-                        {{ available_user.username }}
+                        {{ available_user.profile_data.display_name|default:available_user.username }}
                     </strong>
 
                     <small>
-                        {{ SITE_NAME }} developer
+                        @{{ available_user.username|lower }}
                     </small>
 
                 </span>
@@ -445,7 +486,7 @@ Messages | {{ SITE_NAME }}
                 <i class="bi bi-people"></i>
 
                 <strong>
-                    No developers available
+                    No mutual followers available yet
                 </strong>
 
                 <span>

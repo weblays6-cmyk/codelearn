@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-{{ profile_user.username }} | {{ SITE_NAME }}
+{{ display_name }} · @{{ profile_user.username|lower }} | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
@@ -517,6 +517,22 @@
         flex-wrap: wrap;
     }
 
+    .profile-action-feedback:empty {
+        display: none;
+    }
+
+    .profile-action-feedback {
+        flex-basis: 100%;
+        margin: 0;
+        color: #ffb2bf;
+        font-size: 13px;
+    }
+
+    .profile-follow-request-actions {
+        display: flex;
+        gap: 8px;
+    }
+
     .profile-follow-btn {
         min-width: 120px;
     }
@@ -600,11 +616,12 @@
         <div class="user-profile-main">
 
 
-            <div class="user-profile-avatar">
-
-                {{ profile_user.username|first|upper }}
-
-            </div>
+            {% if user_profile.profile_picture %}
+            <img class="user-profile-avatar" src="{{ user_profile.profile_picture.url }}"
+                alt="{{ display_name }}" style="object-fit:cover;">
+            {% else %}
+            <div class="user-profile-avatar">{{ display_name|first|upper }}</div>
+            {% endif %}
 
 
             <div class="user-profile-info">
@@ -620,10 +637,10 @@
 
                 <h1>
 
-                    {{ profile_user.username }}
+                    {{ display_name }}
 
                 </h1>
-
+                <p>@{{ profile_user.username|lower }}</p>
 
                 <p>
 
@@ -637,11 +654,41 @@
             {% if not is_owner %}
 
             <div class="profile-action-group">
+                <p id="profileActionFeedback" class="profile-action-feedback" role="status"
+                    aria-live="polite"></p>
 
-                {% if is_following %}
+                {% if not request.user.is_authenticated %}
+                <a class="profile-connect-btn" href="{% url 'blog:login' %}?next={{ request.path|urlencode }}">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Sign in to follow
+                </a>
+                {% else %}
+                {% if blocked_by_viewer %}
+                <form method="post" action="{% url 'blog:unblock_user' profile_user.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="profile-connect-btn">
+                        <i class="bi bi-person-check"></i>
+                        Unblock
+                    </button>
+                </form>
+                {% else %}
+                {% if incoming_pending %}
+                <div class="profile-follow-request-actions">
+                    <button type="button" class="profile-connect-btn profile-follow-btn accept"
+                        data-action="accept"
+                        data-url="{% url 'blog:accept_follow_request' incoming_request_id %}">
+                        <i class="bi bi-person-check"></i>Accept
+                    </button>
+                    <button type="button" class="profile-connect-btn profile-follow-btn"
+                        data-action="reject"
+                        data-url="{% url 'blog:reject_follow_request' incoming_request_id %}">
+                        <i class="bi bi-person-x"></i>Reject
+                    </button>
+                </div>
+                {% elif is_following %}
 
                 <button type="button" class="profile-connect-btn profile-follow-btn following" data-action="unfollow"
-                    data-url="{% url 'blog:unfollow_user' profile_user.id %}">
+                    data-url="{% url 'blog:unfollow_user' profile_user.username %}">
                     <i class="bi bi-person-check-fill"></i>
                     Following
                 </button>
@@ -649,28 +696,28 @@
                 {% elif outgoing_pending %}
 
                 <button type="button" class="profile-connect-btn profile-follow-btn pending" data-action="cancel"
-                    data-url="{% url 'blog:cancel_follow_request' profile_user.id %}">
+                    data-url="{% url 'blog:cancel_follow_request' profile_user.username %}">
                     <i class="bi bi-clock-history"></i>
-                    Pending
-                </button>
-
-                {% elif incoming_pending %}
-
-                <button type="button" class="profile-connect-btn profile-follow-btn accept" data-action="accept"
-                    data-url="{% url 'blog:accept_follow_request' incoming_request_id %}"
-                    title="Follow request received">
-                    <i class="bi bi-person-check"></i>
-                    Accept & Chat
+                    Requested
                 </button>
 
                 {% else %}
 
                 <button type="button" class="profile-connect-btn profile-follow-btn" data-action="follow"
-                    data-url="{% url 'blog:send_follow_request' profile_user.id %}">
+                    data-url="{% url 'blog:send_follow_request' profile_user.username %}">
                     <i class="bi bi-person-plus-fill"></i>
-                    Follow
+                    {% if follows_viewer %}Follow Back{% else %}Follow{% endif %}
                 </button>
 
+                {% endif %}
+                <form method="post" action="{% url 'blog:block_user' profile_user.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="profile-connect-btn">
+                        <i class="bi bi-person-slash"></i>
+                        Block
+                    </button>
+                </form>
+                {% endif %}
                 {% endif %}
 
             </div>
@@ -684,7 +731,7 @@
         <div class="profile-stats">
 
 
-            <a href="{% url 'blog:followers_list' profile_user.id %}" class="profile-stat profile-stat-link">
+            <a href="{% url 'blog:followers_list' profile_user.username %}" class="profile-stat profile-stat-link">
 
                 <strong>
                     {{ follower_count }}
@@ -696,7 +743,7 @@
 
             </a>
 
-            <a href="{% url 'blog:following_list' profile_user.id %}" class="profile-stat profile-stat-link">
+            <a href="{% url 'blog:following_list' profile_user.username %}" class="profile-stat profile-stat-link">
                 <strong>
                     {{ following_count }}
                 </strong>
@@ -757,9 +804,20 @@
 
     <div class="profile-content-grid">
 
+        {% if is_private and not can_view_content %}
+        <section class="profile-card">
+            <div class="profile-card-header">
+                <i class="bi bi-lock"></i>
+                <h2>Private Account</h2>
+            </div>
+            <p>Follow this account to see its posts and projects.</p>
+        </section>
+        {% endif %}
+
 
         <!-- LEFT -->
 
+        {% if can_view_content %}
         <div>
 
 
@@ -864,6 +922,7 @@
 
 
         </div>
+        {% endif %}
 
 
         <!-- RIGHT -->
@@ -882,7 +941,7 @@
                 </div>
 
                 <h3>
-                    0 Days
+                    {{ learning_streak }} Day{% if learning_streak != 1 %}s{% endif %}
                 </h3>
 
                 <p>
@@ -914,7 +973,7 @@
                     </span>
 
                     <strong>
-                        {{ profile_user.username }}
+                        @{{ profile_user.username|lower }}
                     </strong>
 
                 </div>
@@ -1026,10 +1085,12 @@
                     !response.ok ||
                     !data.success
                 ) {
-                    throw new Error(
+                    const error = new Error(
                         data.error ||
                         "Something went wrong."
                     );
+                    error.status = response.status;
+                    throw error;
                 }
 
 
@@ -1039,19 +1100,27 @@
 
                 if (action === "follow") {
 
-                    button.dataset.action =
-                        "cancel";
-
-                    button.dataset.url =
-                        "{% url 'blog:cancel_follow_request' profile_user.id %}";
-
-                    button.className =
-                        "profile-connect-btn profile-follow-btn pending";
-
-                    button.innerHTML = `
-                    <i class="bi bi-clock-history"></i>
-                    Pending
-                `;
+                    if (data.status === "ACCEPTED") {
+                        button.dataset.action = "unfollow";
+                        button.dataset.url =
+                            "{% url 'blog:unfollow_user' profile_user.username %}";
+                        button.className =
+                            "profile-connect-btn profile-follow-btn following";
+                        button.innerHTML = `
+                        <i class="bi bi-person-check-fill"></i>
+                        Following
+                    `;
+                    } else {
+                        button.dataset.action = "cancel";
+                        button.dataset.url =
+                            "{% url 'blog:cancel_follow_request' profile_user.username %}";
+                        button.className =
+                            "profile-connect-btn profile-follow-btn pending";
+                        button.innerHTML = `
+                        <i class="bi bi-clock-history"></i>
+                        Requested
+                    `;
+                    }
                 }
 
 
@@ -1060,20 +1129,8 @@
                 ========================================= */
 
                 else if (action === "cancel") {
-
-                    button.dataset.action =
-                        "follow";
-
-                    button.dataset.url =
-                        "{% url 'blog:send_follow_request' profile_user.id %}";
-
-                    button.className =
-                        "profile-connect-btn profile-follow-btn";
-
-                    button.innerHTML = `
-                    <i class="bi bi-person-plus-fill"></i>
-                    Follow
-                `;
+                    window.location.reload();
+                    return;
                 }
 
 
@@ -1082,25 +1139,18 @@
                 ========================================= */
 
                 else if (action === "unfollow") {
-
-                    button.dataset.action =
-                        "follow";
-
-                    button.dataset.url =
-                        "{% url 'blog:send_follow_request' profile_user.id %}";
-
-                    button.className =
-                        "profile-connect-btn profile-follow-btn";
-
-                    button.innerHTML = `
-                    <i class="bi bi-person-plus-fill"></i>
-                    Follow
-                `;
+                    window.location.reload();
+                    return;
                 }
 
                 else if (action === "accept") {
 
-                    window.location.href = data.redirect_url;
+                    window.location.reload();
+                    return;
+                }
+
+                else if (action === "reject") {
+                    window.location.reload();
                     return;
                 }
 
@@ -1111,10 +1161,15 @@
                     error
                 );
 
-                alert(
-                    error.message ||
-                    "Unable to process request."
-                );
+                const feedback = document.getElementById("profileActionFeedback");
+                if (feedback) {
+                    feedback.textContent = error.message || "Unable to process request.";
+                }
+                if (error.status === 409) {
+                    window.setTimeout(function () {
+                        window.location.reload();
+                    }, 1200);
+                }
 
                 button.innerHTML =
                     originalHTML;

@@ -110,9 +110,9 @@
   </div>
 
   <nav style="display:flex; gap:10px; margin:0 0 18px;" aria-label="Leaderboard period">
-    <a class="tool-btn" href="?period=week" {% if period=='week' %}aria-current="page" {% endif %}>Weekly</a>
-    <a class="tool-btn" href="?period=month" {% if period=='month' %}aria-current="page" {% endif %}>Monthly</a>
-    <a class="tool-btn" href="?period=all" {% if period=='all' %}aria-current="page" {% endif %}>All Time</a>
+    <a class="tool-btn" href="?period=week" {% if period == 'week' %}aria-current="page" {% endif %}>Weekly</a>
+    <a class="tool-btn" href="?period=month" {% if period == 'month' %}aria-current="page" {% endif %}>Monthly</a>
+    <a class="tool-btn" href="?period=all" {% if period == 'all' %}aria-current="page" {% endif %}>All Time</a>
   </nav>
 
   {% if podium %}
@@ -136,7 +136,7 @@
       <div>Score / Points</div>
     </div>
     {% for entry in leaderboard %}
-    <div class="leader-row" {% if entry.user.id==user.id %}style="background:rgba(59,130,246,.12);" {% endif %}>
+    <div class="leader-row" {% if entry.user.id == user.id %}style="background:rgba(59,130,246,.12);" {% endif %}>
       <div class="rank">#{{ leaderboard.start_index|add:forloop.counter0 }}</div>
       <div>{{ entry.user.username }}{% if entry.user.id == user.id %} <strong>(You)</strong>{% endif %}</div>
       <div>{{ entry.solved }}</div>

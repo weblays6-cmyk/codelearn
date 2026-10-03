@@ -223,14 +223,15 @@
                 <div class="project-comment">
 
                     <div class="comment-avatar">
-                        {{ comment.user.username|first|upper }}
+                        {{ comment.user.profile_data.display_name|default:comment.user.username|first|upper }}
                     </div>
 
                     <div class="comment-content">
 
                         <strong>
-                            {{ comment.user.username }}
+                            {{ comment.user.profile_data.display_name|default:comment.user.username }}
                         </strong>
+                        <small>@{{ comment.user.username|lower }}</small>
 
                         <span class="comment-date">
                             {{ comment.created_at|date:"M d, Y" }}
@@ -272,22 +273,22 @@
                 <div class="project-owner-detail">
 
                     <div class="owner-large-avatar">
-                        {{ project.owner.username|first|upper }}
+                        {{ project.owner.profile_data.display_name|default:project.owner.username|first|upper }}
                     </div>
 
                     <div>
                         <strong>
-                            {{ project.owner.username }}
+                            {{ project.owner.profile_data.display_name|default:project.owner.username }}
                         </strong>
 
                         <span>
-                            Project Creator
+                            @{{ project.owner.username|lower }} · Project Creator
                         </span>
                     </div>
 
                 </div>
 
-                <a href="{% url 'blog:user_profile' project.owner.id %}" class="owner-profile-btn">
+                <a href="{% url 'blog:user_profile' project.owner.username %}" class="owner-profile-btn">
                     View Profile
                 </a>
 
@@ -437,12 +438,12 @@
                     <div class="connect-admin-preview">
 
                         <div class="connect-admin-avatar">
-                            {{ project.owner.username|first|upper }}
+                            {{ project.owner.profile_data.display_name|default:project.owner.username|first|upper }}
                         </div>
 
                         <div>
-                            <strong>{{ project.owner.username }}</strong>
-                            <span>Project Creator</span>
+                            <strong>{{ project.owner.profile_data.display_name|default:project.owner.username }}</strong>
+                            <span>@{{ project.owner.username|lower }} · Project Creator</span>
                         </div>
 
                     </div>

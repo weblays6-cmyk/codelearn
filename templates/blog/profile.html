@@ -7,6 +7,7 @@ Profile | {{ SITE_NAME }}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/photo_cropper.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -16,11 +17,12 @@ Profile | {{ SITE_NAME }}
     <div class="profile-main">
 
 
-        <div class="big-avatar">
-
-            {{ username|first|upper }}
-
-        </div>
+        {% if user_profile.profile_picture %}
+        <img class="big-avatar" src="{{ user_profile.profile_picture.url }}" alt="{{ display_name }}"
+            style="object-fit: cover;">
+        {% else %}
+        <div class="big-avatar" aria-hidden="true">{{ display_name|first|upper }}</div>
+        {% endif %}
 
 
         <div class="profile-text">
@@ -36,15 +38,20 @@ Profile | {{ SITE_NAME }}
 
 
             <h1>
-                Welcome, {{ username }}
+                Welcome, {{ display_name }}
             </h1>
 
+            <p>@{{ username|lower }}</p>
 
             <p>
                 Your learning journey, goals and progress
                 in one place.
             </p>
 
+            <button class="profile-picture-edit" id="openProfilePictureDialog" type="button">
+                <i class="bi bi-camera" aria-hidden="true"></i>
+                {% if user_profile.profile_picture %}Change Profile Picture{% else %}Upload New Photo{% endif %}
+            </button>
 
         </div>
 
@@ -64,6 +71,306 @@ Profile | {{ SITE_NAME }}
 
 
 </section>
+
+<div class="picture-dialog-backdrop" id="profilePictureDialog" hidden>
+    <section class="picture-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="profilePictureDialogTitle">
+        <button class="picture-dialog-close" id="closeProfilePictureDialog" type="button"
+            aria-label="Close dialog">&times;</button>
+        <h2 id="profilePictureDialogTitle">{% if user_profile.profile_picture %}Change Profile Picture{% else %}Upload New Photo{% endif %}</h2>
+        <p class="picture-dialog-subtitle">Choose a clear photo to represent you on vGrowHub.</p>
+
+        <div class="picture-dialog-previews">
+            <div>
+                <span class="picture-preview-label">Current photo</span>
+                {% if user_profile.profile_picture %}
+                <img class="picture-dialog-avatar" src="{{ user_profile.profile_picture.url }}"
+                    alt="Your current profile picture">
+                {% else %}
+                <span class="picture-dialog-avatar picture-dialog-placeholder" aria-label="No profile picture">
+                    <i class="bi bi-person-fill" aria-hidden="true"></i>
+                </span>
+                {% endif %}
+            </div>
+            <div>
+                <span class="picture-preview-label">New preview</span>
+                {% if user_profile.profile_picture %}
+                <img class="picture-dialog-avatar" id="newProfilePicturePreview"
+                    src="{{ user_profile.profile_picture.url }}" alt="Preview of your new profile picture">
+                <span class="picture-dialog-avatar picture-dialog-placeholder" id="newProfilePicturePlaceholder"
+                    aria-hidden="true" hidden><i class="bi bi-person-fill"></i></span>
+                {% else %}
+                <img class="picture-dialog-avatar" id="newProfilePicturePreview" alt="Preview of your new profile picture"
+                    hidden>
+                <span class="picture-dialog-avatar picture-dialog-placeholder" id="newProfilePicturePlaceholder"
+                    aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+                {% endif %}
+            </div>
+        </div>
+
+        <form id="profilePictureForm" method="post" action="{% url 'blog:profile' %}"
+            enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="remove_picture" id="removeProfilePicture" value="0">
+            <label class="picture-choose-button" for="{{ profile_picture_form.profile_picture.id_for_label }}">
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                Choose Photo
+            </label>
+            {{ profile_picture_form.profile_picture }}
+            <p class="picture-upload-error" id="profilePictureClientError" role="status"
+                aria-live="polite"></p>
+            <p class="picture-help">JPG, PNG or WEBP · Maximum size 5 MB</p>
+            {% if profile_picture_form.errors %}
+            <div class="picture-errors" role="alert">
+                {{ profile_picture_form.non_field_errors }}
+                {{ profile_picture_form.profile_picture.errors }}
+            </div>
+            {% endif %}
+            <div class="picture-dialog-actions">
+                <button class="picture-cancel-button" id="cancelProfilePictureDialog" type="button">Cancel</button>
+                {% if user_profile.profile_picture %}
+                <button class="picture-remove-button" id="removeProfilePictureButton" type="button">Remove photo</button>
+                {% endif %}
+                <button class="picture-save-button" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% include "blog/includes/photo_cropper_dialog.html" %}
+
+<style>
+    .profile-picture-edit,
+    .picture-choose-button,
+    .picture-save-button,
+    .picture-cancel-button,
+    .picture-remove-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 9px 14px;
+        border: 1px solid #514b83;
+        border-radius: 10px;
+        background: rgba(116, 91, 240, .16);
+        color: inherit;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .profile-picture-edit {
+        margin-top: 8px;
+    }
+
+    .profile-picture-edit:hover,
+    .picture-choose-button:hover,
+    .picture-save-button:hover {
+        filter: brightness(1.15);
+    }
+
+    .picture-dialog-backdrop[hidden] {
+        display: none;
+    }
+
+    .picture-dialog-backdrop {
+        position: fixed;
+        z-index: 1000;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: rgba(4, 8, 18, .76);
+    }
+
+    .picture-dialog {
+        position: relative;
+        width: min(100%, 470px);
+        padding: 26px;
+        border: 1px solid var(--ui-border, #28364c);
+        border-radius: 18px;
+        background: var(--ui-surface, #111b2b);
+        color: var(--ui-text, #e7edf7);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+    }
+
+    .picture-dialog h2 {
+        margin: 0;
+        font-size: 21px;
+    }
+
+    .picture-dialog-subtitle,
+    .picture-help {
+        color: var(--ui-muted, #a8b5c8);
+        font-size: 13px;
+    }
+
+    .picture-dialog-close {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        border: 0;
+        background: none;
+        color: inherit;
+        font-size: 26px;
+        cursor: pointer;
+    }
+
+    .picture-dialog-previews {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 20px 0;
+    }
+
+    .picture-dialog-previews > div {
+        display: grid;
+        justify-items: center;
+        gap: 9px;
+    }
+
+    .picture-preview-label {
+        color: var(--ui-muted, #a8b5c8);
+        font-size: 12px;
+    }
+
+    .picture-dialog-avatar {
+        display: grid;
+        width: 88px;
+        height: 88px;
+        place-items: center;
+        overflow: hidden;
+        border: 2px solid rgba(137, 121, 255, .65);
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7657ff, #4d73ff);
+        color: #fff;
+        font-size: 30px;
+        object-fit: cover;
+    }
+
+    .picture-dialog-avatar[hidden] {
+        display: none;
+    }
+
+    .picture-dialog-placeholder {
+        display: grid;
+    }
+
+    .picture-file-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .picture-file-input:focus-visible + .picture-help {
+        outline: 2px solid #a991ff;
+    }
+
+    .picture-help {
+        margin: 9px 0;
+    }
+
+    .picture-errors,
+    .picture-upload-error {
+        color: #ff9aaa;
+        font-size: 13px;
+    }
+
+    .picture-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .picture-cancel-button,
+    .picture-remove-button {
+        border-color: var(--ui-border, #28364c);
+        background: var(--ui-surface-soft, #172338);
+    }
+
+    .picture-save-button {
+        border-color: transparent;
+        background: linear-gradient(135deg, #7657ff, #4d73ff);
+        color: white;
+    }
+
+    @media (max-width: 520px) {
+        .picture-dialog {
+            padding: 22px 17px;
+        }
+
+        .picture-dialog-actions > button {
+            flex: 1 1 auto;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const dialog = document.getElementById("profilePictureDialog");
+        const opener = document.getElementById("openProfilePictureDialog");
+        const closer = document.getElementById("closeProfilePictureDialog");
+        const cancel = document.getElementById("cancelProfilePictureDialog");
+        const form = document.getElementById("profilePictureForm");
+        const input = document.getElementById("id_profile_picture");
+        const removeValue = document.getElementById("removeProfilePicture");
+        const removeButton = document.getElementById("removeProfilePictureButton");
+        const preview = document.getElementById("newProfilePicturePreview");
+        const placeholder = document.getElementById("newProfilePicturePlaceholder");
+        if (!dialog || !opener || !closer || !cancel || !form || !input || !removeValue || !preview) {
+            return;
+        }
+
+        const openDialog = function () {
+            dialog.hidden = false;
+            closer.focus();
+        };
+        const closeDialog = function () {
+            dialog.hidden = true;
+            opener.focus();
+        };
+
+        opener.addEventListener("click", openDialog);
+        closer.addEventListener("click", closeDialog);
+        cancel.addEventListener("click", closeDialog);
+        dialog.addEventListener("click", function (event) {
+            if (event.target === dialog) {
+                closeDialog();
+            }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && !dialog.hidden) {
+                closeDialog();
+            }
+        });
+
+        input.addEventListener("change", function () {
+            removeValue.value = "0";
+        });
+
+        if (removeButton) {
+            removeButton.addEventListener("click", function () {
+                input.value = "";
+                removeValue.value = "1";
+                preview.removeAttribute("src");
+                preview.hidden = true;
+                if (placeholder) {
+                    placeholder.hidden = false;
+                }
+            });
+        }
+
+        if (form.querySelector(".picture-errors")) {
+            openDialog();
+        }
+    });
+</script>
+<script src="{% static 'js/photo_cropper.js' %}"></script>
 
 
 
@@ -112,7 +419,7 @@ Profile | {{ SITE_NAME }}
             </span>
 
             <span class="info-value">
-                {{ username }}
+                @{{ username|lower }}
             </span>
 
         </div>
@@ -404,7 +711,7 @@ Profile | {{ SITE_NAME }}
         </div>
 
 
-        <a href="{% url 'blog:post_detail' post.pk %}" class="post-btn">
+        <a href="{% url 'blog:post_detail' post.slug %}" class="post-btn">
 
             View
 

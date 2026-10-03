@@ -9,6 +9,10 @@
 <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
 {% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/course_comments.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
     <!-- BREADCRUMB -->
 
@@ -71,7 +75,8 @@
 
                     <i class="bi bi-person"></i>
 
-                    {{ post.author.username }}
+                    {{ post.author.profile_data.display_name|default:post.author.username }}
+                    <small>@{{ post.author.username|lower }}</small>
 
                 </span>
 
@@ -333,7 +338,7 @@
 
 
                     <a
-                        href="{% url 'blog:lesson_detail' lesson.pk %}"
+                        href="{% url 'blog:lesson_detail' lesson.slug %}"
                         class="lesson-item"
                     >
 
@@ -473,6 +478,10 @@
                         Student Discussion
                     </h2>
 
+                    <span id="courseCommentCount" aria-live="polite">
+                        {{ comments|length }} comments
+                    </span>
+
                     <span>
                         Learn together
                     </span>
@@ -487,6 +496,7 @@
                 <form
                     method="POST"
                     class="comment-form"
+                    id="courseCommentForm"
                 >
 
                     {% csrf_token %}
@@ -513,6 +523,8 @@
                     </button>
 
                 </form>
+                <p class="comment-status" id="courseCommentStatus" role="status"
+                    aria-live="polite"></p>
 
 
                 {% else %}
@@ -538,10 +550,9 @@
 
 
 
+                <div id="courseCommentList">
                 {% for comment in comments %}
-
-
-                <div class="comment-card">
+                <div class="comment-card" data-comment-id="{{ comment.pk }}">
 
 
                     <div class="comment-header">
@@ -550,15 +561,21 @@
                         <div class="comment-author">
 
 
+                            {% if comment.author.profile_data.profile_picture %}
+                            <img class="comment-avatar"
+                                src="{{ comment.author.profile_data.profile_picture.url }}"
+                                alt="@{{ comment.author.username }} profile photo">
+                            {% else %}
                             <div class="comment-avatar">
-
                                 {{ comment.author.username|first|upper }}
-
                             </div>
+                            {% endif %}
 
 
                             <strong>
-                                {{ comment.author.username }}
+                                <a href="{% url 'blog:user_profile' comment.author.username %}">
+                                    @{{ comment.author.username|lower }}
+                                </a>
                             </strong>
 
 
@@ -619,24 +636,12 @@
 
 
                 {% empty %}
-
-
-                <div
-                    style="
-                        color:#64748b;
-                        font-size:10px;
-                        padding:10px 0;
-                    "
-                >
-
+                <div class="comment-empty" id="courseCommentEmpty">
                     No discussion yet.
                     Be the first to comment.
-
                 </div>
-
-
                 {% endfor %}
-
+                </div>
 
             </section>
 
@@ -733,7 +738,7 @@
                         </strong>
 
                         <span>
-                            {{ post.author.username }}
+                            {{ post.author.profile_data.display_name|default:post.author.username }} (@{{ post.author.username|lower }})
                         </span>
 
                     </div>

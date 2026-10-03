@@ -178,7 +178,7 @@
                             <select id="playgroundLanguage" class="editor-lang-select" data-language
                                 aria-label="Execution language">
                                 {% for item in languages %}
-                                <option value="{{ item }}" {% if item==selected_language %}selected{% endif %}>{{
+                                <option value="{{ item }}" {% if item == selected_language %}selected{% endif %}>{{
                                     item|title }}</option>
                                 {% endfor %}
                             </select>

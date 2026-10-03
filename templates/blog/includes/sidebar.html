@@ -1,6 +1,9 @@
 {% load static %}
 
-<aside class="sidebar" aria-label="Main navigation">
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <button type="button" class="mobile-drawer-close" id="mobileDrawerClose" aria-label="Close navigation menu">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
     <a href="{% if user.is_authenticated %}{% url 'blog:dashboard' %}{% else %}{% url 'blog:blogpage' %}{% endif %}"
         class="brand">
         <img class="site-logo site-logo--sidebar" src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
@@ -42,13 +45,13 @@
         class="nav-link {% if request.resolver_match.url_name == 'community' %}active{% endif %}">
         <i class="bi bi-people" aria-hidden="true"></i><span>Community</span>
     </a>
+    {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
     <a href="{% url 'blog:messages' %}"
         class="nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
         <i class="bi bi-chat-dots" aria-hidden="true"></i><span>Messages</span>
-        {% if UNREAD_MESSAGE_COUNT > 0 %}<span class="message-unread-count"
-            aria-label="{{ UNREAD_MESSAGE_COUNT }} unread messages">{% if UNREAD_MESSAGE_COUNT > 99 %}99+{% else %}{{
-            UNREAD_MESSAGE_COUNT }}{% endif %}</span>{% endif %}
+        {% if unread_count > 0 %}<span class="message-unread-count" aria-label="{{ unread_count }} unread messages">{% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}</span>{% endif %}
     </a>
+    {% endwith %}
 
     <div class="nav-label nav-label-spaced">Account</div>
     <a href="{% url 'blog:profile' %}"

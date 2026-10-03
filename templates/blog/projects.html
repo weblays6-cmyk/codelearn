@@ -323,7 +323,7 @@ Projects | {{ SITE_NAME }}
 
                             <div class="owner-avatar">
 
-                                {{ project.owner.username|first|upper }}
+                                {{ project.owner.profile_data.display_name|default:project.owner.username|first|upper }}
 
                             </div>
 
@@ -331,11 +331,11 @@ Projects | {{ SITE_NAME }}
                             <div class="owner-info">
 
                                 <strong>
-                                    {{ project.owner.username }}
+                                    {{ project.owner.profile_data.display_name|default:project.owner.username }}
                                 </strong>
 
                                 <span>
-                                    Project creator
+                                    @{{ project.owner.username|lower }} · Project creator
                                 </span>
 
                             </div>
