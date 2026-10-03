@@ -1,6 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
+from django.utils.text import slugify
+
+
+class PreserveOriginalFilenameStorage(FileSystemStorage):
+    def get_available_name(self, name, max_length=None):
+        if self.exists(name):
+            self.delete(name)
+        return name
 
 
 # =========================================================
@@ -43,6 +52,12 @@ class Post(models.Model):
 
     title = models.CharField(
         max_length=100
+    )
+
+    slug = models.SlugField(
+        max_length=180,
+        unique=True,
+        blank=True,
     )
 
     category = models.CharField(
@@ -89,6 +104,17 @@ class Post(models.Model):
     created_at = models.DateTimeField(
         auto_now_add=True
     )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or f'course-{self.pk or "new"}'
+            candidate = base_slug
+            suffix = 2
+            while Post.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                candidate = f'{base_slug}-{suffix}'
+                suffix += 1
+            self.slug = candidate
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -141,6 +167,12 @@ class Lesson(models.Model):
         max_length=200
     )
 
+    slug = models.SlugField(
+        max_length=220,
+        unique=True,
+        blank=True,
+    )
+
     content = models.TextField()
 
     video_url = models.URLField(
@@ -158,6 +190,17 @@ class Lesson(models.Model):
 
     class Meta:
         ordering = ['order']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or f'lesson-{self.pk or "new"}'
+            candidate = base_slug
+            suffix = 2
+            while Lesson.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                candidate = f'{base_slug}-{suffix}'
+                suffix += 1
+            self.slug = candidate
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
@@ -384,6 +427,7 @@ class AssignmentSubmission(models.Model):
 
     file = models.FileField(
         upload_to='assignments/',
+        storage=PreserveOriginalFilenameStorage(),
         blank=True,
         null=True
     )
@@ -463,22 +507,15 @@ class Comment(models.Model):
 class UserProfile(models.Model):
 
     GOAL_CHOICES = [
-        (
-            'job',
-            'Get a Job'
-        ),
-        (
-            'skill',
-            'Learn a New Skill'
-        ),
-        (
-            'projects',
-            'Build Projects'
-        ),
-        (
-            'interview',
-            'Prepare for Interviews'
-        ),
+        ('python', 'Learn Python'),
+        ('full_stack', 'Become a Full Stack Developer'),
+        ('django', 'Learn Django'),
+        ('dsa', 'Improve DSA'),
+        ('interview', 'Prepare for Interviews'),
+        ('projects', 'Build Projects'),
+        ('job', 'Get Job Ready'),
+        ('other', 'Other'),
+        ('skill', 'Learn a New Skill'),
     ]
 
     user = models.OneToOneField(
@@ -487,11 +524,50 @@ class UserProfile(models.Model):
         related_name='profile_data'
     )
 
+    display_name = models.CharField(
+        max_length=150,
+        blank=True,
+        default=''
+    )
+
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/',
+        blank=True,
+        null=True
+    )
+
+    is_private = models.BooleanField(
+        default=False
+    )
+
     goal = models.CharField(
         max_length=20,
         choices=GOAL_CHOICES,
         blank=True,
         null=True
+    )
+
+    onboarding_completed = models.BooleanField(
+        default=True
+    )
+
+    is_deactivated = models.BooleanField(
+        default=False
+    )
+
+    deactivated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    deletion_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    scheduled_deletion_at = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     created_at = models.DateTimeField(
@@ -1470,6 +1546,39 @@ class FollowRequest(models.Model):
         )
         
 # =========================================================
+# USER BLOCKS
+# =========================================================
+
+class UserBlock(models.Model):
+
+    blocker = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocks_created",
+    )
+
+    blocked = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocks_received",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["blocker", "blocked"],
+                name="unique_user_block",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(blocker=models.F("blocked")),
+                name="prevent_self_block",
+            ),
+        ]
+
+
+# =========================================================
 # NOTIFICATIONS
 # =========================================================
 
@@ -1513,6 +1622,48 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class AITutorConversation(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="ai_tutor_conversations",
+    )
+    title = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_active_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.user.username}: {self.title}"
+
+
+class AITutorMessage(models.Model):
+
+    ROLE_CHOICES = [
+        ("user", "User"),
+        ("assistant", "Assistant"),
+    ]
+
+    conversation = models.ForeignKey(
+        AITutorConversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        indexes = [
+            models.Index(fields=["conversation", "id"]),
+        ]
 
     def __str__(self):
         return (

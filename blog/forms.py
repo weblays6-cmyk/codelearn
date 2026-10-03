@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from .models import (
     Post,
@@ -9,6 +12,33 @@ from .models import (
     UserProfile,
     Project,
 )
+
+PROFILE_PICTURE_MAX_SIZE = 5 * 1024 * 1024
+PROFILE_PICTURE_FORMATS = {
+    '.jpg': 'JPEG',
+    '.jpeg': 'JPEG',
+    '.png': 'PNG',
+    '.webp': 'WEBP',
+}
+
+
+def validate_profile_picture(profile_picture):
+    if not profile_picture:
+        return profile_picture
+
+    if profile_picture.size > PROFILE_PICTURE_MAX_SIZE:
+        raise ValidationError('Profile pictures must be 5 MB or smaller.')
+
+    extension = Path(profile_picture.name).suffix.lower()
+    expected_format = PROFILE_PICTURE_FORMATS.get(extension)
+    actual_format = getattr(getattr(profile_picture, 'image', None), 'format', None)
+    if not expected_format or actual_format != expected_format:
+        raise ValidationError('Choose a valid JPG, PNG, or WEBP image.')
+    image = profile_picture.image
+    if image.width != image.height:
+        raise ValidationError('Crop profile pictures to a square before saving.')
+
+    return profile_picture
 
 
 class PostForm(forms.ModelForm):
@@ -86,6 +116,35 @@ class CommentForm(forms.ModelForm):
 # =========================================================
 
 class EmailSignupForm(forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        min_length=3,
+        validators=[
+            RegexValidator(
+                regex=r'^@?[A-Za-z0-9_]+$',
+                message='Use only letters, numbers, and underscores.',
+            )
+        ],
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Choose your username'
+            }
+        )
+    )
+
+    profile_picture = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={
+                'class': 'profile-upload-input profile-photo-input',
+                'accept': 'image/jpeg,image/png,image/webp',
+                'data-preview': '#signupProfilePreview',
+                'data-placeholder': '#signupProfilePlaceholder',
+                'data-error': '#signupProfileError',
+            }
+        )
+    )
 
     email = forms.EmailField(
         max_length=254,
@@ -93,17 +152,6 @@ class EmailSignupForm(forms.Form):
             attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your email'
-            }
-        )
-    )
-
-    username = forms.CharField(
-        max_length=150,
-        min_length=3,
-        widget=forms.TextInput(
-            attrs={
-                'class': 'form-control',
-                'placeholder': 'Choose your username'
             }
         )
     )
@@ -139,11 +187,11 @@ class EmailSignupForm(forms.Form):
         return email
 
     def clean_username(self):
-        username = self.cleaned_data['username'].strip().lower()
+        username = self.cleaned_data['username'].strip().removeprefix('@').lower()
 
-        if not username:
+        if len(username) < 3:
             raise forms.ValidationError(
-                "Username is required."
+                "Username must contain at least 3 letters, numbers, or underscores."
             )
 
         if User.objects.filter(
@@ -155,6 +203,11 @@ class EmailSignupForm(forms.Form):
             )
 
         return username
+
+    def clean_profile_picture(self):
+        return validate_profile_picture(
+            self.cleaned_data.get('profile_picture')
+        )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -191,11 +244,36 @@ class EmailSignupForm(forms.Form):
             password=password
         )
 
-        UserProfile.objects.get_or_create(
-            user=user
+        profile_picture = self.cleaned_data.get('profile_picture')
+        UserProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                'display_name': username,
+                'profile_picture': profile_picture,
+            },
         )
 
         return user
+
+
+class ProfilePictureForm(forms.Form):
+    profile_picture = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'picture-file-input profile-photo-input',
+            'accept': 'image/jpeg,image/png,image/webp',
+            'data-preview': '#newProfilePicturePreview',
+            'data-placeholder': '#newProfilePicturePlaceholder',
+            'data-error': '#profilePictureClientError',
+        }),
+    )
+
+    def clean_profile_picture(self):
+        return validate_profile_picture(
+            self.cleaned_data.get('profile_picture')
+        )
+
+
 # =========================================================
 # PROJECT FORM
 # =========================================================
