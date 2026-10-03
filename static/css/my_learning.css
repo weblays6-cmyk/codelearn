@@ -119,6 +119,7 @@
     border: 1px solid #292c43;
     border-radius: 18px;
     padding: 20px;
+    cursor: pointer;
     transition: .25s;
 }
 
@@ -169,9 +170,9 @@
 }
 
 .course-description {
-    color: #737a94;
-    font-size: 11px;
-    line-height: 1.65;
+    color: #5a6379;
+    font-size: 13px;
+    line-height: 1.7;
     min-height: 38px;
     margin-bottom: 20px;
 }
@@ -234,9 +235,10 @@
     color: white;
     padding: 10px 14px;
     border-radius: 9px;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
+    cursor: pointer;
     transition: .2s;
 }
 

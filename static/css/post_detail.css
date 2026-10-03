@@ -716,7 +716,8 @@
 
             font-family: inherit;
 
-            font-size: 11px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
 
@@ -753,11 +754,23 @@
                     #2563eb
                 );
 
-            font-size: 10px;
+            font-size: 13px;
 
             font-weight: 700;
 
             cursor: pointer;
+        }
+
+        .comment-submit:disabled {
+            cursor: wait;
+            opacity: .7;
+        }
+
+        .comment-status {
+            min-height: 1.4em;
+            margin: -10px 0 14px;
+            color: #a5f3c4;
+            font-size: 13px;
         }
 
 
@@ -843,7 +856,11 @@
                     #2563eb
                 );
 
-            font-size: 9px;
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            font-size: 13px;
 
             font-weight: 800;
         }
@@ -851,7 +868,12 @@
 
         .comment-author strong {
 
-            font-size: 10px;
+            font-size: 13px;
+        }
+
+        .comment-author a {
+            color: #f1f5f9;
+            text-decoration: none;
         }
 
 
@@ -859,17 +881,25 @@
 
             color: var(--cd-dim);
 
-            font-size: 8px;
+            font-size: 11px;
         }
 
 
         .comment-text {
 
-            color: #cbd5e1;
+            color: #e2e8f0;
 
-            font-size: 10px;
+            font-size: 15px;
 
-            line-height: 1.7;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .comment-empty {
+            padding: 10px 0;
+            color: #94a3b8;
+            font-size: 13px;
         }
 
 
@@ -890,7 +920,7 @@
 
             border-radius: 7px;
 
-            font-size: 8px;
+            font-size: 12px;
         }
 
 
@@ -1043,4 +1073,3 @@
         padding: 20px;
     }
 }
-

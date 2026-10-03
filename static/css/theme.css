@@ -30,6 +30,7 @@
    LIGHT THEME
 ========================= */
 
+html.light-theme,
 body.light-theme {
 
     --bg: #f5f7fb;
@@ -56,6 +57,7 @@ body.light-theme {
    LIGHT THEME UI
 ========================= */
 
+html.light-theme body,
 body.light-theme {
     background:
         radial-gradient(

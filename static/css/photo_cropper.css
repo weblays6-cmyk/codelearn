@@ -1,0 +1,113 @@
+.photo-crop-backdrop[hidden] {
+    display: none;
+}
+
+.photo-crop-backdrop {
+    position: fixed;
+    z-index: 2000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(4, 8, 18, .82);
+}
+
+.photo-crop-dialog {
+    width: min(100%, 470px);
+    padding: 24px;
+    border: 1px solid var(--ui-border, #343650);
+    border-radius: 20px;
+    background: var(--ui-surface, #111525);
+    color: var(--ui-text, #f5f7ff);
+    box-shadow: 0 28px 85px rgba(0, 0, 0, .48);
+}
+
+.photo-crop-dialog h2 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.photo-crop-dialog p {
+    margin: 7px 0 16px;
+    color: var(--ui-muted, #a8b5c8);
+    font-size: 13px;
+}
+
+.photo-crop-canvas-wrap {
+    width: min(100%, 340px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid rgba(169, 145, 255, .56);
+    border-radius: 14px;
+    background: #080a13;
+    touch-action: none;
+}
+
+.photo-crop-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+.photo-crop-canvas:active {
+    cursor: grabbing;
+}
+
+.photo-crop-zoom {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    max-width: 340px;
+    margin: 17px auto 0;
+    color: var(--ui-muted, #a8b5c8);
+    font-size: 13px;
+}
+
+.photo-crop-zoom input {
+    width: 100%;
+    accent-color: #8974ff;
+}
+
+.photo-crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.photo-crop-actions button {
+    min-height: 42px;
+    padding: 9px 15px;
+    border: 1px solid var(--ui-border, #343650);
+    border-radius: 10px;
+    background: var(--ui-surface-soft, #1a2030);
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.photo-crop-actions .photo-crop-use {
+    border-color: transparent;
+    background: linear-gradient(135deg, #805cff, #4d8dff);
+    color: #fff;
+}
+
+.photo-crop-actions button:focus-visible,
+.photo-crop-zoom input:focus-visible {
+    outline: 2px solid #b5a8ff;
+    outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .photo-crop-dialog {
+        padding: 19px;
+    }
+
+    .photo-crop-actions button {
+        flex: 1;
+    }
+}
