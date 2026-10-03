@@ -1279,6 +1279,114 @@ showLatestMessageImmediately();
     }
 
 
+    function appendIncomingMessage(data) {
+        if (messagesBox.querySelector(
+            `[data-message-id="${data.id}"]`
+        )) {
+            return;
+        }
+
+        const shouldScroll = isNearBottom();
+        const emptyState = document.getElementById("chatEmpty");
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        const row = document.createElement("div");
+        row.className = "chat-message-row message-row-other";
+        row.dataset.messageId = data.id;
+
+        const avatar = data.sender_profile_picture
+            ? document.createElement("img")
+            : document.createElement("div");
+        avatar.className = "chat-small-avatar";
+        if (data.sender_profile_picture) {
+            avatar.src = data.sender_profile_picture;
+            avatar.alt = data.sender_display_name || data.sender_username;
+            avatar.style.objectFit = "cover";
+        } else {
+            avatar.textContent = (
+                data.sender_display_name ||
+                data.sender_username ||
+                "?"
+            ).charAt(0).toUpperCase();
+        }
+        row.appendChild(avatar);
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+
+        if (data.deleted_for_everyone) {
+            const deleted = document.createElement("span");
+            deleted.className = "message-deleted";
+            deleted.textContent = "This message was deleted";
+            bubble.appendChild(deleted);
+        } else {
+            if (data.content) {
+                const text = document.createElement("span");
+                text.className = "message-text";
+                text.innerHTML = escapeHtml(data.content).replace(/\n/g, "<br>");
+                bubble.appendChild(text);
+            }
+        }
+
+        content.appendChild(bubble);
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+        const time = document.createElement("span");
+        time.className = "message-time";
+        time.textContent = data.created_at || "Just now";
+        meta.appendChild(time);
+        content.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "message-actions";
+
+        const reply = document.createElement("button");
+        reply.type = "button";
+        reply.className = "message-action-btn message-reply-btn";
+        reply.dataset.messageId = data.id;
+        reply.dataset.messageText = data.content || "";
+        reply.title = "Reply";
+        reply.setAttribute("aria-label", "Reply");
+        reply.innerHTML = '<i class="bi bi-reply"></i>';
+        actions.appendChild(reply);
+
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.className = "message-action-btn message-copy-btn";
+        copy.dataset.copyText = data.content || "";
+        copy.title = "Copy";
+        copy.setAttribute("aria-label", "Copy");
+        copy.innerHTML = '<i class="bi bi-copy"></i>';
+        actions.appendChild(copy);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "message-action-btn message-delete-btn";
+        remove.dataset.messageId = data.id;
+        remove.dataset.messageSender = data.sender_id;
+        remove.title = "Delete";
+        remove.setAttribute("aria-label", "Delete");
+        remove.innerHTML = '<i class="bi bi-trash3"></i>';
+        actions.appendChild(remove);
+
+        content.appendChild(actions);
+        row.appendChild(content);
+        if (!data.deleted_for_everyone) {
+            addAttachmentsToMessage(row, data.attachments);
+        }
+        messagesBox.appendChild(row);
+
+        if (shouldScroll) {
+            scrollToBottom();
+        }
+    }
+
+
     /* =====================================================
        SEND MESSAGE
        
@@ -2058,6 +2166,15 @@ function markMessageAsDeleted(row) {
 
             (data.messages || []).forEach(
                 function (message) {
+                    if (
+                        Number(message.sender_id) !==
+                            Number(page.dataset.currentUserId) &&
+                        !messagesBox.querySelector(
+                            `[data-message-id="${message.id}"]`
+                        )
+                    ) {
+                        appendIncomingMessage(message);
+                    }
 
                     updateMessageStatus(
                         message.id,
@@ -2090,6 +2207,55 @@ function markMessageAsDeleted(row) {
 
 
     pollStatus();
+
+
+    let websocket = null;
+    let reconnectTimer = null;
+    let reconnectDelay = 1000;
+    let shouldReconnect = true;
+
+    function connectWebSocket() {
+        if (!window.WebSocket || !shouldReconnect) {
+            return;
+        }
+
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const url = `${protocol}//${window.location.host}/ws/messages/${page.dataset.conversationId}/`;
+        websocket = new WebSocket(url);
+
+        websocket.addEventListener("open", function () {
+            reconnectDelay = 1000;
+            if (statusTimer) {
+                clearInterval(statusTimer);
+                statusTimer = null;
+            }
+            pollStatus();
+        });
+        websocket.addEventListener("message", function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === "message_created") {
+                    pollStatus();
+                }
+            } catch (error) {
+                console.error("Invalid chat update received.", error);
+            }
+        });
+        websocket.addEventListener("close", function (event) {
+            if (!shouldReconnect || event.code === 4401 || event.code === 4403) {
+                return;
+            }
+            if (!statusTimer) {
+                statusTimer = window.setInterval(pollStatus, 2000);
+            }
+            reconnectTimer = window.setTimeout(function () {
+                reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+                connectWebSocket();
+            }, reconnectDelay);
+        });
+    }
+
+    connectWebSocket();
 
 
     /* =====================================================
@@ -2156,6 +2322,13 @@ function markMessageAsDeleted(row) {
                     statusTimer
                 );
 
+            }
+            shouldReconnect = false;
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+            }
+            if (websocket) {
+                websocket.close(1000);
             }
 
         }

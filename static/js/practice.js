@@ -943,7 +943,7 @@ def __build_tree(arr):
       if (progressCircle) {
         const sDeg = summary.total ? (summary.solved / summary.total) * 360 : 0;
         const pDeg = sDeg + (summary.total ? (summary.attempted / summary.total) * 360 : 0);
-        progressCircle.style.background = `conic-gradient(#22c55e 0deg ${sDeg}deg, #3b82f6 ${sDeg}deg ${pDeg}deg, #1e293b ${pDeg}deg 360deg)`;
+        progressCircle.style.background = `conic-gradient(var(--green) 0deg ${sDeg}deg, var(--blue) ${sDeg}deg ${pDeg}deg, var(--bg-secondary) ${pDeg}deg 360deg)`;
       }
     }
 
