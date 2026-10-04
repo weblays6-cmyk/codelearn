@@ -197,6 +197,8 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+SITE_BASE_URL = os.getenv('SITE_BASE_URL', 'https://vgrowhub.hopto.org' if not DEBUG else 'http://127.0.0.1:8000').rstrip('/')
+
 SITE_ID = 1
 
 # =========================================================

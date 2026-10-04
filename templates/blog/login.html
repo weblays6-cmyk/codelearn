@@ -448,6 +448,44 @@
             color: #a78bfa;
         }
 
+        .auth-messages {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .auth-message {
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .auth-message--success {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .auth-message--info {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .auth-message--error,
+        .auth-message--warning {
+            border-color: rgba(251, 113, 133, .38);
+            background: rgba(244, 63, 94, .08);
+            color: #fecdd3;
+        }
+
         .login-subtitle {
             margin-top: 7px;
 
@@ -1113,6 +1151,15 @@
                     <i class="bi bi-person-lock"></i>
                 </div>
 
+                {% if messages %}
+                <div class="auth-messages" aria-live="polite">
+                    {% for message in messages %}
+                    <div class="auth-message auth-message--{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
                 <!-- =================================================
                  FORGOT PASSWORD / OTP

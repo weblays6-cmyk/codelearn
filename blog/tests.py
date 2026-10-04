@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.signals import user_logged_in
 from django.core.management import call_command
@@ -180,6 +181,45 @@ class EmailServiceTests(TestCase):
 		self.assertEqual(mail.outbox[0].from_email, 'noreply@vgrowhub.example')
 		self.assertEqual(mail.outbox[0].to, ['learner@example.test'])
 		self.assertNotIn('password', mail.outbox[0].body.lower())
+
+	@patch('blog.views.send_gmail')
+	def test_signup_success_message_uses_production_login_url(self, send_gmail):
+		response = self.client.post(
+			reverse('blog:signup'),
+			{
+				'username': 'newuser',
+				'email': 'newuser@example.com',
+				'password1': 'VeryStrongPass!123',
+				'password2': 'VeryStrongPass!123',
+			},
+			follow=True,
+		)
+
+		self.assertContains(response, 'Account created successfully! 🎉')
+		self.assertContains(response, 'We’ve sent your welcome email')
+		send_gmail.assert_called_once()
+		self.assertIn(settings.SITE_BASE_URL + '/login/', send_gmail.call_args.args[2])
+		self.assertNotIn('127.0.0.1', send_gmail.call_args.args[2])
+
+	@patch('blog.views.send_gmail')
+	def test_forgot_password_success_shows_professional_reset_message(self, send_gmail):
+		user = User.objects.create_user(
+			'otpuser',
+			email='otpuser@example.com',
+			password='StrongPassword!123',
+		)
+
+		response = self.client.post(
+			reverse('blog:forgot_password'),
+			{'email': user.email},
+			follow=True,
+		)
+
+		self.assertContains(response, 'Check your email 📩')
+		self.assertContains(response, 'Enter the OTP here to continue resetting your password.')
+		send_gmail.assert_called_once()
+		self.assertEqual(send_gmail.call_args.args[1], 'vGrowHub Password Reset OTP')
+		self.assertNotIn('127.0.0.1', send_gmail.call_args.args[2])
 
 
 class PasswordChangeTests(TestCase):

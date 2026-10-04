@@ -16,7 +16,6 @@ from django.http import (
     HttpResponseForbidden,
 )
 from django.core.exceptions import ImproperlyConfigured
-from django.core.mail import send_mail
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
@@ -43,7 +42,7 @@ from .services.course_progress import (
     start_lesson,
 )
 
-from .gmail_service import send_gmail
+from .gmail_service import build_site_url, send_gmail
 from .forms import (
     CommentForm,
     EmailSignupForm,
@@ -857,12 +856,8 @@ def signup(request):
         if form.is_valid():
 
             user = form.save()
-
-            try:
-                send_gmail(
-                    user.email,
-                    "Welcome to vGrowHub 🎉",
-                    f"""Hello @{user.username},
+            login_url = build_site_url(reverse('blog:login'))
+            welcome_text = f"""Hello @{user.username},
 
 Welcome to vGrowHub!
 
@@ -871,19 +866,51 @@ Your account has been successfully created.
 Username:
 @{user.username}
 
-You can now start learning, practicing, building projects and growing your skills on vGrowHub.
+You can now start learning, practicing, building projects, and growing your skills on vGrowHub.
 
 Login to vGrowHub:
-{request.build_absolute_uri(reverse('blog:login'))}
+{login_url}
+
+If you did not create this account, please contact vGrowHub Support.
 
 Regards,
 vGrowHub Team
 """
+            welcome_html = f"""
+            <html>
+              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a; background: #f8fafc; padding: 24px;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px;">
+                  <h2 style="margin-top: 0; color: #111827;">Welcome to vGrowHub!</h2>
+                  <p>Hello @{user.username},</p>
+                  <p>Your account has been successfully created.</p>
+                  <p><strong>Username:</strong> @{user.username}</p>
+                  <p>You can now start learning, practicing, building projects, and growing your skills on vGrowHub.</p>
+                  <p><strong>Login to vGrowHub:</strong><br><a href="{login_url}">{login_url}</a></p>
+                  <p>If you did not create this account, please contact vGrowHub Support.</p>
+                  <p>Regards,<br>vGrowHub Team</p>
+                </div>
+              </body>
+            </html>
+            """
+            try:
+                send_gmail(
+                    user.email,
+                    "Welcome to vGrowHub — Your account is ready 🎉",
+                    welcome_text,
+                    welcome_html,
+                )
+                django_messages.success(
+                    request,
+                    "Account created successfully! 🎉\nYour vGrowHub account is ready. We’ve sent your welcome email to your registered email address. Please check your Inbox. If you don’t see it within a few minutes, check your Spam or Promotions folder.",
                 )
             except Exception:
                 logger.exception(
                     "vGrowHub welcome email delivery failed for user %s.",
                     user.pk,
+                )
+                django_messages.warning(
+                    request,
+                    "Your account was created successfully, but we couldn't send the welcome email right now. You can continue to log in and try again later.",
                 )
 
             return redirect(
@@ -933,9 +960,7 @@ def forgot_password(request):
                     "EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must be configured."
                 )
 
-            send_mail(
-                subject=f"{settings.SITE_NAME} - Password Reset OTP",
-                message=f"""Hi,
+            otp_email_body = f"""Hello @{user.username},
 
 We received a request to reset your {settings.SITE_NAME} password.
 
@@ -943,21 +968,52 @@ Your password reset OTP is:
 
 {otp}
 
-Use this OTP to verify your identity and reset your password.
+This OTP expires according to the existing OTP expiry configuration.
 
-If you did not request a password reset, you can safely ignore this email.
+If you did not request this password reset, you can safely ignore this email.
 
 Regards,
-{settings.SITE_NAME} Team
-""",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+{settings.SITE_NAME} Security Team
+"""
+            otp_email_html = f"""
+            <html>
+              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a; background: #f8fafc; padding: 24px;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px;">
+                  <h2 style="margin-top: 0; color: #111827;">vGrowHub Password Reset OTP</h2>
+                  <p>Hello @{user.username},</p>
+                  <p>We received a request to reset your vGrowHub password.</p>
+                  <p><strong>Your password reset OTP is:</strong></p>
+                  <p style="font-size: 28px; font-weight: 700; letter-spacing: 0.2em; color: #7c3aed; margin: 18px 0;">{otp}</p>
+                  <p>This OTP expires according to the existing OTP expiry configuration.</p>
+                  <p>If you did not request this password reset, you can safely ignore this email.</p>
+                  <p>Regards,<br>vGrowHub Security Team</p>
+                </div>
+              </body>
+            </html>
+            """
+            send_gmail(
+                user.email,
+                "vGrowHub Password Reset OTP",
+                otp_email_body,
+                otp_email_html,
             )
 
             request.session["reset_email"] = user.email
             request.session["reset_otp"] = otp
             request.session["otp_verified"] = False
+
+            django_messages.success(
+                request,
+                "Check your email 📩",
+            )
+            django_messages.info(
+                request,
+                "We’ve sent a password reset OTP to your registered email address. Please check your Inbox. If you don’t see it within a few minutes, check your Spam or Promotions folder.",
+            )
+            django_messages.info(
+                request,
+                "Enter the OTP here to continue resetting your password.",
+            )
 
             return render(
                 request,
@@ -980,25 +1036,20 @@ Regards,
                 }
             )
 
-        except Exception as error:
+        except Exception:
 
             logger.exception("vGrowHub password reset email delivery failed.")
 
-            error_message = "Unable to send the vGrowHub password reset OTP. Please try again."
-            if settings.DEBUG:
-                details = str(error)
-                if settings.EMAIL_HOST_PASSWORD:
-                    details = details.replace(settings.EMAIL_HOST_PASSWORD, "[redacted]")
-                error_message = (
-                    f"{error_message} ({type(error).__name__}: {details[:500]})"
-                )
+            django_messages.error(
+                request,
+                "We couldn't send the password reset email right now. Please try again in a few moments.",
+            )
 
             return render(
                 request,
                 "blog/login.html",
                 {
                     "show_forgot": True,
-                    "error": error_message
                 }
             )
 
