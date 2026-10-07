@@ -487,8 +487,9 @@
 
             background:
                 conic-gradient(
-                    #8b5cf6 0deg 248deg,
-                    #20263a 248deg 360deg
+                    from -90deg,
+                    var(--primary, var(--ui-blue)) 0 var(--completion, 0%),
+                    var(--ui-border) var(--completion, 0%) 100%
                 );
         }
 .assignments-page .progress-circle::after {
@@ -500,7 +501,7 @@
 
             border-radius: 50%;
 
-            background: #0b0e1c;
+            background: var(--ui-surface);
         }
 .assignments-page .circle-text {
             position: relative;
@@ -511,6 +512,7 @@
 .assignments-page .circle-text strong {
             display: block;
             font-size: 21px;
+            color: var(--ui-text, var(--text));
         }
 .assignments-page .circle-text span {
             color: var(--dim);
@@ -667,8 +669,29 @@
     }
 
     .assignments-page .completion {
-        flex-direction: column;
-        align-items: flex-start;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .assignments-page .progress-circle {
+        width: 78px;
+        height: 78px;
+    }
+
+    .assignments-page .progress-circle::after {
+        inset: 7px;
+    }
+
+    .assignments-page .circle-text strong {
+        font-size: 17px;
+    }
+
+    .assignments-page .circle-text span {
+        font-size: 8px;
+    }
+
+    .assignments-page .completion-info {
+        min-width: 0;
     }
 }
 

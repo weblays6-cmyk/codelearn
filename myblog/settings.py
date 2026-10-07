@@ -42,7 +42,51 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('DJANGO_HSTS_INCLUDE_SUBDOMAINS', 'false').strip().lower() in {'1', 'true', 'yes'}
     SECURE_HSTS_PRELOAD = os.getenv('DJANGO_HSTS_PRELOAD', 'false').strip().lower() in {'1', 'true', 'yes'}
 
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+
+TEMPLATES_DIR = Path.joinpath(BASE_DIR, 'templates')
+STATIC_DIR = Path.joinpath(BASE_DIR, 'static')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+DEBUG = os.getenv('DJANGO_DEBUG', 'true').strip().lower() in {'1', 'true', 'yes'}
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is disabled.')
+    SECRET_KEY = 'django-insecure-development-only-key-change-before-deploying'
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
+if not ALLOWED_HOSTS:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be set when DEBUG is disabled.')
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+ALLOWED_HOSTS = [
+    "vgrowhub.hopto.org",
+    "https://vgrowhub.hopto.org",
+    "127.0.0.1",
+    "localhost",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://vgrowhub.hopto.org",
+    "http://vgrowhub.hopto.org",
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -200,6 +244,13 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SITE_BASE_URL = os.getenv('SITE_BASE_URL', 'https://vgrowhub.hopto.org' if not DEBUG else 'http://127.0.0.1:8000').rstrip('/')
 
 SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    }
+}
 
 # =========================================================
 # WEBSITE BRAND NAME

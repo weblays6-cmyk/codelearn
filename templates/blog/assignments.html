@@ -638,7 +638,9 @@ Assignments | {{ SITE_NAME }}
                 <div class="completion">
 
 
-                    <div class="progress-circle">
+                    <div class="progress-circle" role="img"
+                        aria-label="Completion rate: {{ completion_percent }}%"
+                        style="--completion: {{ completion_percent }}%;">
 
                         <div class="circle-text">
 
