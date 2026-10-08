@@ -84,6 +84,18 @@
         }
 
 
+        .profile-avatar-wrap {
+            flex-shrink: 0;
+        }
+
+        .profile-photo-frame {
+            position: relative;
+            overflow: visible;
+            width: 90px;
+            height: 90px;
+            border-radius: 25px;
+        }
+
         .big-avatar {
 
             width: 90px;
@@ -110,6 +122,219 @@
 
             box-shadow:
                 0 15px 40px rgba(86,70,220,.25);
+        }
+
+        .profile-photo-preview {
+            position: relative;
+            display: block;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: 0;
+            border-radius: 25px;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .profile-photo-preview .big-avatar {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-photo-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #815cff, #437cff);
+            color: #fff;
+            font-size: 35px;
+            font-weight: 850;
+        }
+
+        .profile-photo-view-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 25px;
+            background: color-mix(in srgb, var(--card-solid) 48%, transparent);
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.98);
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        }
+
+        .profile-photo-interactive:hover .profile-photo-view-overlay,
+        .profile-photo-interactive:focus-within .profile-photo-view-overlay {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        .profile-photo-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .profile-picture-edit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 8px 13px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-solid);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .profile-picture-hover-action {
+            position: absolute;
+            z-index: 2;
+            top: calc(100% + 4px);
+            left: 50%;
+            gap: 4px;
+            max-width: 100%;
+            min-height: 0;
+            padding: 2px 0;
+            border-color: transparent;
+            background: transparent;
+            color: var(--text);
+            font-size: 10px !important;
+            transform: translate(-50%, -4px);
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        }
+
+        .profile-photo-interactive:hover .profile-picture-hover-action,
+        .profile-photo-interactive:focus-within .profile-picture-hover-action {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+
+        .profile-picture-edit:hover {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+        }
+
+        .profile-picture-edit:focus-visible,
+        .profile-photo-preview:focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: -3px;
+        }
+
+        @media (hover: none) {
+            .profile-photo-interactive:hover .profile-photo-view-overlay,
+            .profile-photo-interactive:focus-within .profile-photo-view-overlay {
+                display: none;
+            }
+
+            .profile-photo-interactive:hover .profile-picture-hover-action,
+            .profile-photo-interactive:focus-within .profile-picture-hover-action {
+                transform: none;
+            }
+
+            .profile-picture-hover-action {
+                position: static;
+                display: inline-flex;
+                max-width: calc(100vw - 32px);
+                min-height: 44px;
+                margin-top: 8px;
+                padding: 8px 12px;
+                border-color: var(--border);
+                background: var(--card-solid);
+                color: var(--text);
+                transform: none;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .profile-photo-frame {
+                width: max-content;
+                height: auto;
+                overflow: visible;
+                border-radius: 0;
+            }
+        }
+
+        .photo-lightbox[hidden] {
+            display: none;
+        }
+
+        .photo-lightbox {
+            position: fixed;
+            z-index: 1100;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 12px;
+            background: rgba(4, 8, 18, 0.82);
+        }
+
+        .photo-lightbox-dialog {
+            position: relative;
+            display: grid;
+            max-width: 100%;
+            max-height: 100%;
+            gap: 12px;
+            place-items: center;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--card-solid);
+            box-shadow: 0 24px 80px var(--shadow);
+        }
+
+        .photo-lightbox-image {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: min(calc(100vw - 64px), 1100px);
+            max-height: calc(100vh - 64px);
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        .photo-lightbox-close {
+            position: absolute;
+            z-index: 1;
+            top: 6px;
+            right: 6px;
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            background: var(--card-solid);
+            color: var(--text);
+            font-size: 25px !important;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .photo-lightbox-close:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
         }
 
 
@@ -495,6 +720,195 @@
         }
 
 
+        .contributions-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-box.contributions-card {
+            background: var(--card);
+            border-color: var(--border);
+            border-radius: 18px;
+            color: var(--text);
+        }
+
+        .contribution-tabs {
+            display: inline-flex;
+            align-self: flex-start;
+            flex-wrap: wrap;
+            gap: 4px;
+            max-width: 100%;
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+        }
+
+
+        .contribution-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 36px;
+            padding: 7px 13px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+
+        .contribution-tab:hover {
+            color: var(--text);
+            background: var(--card);
+        }
+
+
+        .contribution-tab.is-active {
+            border-color: var(--border);
+            background: var(--card);
+            color: var(--text);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .contribution-tab:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .contribution-load-error {
+            margin: 0;
+            color: #b4233a;
+            font-size: 13px;
+        }
+
+
+        .contribution-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+
+        .contribution-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-secondary);
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+
+        .contribution-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(17, 24, 39, 0.18);
+        }
+
+
+        .project-item {
+            align-items: center;
+        }
+
+
+        .project-thumb {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #31364f;
+            background: #151b2f;
+        }
+
+
+        .project-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+
+        .contribution-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+
+        .contribution-title {
+            margin-bottom: 6px;
+            color: #edf2ff;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+
+        .contribution-preview {
+            margin: 0;
+            color: #9aa5bd;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+
+        .tech-stack {
+            margin-top: 8px;
+            color: #b7c9ff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            word-break: break-word;
+        }
+
+
+        .contribution-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+            color: #75829b;
+            font-size: 9px;
+            line-height: 1.5;
+        }
+
+
+        .contribution-meta i {
+            margin-right: 4px;
+        }
+
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            border: 1px solid #2c3655;
+            border-radius: 999px;
+            background: rgba(118, 95, 255, 0.08);
+            color: #c9d4ff;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+
         /* =====================================================
            EMPTY
         ===================================================== */
@@ -638,4 +1052,3 @@
 .learning-overview-card {
     margin-bottom: 18px;
 }
-

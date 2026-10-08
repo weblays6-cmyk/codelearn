@@ -514,6 +514,12 @@ urlpatterns = [
         views.project_share,
         name="project_share"
     ),
+
+    path(
+        "global-search/",
+        views.global_search,
+        name="global_search"
+    ),
 # =========================================================
 # MESSAGES
 # =========================================================
@@ -555,5 +561,50 @@ path(
         "community/",
         views.community,
         name="community"
+    ),
+    path(
+        "community/create/",
+        views.community_post_create,
+        name="community_post_create",
+    ),
+    path(
+        "community/posts/<int:pk>/",
+        views.community_post_detail,
+        name="community_post_detail",
+    ),
+    path(
+        "community/posts/<int:pk>/edit/",
+        views.community_post_edit,
+        name="community_post_edit",
+    ),
+    path(
+        "community/posts/<int:pk>/delete/",
+        views.community_post_delete,
+        name="community_post_delete",
+    ),
+    path(
+        "community/posts/<int:pk>/reply/",
+        views.community_reply_create,
+        name="community_reply_create",
+    ),
+    path(
+        "community/replies/<int:pk>/delete/",
+        views.community_reply_delete,
+        name="community_reply_delete",
+    ),
+    path(
+        "community/replies/<int:pk>/edit/",
+        views.community_reply_edit,
+        name="community_reply_edit",
+    ),
+    path(
+        "community/posts/<int:pk>/like/",
+        views.community_post_like,
+        name="community_post_like",
+    ),
+    path(
+        "community/posts/<int:pk>/save/",
+        views.community_post_save,
+        name="community_post_save",
     ),
 ]

@@ -6,7 +6,7 @@ Profile | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'css/photo_cropper.css' %}">
 {% endblock %}
 
@@ -17,12 +17,32 @@ Profile | {{ SITE_NAME }}
     <div class="profile-main">
 
 
-        {% if user_profile.profile_picture %}
-        <img class="big-avatar" src="{{ user_profile.profile_picture.url }}" alt="{{ display_name }}"
-            style="object-fit: cover;">
-        {% else %}
-        <div class="big-avatar" aria-hidden="true">{{ display_name|first|upper }}</div>
-        {% endif %}
+        <div class="profile-avatar-wrap">
+            <div class="profile-photo-frame profile-photo-interactive">
+                {% if user_profile.profile_picture %}
+                <button class="profile-photo-preview" id="openProfilePhotoPreview" type="button"
+                    aria-label="View {{ display_name }}'s profile photo" aria-haspopup="dialog">
+                    <img class="big-avatar" src="{{ user_profile.profile_picture.url }}" alt="">
+                    <span class="profile-photo-view-overlay" aria-hidden="true">
+                        <span class="profile-photo-action">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                            View Photo
+                        </span>
+                    </span>
+                </button>
+                <button class="profile-picture-edit profile-picture-hover-action" type="button"
+                    data-open-profile-picture aria-label="Change profile photo">
+                    <i class="bi bi-camera" aria-hidden="true"></i>
+                    Change Photo
+                </button>
+                {% else %}
+                <button class="profile-photo-preview profile-photo-placeholder" type="button"
+                    data-open-profile-picture aria-label="Upload profile photo">
+                    {{ display_name|first|upper }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
 
 
         <div class="profile-text">
@@ -47,11 +67,6 @@ Profile | {{ SITE_NAME }}
                 Your learning journey, goals and progress
                 in one place.
             </p>
-
-            <button class="profile-picture-edit" id="openProfilePictureDialog" type="button">
-                <i class="bi bi-camera" aria-hidden="true"></i>
-                {% if user_profile.profile_picture %}Change Profile Picture{% else %}Upload New Photo{% endif %}
-            </button>
 
         </div>
 
@@ -136,10 +151,20 @@ Profile | {{ SITE_NAME }}
         </form>
     </section>
 </div>
+
+{% if user_profile.profile_picture %}
+<div class="photo-lightbox" id="profilePhotoLightbox" hidden>
+    <section class="photo-lightbox-dialog" role="dialog" aria-modal="true"
+        aria-label="Profile photo preview" tabindex="-1">
+        <button class="photo-lightbox-close" id="closeProfilePhotoPreview" type="button"
+            aria-label="Close photo preview">&times;</button>
+        <img class="photo-lightbox-image" id="profilePhotoLightboxImage" alt="{{ display_name }}'s profile photo">
+    </section>
+</div>
+{% endif %}
 {% include "blog/includes/photo_cropper_dialog.html" %}
 
 <style>
-    .profile-picture-edit,
     .picture-choose-button,
     .picture-save-button,
     .picture-cancel-button,
@@ -158,10 +183,6 @@ Profile | {{ SITE_NAME }}
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
-    }
-
-    .profile-picture-edit {
-        margin-top: 8px;
     }
 
     .profile-picture-edit:hover,
@@ -313,7 +334,7 @@ Profile | {{ SITE_NAME }}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const dialog = document.getElementById("profilePictureDialog");
-        const opener = document.getElementById("openProfilePictureDialog");
+        const openers = document.querySelectorAll("[data-open-profile-picture]");
         const closer = document.getElementById("closeProfilePictureDialog");
         const cancel = document.getElementById("cancelProfilePictureDialog");
         const form = document.getElementById("profilePictureForm");
@@ -322,7 +343,45 @@ Profile | {{ SITE_NAME }}
         const removeButton = document.getElementById("removeProfilePictureButton");
         const preview = document.getElementById("newProfilePicturePreview");
         const placeholder = document.getElementById("newProfilePicturePlaceholder");
-        if (!dialog || !opener || !closer || !cancel || !form || !input || !removeValue || !preview) {
+
+        const photoPreviewButton = document.getElementById("openProfilePhotoPreview");
+        const lightbox = document.getElementById("profilePhotoLightbox");
+        const lightboxImage = document.getElementById("profilePhotoLightboxImage");
+        const closeLightboxButton = document.getElementById("closeProfilePhotoPreview");
+        let lastPictureOpener = openers[0];
+
+        if (photoPreviewButton && lightbox && lightboxImage && closeLightboxButton) {
+            const closeLightbox = function () {
+                lightbox.hidden = true;
+                photoPreviewButton.focus();
+            };
+
+            photoPreviewButton.addEventListener("click", function () {
+                const photo = photoPreviewButton.querySelector("img");
+                if (!photo) {
+                    return;
+                }
+                lightboxImage.src = photo.src;
+                lightbox.hidden = false;
+                closeLightboxButton.focus();
+            });
+            closeLightboxButton.addEventListener("click", closeLightbox);
+            lightbox.addEventListener("click", function (event) {
+                if (event.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+            lightbox.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    closeLightbox();
+                } else if (event.key === "Tab") {
+                    event.preventDefault();
+                    closeLightboxButton.focus();
+                }
+            });
+        }
+
+        if (!dialog || !closer || !cancel || !form || !input || !removeValue || !preview) {
             return;
         }
 
@@ -332,10 +391,21 @@ Profile | {{ SITE_NAME }}
         };
         const closeDialog = function () {
             dialog.hidden = true;
-            opener.focus();
+            if (lastPictureOpener) {
+                lastPictureOpener.focus();
+            }
         };
 
-        opener.addEventListener("click", openDialog);
+        openers.forEach(function (opener) {
+            opener.addEventListener("click", function (event) {
+                event.stopPropagation();
+                lastPictureOpener = opener;
+                if (lightbox) {
+                    lightbox.hidden = true;
+                }
+                openDialog();
+            });
+        });
         closer.addEventListener("click", closeDialog);
         cancel.addEventListener("click", closeDialog);
         dialog.addEventListener("click", function (event) {
@@ -367,6 +437,55 @@ Profile | {{ SITE_NAME }}
 
         if (form.querySelector(".picture-errors")) {
             openDialog();
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+            const link = event.target.closest("#profile-contributions .contribution-tab");
+            const profileContainer = link && link.closest("#profile-contributions");
+            const targetUrl = link && link.getAttribute("data-profile-url");
+            if (!link || !profileContainer || !targetUrl) {
+                return;
+            }
+
+            event.preventDefault();
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", targetUrl, true);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.onload = function () {
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    console.error("Could not load profile contributions:", xhr.status);
+                    showContributionLoadError(profileContainer);
+                    return;
+                }
+
+                const responseDocument = new DOMParser().parseFromString(xhr.responseText, "text/html");
+                const replacement = responseDocument.querySelector("#profile-contributions");
+                if (!replacement) {
+                    console.error("Profile contributions response did not contain the expected section.");
+                    showContributionLoadError(profileContainer);
+                    return;
+                }
+                profileContainer.replaceWith(replacement);
+            };
+            xhr.onerror = function () {
+                console.error("Network error while loading profile contributions.");
+                showContributionLoadError(profileContainer);
+            };
+            xhr.send();
+        });
+
+        function showContributionLoadError(container) {
+            let message = container.querySelector(".contribution-load-error");
+            if (!message) {
+                message = document.createElement("p");
+                message.className = "contribution-load-error";
+                message.setAttribute("role", "alert");
+                message.textContent = "Contributions could not be loaded. Please try again.";
+                container.appendChild(message);
+            }
         }
     });
 </script>
@@ -648,121 +767,8 @@ Profile | {{ SITE_NAME }}
 
 
 <!-- =====================================================
-             MY POSTS
+             MY CONTRIBUTIONS
         ====================================================== -->
 
-<div class="card-box">
-
-
-    <div class="card-title">
-
-
-        <div class="card-title-icon">
-
-            <i class="bi bi-file-earmark-code"></i>
-
-        </div>
-
-
-        <div>
-
-            <h2>
-                My Posts
-            </h2>
-
-            <p>
-                Content you have shared
-            </p>
-
-        </div>
-
-
-    </div>
-
-
-    {% if posts %}
-
-
-    {% for post in posts %}
-
-
-    <div class="post-item">
-
-
-        <div>
-
-
-            <div class="post-title">
-
-                {{ post.title }}
-
-            </div>
-
-
-            <div class="post-date">
-
-                <i class="bi bi-calendar3"></i>
-
-                {{ post.created_at|date:"d M Y" }}
-
-            </div>
-
-
-        </div>
-
-
-        <a href="{% url 'blog:post_detail' post.slug %}" class="post-btn">
-
-            View
-
-            <i class="bi bi-arrow-right"></i>
-
-        </a>
-
-
-    </div>
-
-
-    {% endfor %}
-
-
-    {% else %}
-
-
-    <div class="empty">
-
-
-        <div class="empty-icon">
-
-            <i class="bi bi-file-earmark-code"></i>
-
-        </div>
-
-
-        <h3>
-            No posts yet
-        </h3>
-
-
-        <p>
-            You haven't created any posts yet.
-        </p>
-
-
-        <a href="{% url 'blog:create_post' %}" class="browse-btn">
-
-            <i class="bi bi-plus-circle"></i>
-
-            Create Post
-
-        </a>
-
-
-    </div>
-
-
-    {% endif %}
-
-
-</div>
+{% include "blog/includes/profile_contributions.html" %}
 {% endblock %}

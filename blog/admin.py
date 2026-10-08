@@ -10,6 +10,8 @@ from .models import (
     AssignmentQuestion,
     AssignmentSubmission,
     Comment,
+    CommunityPost,
+    CommunityReply,
     PracticeProblem,
     PracticeProgress,
     PracticeSubmission,
@@ -276,3 +278,16 @@ admin.site.register(Assignment, AssignmentAdmin)
 admin.site.register(AssignmentSubmission, AssignmentSubmissionAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+
+
+@admin.register(CommunityPost)
+class CommunityPostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'author', 'created_at')
+    list_filter = ('category', 'created_at')
+    search_fields = ('title', 'content', 'author__username')
+
+
+@admin.register(CommunityReply)
+class CommunityReplyAdmin(admin.ModelAdmin):
+    list_display = ('post', 'author', 'created_at')
+    search_fields = ('content', 'author__username', 'post__title')

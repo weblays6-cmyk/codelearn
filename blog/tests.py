@@ -36,6 +36,8 @@ from .models import (
 	Enrollment,
 	Conversation,
 	Comment,
+	CommunityPost,
+	CommunityReply,
 	Lesson,
 	Post,
 	PracticeProgress,
@@ -1194,6 +1196,67 @@ class PasswordResetFlowTests(TestCase):
 		self.assertTrue(user.check_password('new-password-123'))
 
 
+class CourseCreationPermissionTests(TestCase):
+	def setUp(self):
+		self.learner = User.objects.create_user('course-learner', password='pass')
+		self.admin = User.objects.create_user(
+			'course-admin',
+			password='pass',
+			is_staff=True,
+		)
+
+	def test_learner_cannot_open_or_submit_course_creation(self):
+		self.client.force_login(self.learner)
+
+		get_response = self.client.get(reverse('blog:create_post'))
+		self.assertEqual(get_response.status_code, 403)
+		self.assertNotContains(get_response, 'Create New Course', status_code=403)
+
+		post_response = self.client.post(
+			reverse('blog:create_post'),
+			{'title': 'Unauthorized course', 'content': 'Attempted submission'},
+		)
+		self.assertEqual(post_response.status_code, 403)
+		self.assertFalse(Post.objects.filter(title='Unauthorized course').exists())
+
+		profile_response = self.client.get(reverse('blog:profile'))
+		self.assertContains(profile_response, 'Courses')
+		self.assertNotContains(profile_response, 'Create Course')
+
+	def test_staff_user_can_open_and_create_course(self):
+		self.client.force_login(self.admin)
+
+		get_response = self.client.get(reverse('blog:create_post'))
+		self.assertEqual(get_response.status_code, 200)
+		self.assertContains(get_response, 'Create Course')
+
+		post_response = self.client.post(
+			reverse('blog:create_post'),
+			{
+				'title': 'Staff-created course',
+				'content': 'Course content',
+				'category': 'Python',
+				'difficulty': 'Beginner',
+			},
+		)
+		self.assertRedirects(post_response, reverse('blog:blogpage'))
+		course = Post.objects.get(title='Staff-created course')
+		self.assertEqual(course.author, self.admin)
+
+		profile_response = self.client.get(reverse('blog:profile'))
+		self.assertContains(profile_response, 'Create Course')
+
+	def test_ask_community_link_uses_community_route(self):
+		self.client.force_login(self.learner)
+
+		response = self.client.get(reverse('blog:profile'))
+
+		self.assertContains(
+			response,
+			'href="{}"'.format(reverse('blog:community')),
+		)
+
+
 class CoursePageTests(TestCase):
 	def test_courses_page_renders(self):
 		response = self.client.get(reverse('blog:blogpage'))
@@ -1661,3 +1724,179 @@ class AITutorPersistenceTests(TestCase):
 		self.assertEqual(response.status_code, 502)
 		self.assertIn('error', response.json())
 		self.assertFalse(AITutorConversation.objects.filter(user=self.user).exists())
+
+
+class CommunityWorkflowTests(TestCase):
+
+	def setUp(self):
+		self.author = User.objects.create_user('community-author', password='pass')
+		self.learner = User.objects.create_user('community-learner', password='pass')
+		self.post = CommunityPost.objects.create(
+			author=self.author,
+			title='How do Django forms validate?',
+			category='Django',
+			content='I need help understanding form validation.',
+		)
+
+	def test_community_and_create_question_require_authentication(self):
+		self.assertRedirects(
+			self.client.get(reverse('blog:community')),
+			'/login/?next=/community/',
+		)
+		self.assertRedirects(
+			self.client.get(reverse('blog:community_post_create')),
+			'/login/?next=/community/create/',
+		)
+
+	def test_feed_search_topic_filter_empty_state_and_profile_link(self):
+		self.client.force_login(self.learner)
+		response = self.client.get(reverse('blog:community'))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, self.post.title)
+		self.assertContains(
+			response,
+			reverse('blog:user_profile', args=[self.author.username]),
+		)
+
+		response = self.client.get(
+			reverse('blog:community'),
+			{'q': 'forms', 'category': 'Django'},
+		)
+		self.assertContains(response, self.post.title)
+
+		response = self.client.get(
+			reverse('blog:community'),
+			{'q': 'not-a-match'},
+		)
+		self.assertContains(response, 'No matching questions')
+		self.assertContains(
+			response,
+			'href="{}"'.format(reverse('blog:community_post_create')),
+		)
+
+	def test_learner_can_create_and_read_a_community_question(self):
+		self.client.force_login(self.learner)
+		response = self.client.post(
+			reverse('blog:community_post_create'),
+			{
+				'title': 'Why does my queryset return no rows?',
+				'category': 'Python',
+				'content': 'The filter works in the shell but not in the view.',
+			},
+		)
+
+		created = CommunityPost.objects.get(
+			title='Why does my queryset return no rows?',
+		)
+		self.assertEqual(created.author, self.learner)
+		self.assertRedirects(
+			response,
+			reverse('blog:community_post_detail', args=[created.pk]),
+		)
+		detail = self.client.get(
+			reverse('blog:community_post_detail', args=[created.pk]),
+		)
+		self.assertContains(detail, created.content)
+		self.assertContains(detail, 'Write a reply')
+
+	def test_like_save_and_reply_work_for_authenticated_users(self):
+		self.client.force_login(self.learner)
+		detail_url = reverse('blog:community_post_detail', args=[self.post.pk])
+
+		self.assertRedirects(
+			self.client.post(
+				reverse('blog:community_post_like', args=[self.post.pk]),
+			),
+			detail_url,
+		)
+		self.assertTrue(self.post.liked_by.filter(pk=self.learner.pk).exists())
+		self.client.post(reverse('blog:community_post_like', args=[self.post.pk]))
+		self.assertFalse(self.post.liked_by.filter(pk=self.learner.pk).exists())
+
+		self.client.post(reverse('blog:community_post_save', args=[self.post.pk]))
+		self.assertTrue(self.post.saved_by.filter(pk=self.learner.pk).exists())
+
+		reply_response = self.client.post(
+			reverse('blog:community_reply_create', args=[self.post.pk]),
+			{'content': 'Can you share the view and the exact form field?'},
+		)
+		self.assertRedirects(reply_response, detail_url)
+		reply = CommunityReply.objects.get(post=self.post)
+		self.assertEqual(reply.author, self.learner)
+		self.assertEqual(
+			Notification.objects.filter(
+				recipient=self.author,
+				sender=self.learner,
+				notification_type='COMMUNITY_REPLY',
+				community_post=self.post,
+			).count(),
+			1,
+		)
+		self.client.force_login(self.author)
+		self.assertContains(
+			self.client.get(reverse('blog:notifications')),
+			'View question',
+		)
+		self.assertContains(self.client.get(detail_url), reply.content)
+
+	def test_only_content_owners_can_edit_or_delete_posts_and_replies(self):
+		self.client.force_login(self.learner)
+		edit_url = reverse('blog:community_post_edit', args=[self.post.pk])
+		delete_url = reverse('blog:community_post_delete', args=[self.post.pk])
+		self.assertEqual(self.client.get(edit_url).status_code, 403)
+		self.assertEqual(self.client.post(delete_url).status_code, 403)
+		self.post.refresh_from_db()
+		self.assertEqual(self.post.title, 'How do Django forms validate?')
+
+		reply = CommunityReply.objects.create(
+			post=self.post,
+			author=self.author,
+			content='Original answer',
+		)
+		self.assertEqual(
+			self.client.post(
+				reverse('blog:community_reply_delete', args=[reply.pk]),
+			).status_code,
+			403,
+		)
+		self.assertTrue(CommunityReply.objects.filter(pk=reply.pk).exists())
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:community_reply_edit', args=[reply.pk]),
+			).status_code,
+			403,
+		)
+		self.client.force_login(self.author)
+		self.assertEqual(
+			self.client.post(
+				reverse('blog:community_reply_edit', args=[reply.pk]),
+				{'content': 'Edited answer'},
+			).status_code,
+			302,
+		)
+		reply.refresh_from_db()
+		self.assertEqual(reply.content, 'Edited answer')
+		self.assertEqual(
+			self.client.post(
+				reverse('blog:community_reply_delete', args=[reply.pk]),
+			).status_code,
+			302,
+		)
+		self.assertFalse(CommunityReply.objects.filter(pk=reply.pk).exists())
+
+		self.assertEqual(self.client.get(edit_url).status_code, 200)
+		self.client.post(
+			edit_url,
+			{
+				'title': 'Updated question title',
+				'category': 'Django',
+				'content': 'Updated question details',
+			},
+		)
+		self.post.refresh_from_db()
+		self.assertEqual(self.post.title, 'Updated question title')
+		self.assertRedirects(
+			self.client.post(delete_url),
+			reverse('blog:community'),
+		)
+		self.assertFalse(CommunityPost.objects.filter(pk=self.post.pk).exists())

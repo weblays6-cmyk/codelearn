@@ -34,6 +34,7 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .models import MessageAttachment
 from .services.course_progress import (
@@ -49,6 +50,8 @@ from .forms import (
     PostForm,
     ProfilePictureForm,
     ProjectForm,
+    CommunityPostForm,
+    CommunityReplyForm,
 )
 
 from .models import (
@@ -69,6 +72,8 @@ from .models import (
     ProjectReport,
     ProjectShare,
     ProjectView,
+    CommunityPost,
+    CommunityReply,
     Conversation,
     Message,
     Assignment,
@@ -720,6 +725,9 @@ def lesson_detail(request, slug):
 @login_required
 def create_post(request):
 
+    if not request.user.is_staff:
+        return HttpResponseForbidden()
+
     if request.method == "POST":
 
         form = PostForm(
@@ -1310,6 +1318,118 @@ def login_view(request):
     )
 
 
+@require_GET
+def global_search(request):
+    query = (request.GET.get('q') or request.GET.get('search') or '').strip()
+    if not query:
+        return JsonResponse({
+            'navigation': [],
+            'content': [],
+        })
+
+    normalized_query = query.casefold()
+
+    def score_result(label, description=''):
+        label_text = (label or '').casefold()
+        description_text = (description or '').casefold()
+        if not label_text:
+            return 0
+        if label_text == normalized_query:
+            return 150
+        if label_text.startswith(normalized_query):
+            return 120
+        if normalized_query in label_text:
+            return 90
+        if description_text.startswith(normalized_query):
+            return 75
+        if normalized_query in description_text:
+            return 60
+        return 0
+
+    navigation = []
+    nav_items = [
+        {'label': 'Dashboard', 'url': reverse('blog:dashboard'), 'description': 'Overview and learning progress', 'category': 'Navigation', 'icon': 'grid'},
+        {'label': 'Courses', 'url': reverse('blog:blogpage'), 'description': 'Explore courses and lessons', 'category': 'Navigation', 'icon': 'book'},
+        {'label': 'My Learning', 'url': reverse('blog:my_learning'), 'description': 'Your learning dashboard', 'category': 'Navigation', 'icon': 'mortarboard'},
+        {'label': 'Practice', 'url': reverse('blog:practice'), 'description': 'Coding challenges and practice', 'category': 'Navigation', 'icon': 'lightning-charge'},
+        {'label': 'Assignments', 'url': reverse('blog:assignments'), 'description': 'Course tasks and submissions', 'category': 'Navigation', 'icon': 'clipboard-check'},
+        {'label': 'AI Tutor', 'url': reverse('blog:ai_tutor'), 'description': 'Ask for help and ideas', 'category': 'Navigation', 'icon': 'robot'},
+        {'label': 'Projects', 'url': reverse('blog:projects'), 'description': 'Build and share projects', 'category': 'Navigation', 'icon': 'folder2-open'},
+        {'label': 'Community', 'url': reverse('blog:community'), 'description': 'Connect with fellow learners', 'category': 'Navigation', 'icon': 'people'},
+        {'label': 'Messages', 'url': reverse('blog:messages'), 'description': 'Chat and direct conversations', 'category': 'Navigation', 'icon': 'chat-dots'},
+        {'label': 'Notifications', 'url': reverse('blog:notifications'), 'description': 'Updates and alerts', 'category': 'Navigation', 'icon': 'bell'},
+        {'label': 'Profile', 'url': reverse('blog:profile'), 'description': 'View and manage your profile', 'category': 'Navigation', 'icon': 'person-circle'},
+        {'label': 'Settings', 'url': reverse('blog:settings'), 'description': 'Manage account preferences', 'category': 'Navigation', 'icon': 'gear'},
+    ]
+
+    if not request.user.is_authenticated:
+        nav_items = [
+            {'label': 'Courses', 'url': reverse('blog:blogpage'), 'description': 'Explore available courses', 'category': 'Navigation', 'icon': 'book'},
+            {'label': 'Sign in', 'url': reverse('blog:login'), 'description': 'Access your learning dashboard', 'category': 'Navigation', 'icon': 'box-arrow-in-right'},
+            {'label': 'Create account', 'url': reverse('blog:signup'), 'description': 'Join vGrowHub', 'category': 'Navigation', 'icon': 'person-plus'},
+        ]
+
+    for item in nav_items:
+        item_score = score_result(item['label'], item.get('description', ''))
+        if item_score:
+            navigation.append({
+                **item,
+                'score': item_score,
+            })
+
+    content = []
+    content_items = []
+
+    accessible_posts = Post.objects.filter(
+        _user_content_visibility_filter('author', request.user)
+    ).select_related('author').order_by('-created_at')[:12]
+    for post in accessible_posts:
+        score = score_result(post.title, post.category)
+        if score:
+            content_items.append({
+                'label': post.title,
+                'url': reverse('blog:post_detail', kwargs={'slug': post.slug}),
+                'description': post.category,
+                'category': 'Courses',
+                'icon': 'book',
+                'score': score,
+            })
+
+    practice_problems = PracticeProblem.objects.filter(active=True).order_by('title')[:12]
+    for problem in practice_problems:
+        score = score_result(problem.title, problem.category)
+        if score:
+            content_items.append({
+                'label': problem.title,
+                'url': reverse('blog:practice_problem_detail', kwargs={'slug': problem.slug}),
+                'description': f"{problem.category.title()} practice problem",
+                'category': 'Practice',
+                'icon': 'lightning-charge',
+                'score': score,
+            })
+
+    projects = Project.objects.select_related('owner').order_by('-created_at')[:12]
+    for project in projects:
+        score = score_result(project.title, project.description or '')
+        if score:
+            content_items.append({
+                'label': project.title,
+                'url': reverse('blog:project_detail', kwargs={'pk': project.pk}),
+                'description': project.description[:120] if project.description else 'Project',
+                'category': 'Community',
+                'icon': 'folder2-open',
+                'score': score,
+            })
+
+    content = sorted(content_items, key=lambda item: (-item['score'], item['label']))[:8]
+    navigation = sorted(navigation, key=lambda item: (-item['score'], item['label']))[:8]
+
+    return JsonResponse({
+        'navigation': navigation,
+        'content': content,
+    })
+
+
 # =========================================================
 # DELETE COMMENT
 # =========================================================
@@ -1466,6 +1586,10 @@ def profile(request):
                     'Choose a photo or select Remove photo.',
                 )
 
+    active_tab = request.GET.get('tab', 'community').lower()
+    if active_tab not in {'community', 'projects'}:
+        active_tab = 'community'
+
     posts = Post.objects.filter(
         author=request.user
     ).order_by('-created_at')
@@ -1477,6 +1601,11 @@ def profile(request):
     context = {
         'posts': posts,
         'projects': projects,
+        'community_posts': posts,
+        'project_contributions': projects,
+        'community_count': posts.count(),
+        'project_count': projects.count(),
+        'active_tab': active_tab,
         'username': request.user.username,
         'user_profile': profile,
         'display_name': (
@@ -1486,6 +1615,13 @@ def profile(request):
         ),
         'profile_picture_form': profile_picture_form,
     }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(
+            request,
+            'blog/includes/profile_contributions.html',
+            context,
+        )
 
     return render(
         request,
@@ -2207,6 +2343,7 @@ def notifications(request):
         ).select_related(
             'sender',
             'sender__profile_data',
+            'community_post',
         )
     )
     pending_requests = {}
@@ -4559,7 +4696,44 @@ def project_share(request, pk):
 
 @login_required
 def community(request):
+    query = request.GET.get('q', '').strip()[:100]
+    category = request.GET.get('category', '').strip()
+    valid_categories = {choice[0] for choice in CommunityPost._meta.get_field('category').choices}
 
+    posts = CommunityPost.objects.select_related(
+        'author',
+        'author__profile_data',
+    ).annotate(
+        like_count=Count('liked_by', distinct=True),
+        reply_count=Count('replies', distinct=True),
+    ).order_by('-created_at', '-pk')
+    if query:
+        posts = posts.filter(
+            Q(title__icontains=query)
+            | Q(content__icontains=query)
+            | Q(category__icontains=query)
+        )
+    if category in valid_categories:
+        posts = posts.filter(category=category)
+
+    page = Paginator(posts, 15).get_page(request.GET.get('page'))
+    post_ids = [post.pk for post in page.object_list]
+    liked_post_ids = set(
+        CommunityPost.objects.filter(
+            pk__in=post_ids,
+            liked_by=request.user,
+        ).values_list('pk', flat=True)
+    )
+    saved_post_ids = set(
+        CommunityPost.objects.filter(
+            pk__in=post_ids,
+            saved_by=request.user,
+        ).values_list('pk', flat=True)
+    )
+    visible_photo_user_ids = _community_visible_photo_user_ids(
+        (post.author for post in page.object_list),
+        request.user,
+    )
     return render(
         request,
         'blog/community.html',
@@ -4574,5 +4748,207 @@ def community(request):
                 or request.user.get_full_name()
                 or request.user.username
             ),
+            'posts': page,
+            'query': query,
+            'selected_category': category if category in valid_categories else '',
+            'categories': CommunityPost._meta.get_field('category').choices,
+            'liked_post_ids': liked_post_ids,
+            'saved_post_ids': saved_post_ids,
+            'visible_photo_user_ids': visible_photo_user_ids,
         }
     )
+
+
+@login_required
+def community_post_create(request):
+    if request.method == 'POST':
+        form = CommunityPostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('blog:community_post_detail', pk=post.pk)
+    else:
+        form = CommunityPostForm()
+
+    return render(
+        request,
+        'blog/community_post_form.html',
+        {'form': form, 'is_edit': False},
+    )
+
+
+@login_required
+def community_post_detail(request, pk):
+    post = get_object_or_404(
+        CommunityPost.objects.select_related(
+            'author',
+            'author__profile_data',
+        ).annotate(
+            like_count=Count('liked_by', distinct=True),
+        ),
+        pk=pk,
+    )
+    replies = list(post.replies.select_related(
+        'author',
+        'author__profile_data',
+    ))
+    visible_photo_user_ids = _community_visible_photo_user_ids(
+        [post.author, *(reply.author for reply in replies)],
+        request.user,
+    )
+    return render(
+        request,
+        'blog/community_post_detail.html',
+        {
+            'post': post,
+            'replies': replies,
+            'is_liked': post.liked_by.filter(pk=request.user.pk).exists(),
+            'is_saved': post.saved_by.filter(pk=request.user.pk).exists(),
+            'visible_photo_user_ids': visible_photo_user_ids,
+        },
+    )
+
+
+@login_required
+def community_post_edit(request, pk):
+    post = get_object_or_404(CommunityPost, pk=pk)
+    if post.author_id != request.user.pk:
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        form = CommunityPostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('blog:community_post_detail', pk=post.pk)
+    else:
+        form = CommunityPostForm(instance=post)
+
+    return render(
+        request,
+        'blog/community_post_form.html',
+        {'form': form, 'post': post, 'is_edit': True},
+    )
+
+
+@login_required
+@require_POST
+def community_post_delete(request, pk):
+    post = get_object_or_404(CommunityPost, pk=pk)
+    if post.author_id != request.user.pk:
+        return HttpResponseForbidden()
+    post.delete()
+    return redirect('blog:community')
+
+
+@login_required
+@require_POST
+def community_reply_create(request, pk):
+    post = get_object_or_404(CommunityPost, pk=pk)
+    content = request.POST.get('content', '').strip()
+    if not content:
+        django_messages.error(request, 'Write a reply before submitting.')
+    elif len(content) > 10000:
+        django_messages.error(request, 'Replies must be 10,000 characters or fewer.')
+    else:
+        with transaction.atomic():
+            CommunityReply.objects.create(
+                post=post,
+                author=request.user,
+                content=content,
+            )
+            if post.author_id != request.user.pk:
+                Notification.objects.create(
+                    recipient=post.author,
+                    sender=request.user,
+                    notification_type='COMMUNITY_REPLY',
+                    community_post=post,
+                    message=(
+                        f'{request.user.username[:60]} replied to your question: '
+                        f'{post.title[:160]}'
+                    ),
+                )
+        django_messages.success(request, 'Your reply was added.')
+    return redirect('blog:community_post_detail', pk=post.pk)
+
+
+@login_required
+def community_reply_edit(request, pk):
+    reply = get_object_or_404(
+        CommunityReply.objects.select_related('post'),
+        pk=pk,
+    )
+    if reply.author_id != request.user.pk:
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        form = CommunityReplyForm(request.POST, instance=reply)
+        if form.is_valid():
+            form.save()
+            return redirect('blog:community_post_detail', pk=reply.post_id)
+    else:
+        form = CommunityReplyForm(instance=reply)
+
+    return render(
+        request,
+        'blog/community_reply_edit.html',
+        {'form': form, 'reply': reply},
+    )
+
+
+@login_required
+@require_POST
+def community_reply_delete(request, pk):
+    reply = get_object_or_404(
+        CommunityReply.objects.select_related('post'),
+        pk=pk,
+    )
+    if reply.author_id != request.user.pk:
+        return HttpResponseForbidden()
+    post_id = reply.post_id
+    reply.delete()
+    return redirect('blog:community_post_detail', pk=post_id)
+
+
+def _community_return_url(request, post):
+    next_url = request.POST.get('next', '')
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return reverse('blog:community_post_detail', kwargs={'pk': post.pk})
+
+
+def _community_visible_photo_user_ids(users, viewer):
+    unique_users = {user.pk: user for user in users}
+    return {
+        user.pk
+        for user in unique_users.values()
+        if getattr(user, 'profile_data', None)
+        and user.profile_data.profile_picture
+        and _can_view_user_content(user, viewer)
+    }
+
+
+@login_required
+@require_POST
+def community_post_like(request, pk):
+    post = get_object_or_404(CommunityPost, pk=pk)
+    if post.liked_by.filter(pk=request.user.pk).exists():
+        post.liked_by.remove(request.user)
+    else:
+        post.liked_by.add(request.user)
+    return redirect(_community_return_url(request, post))
+
+
+@login_required
+@require_POST
+def community_post_save(request, pk):
+    post = get_object_or_404(CommunityPost, pk=pk)
+    if post.saved_by.filter(pk=request.user.pk).exists():
+        post.saved_by.remove(request.user)
+    else:
+        post.saved_by.add(request.user)
+    return redirect(_community_return_url(request, post))

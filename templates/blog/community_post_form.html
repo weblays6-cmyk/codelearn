@@ -1,0 +1,47 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit question{% else %}Ask the Community{% endif %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="community-page community-form-page">
+    <a class="community-back-link" href="{% if post %}{% url 'blog:community_post_detail' post.pk %}{% else %}{% url 'blog:community' %}{% endif %}">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Community
+    </a>
+    <section class="community-form-card">
+        <span class="community-eyebrow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Developer Community</span>
+        <h1>{% if is_edit %}Edit your question{% else %}Ask the Community{% endif %}</h1>
+        <p>Share enough detail to help other learners understand what you need.</p>
+        <form method="post" class="community-post-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="community-form-errors">{{ form.non_field_errors }}</div>{% endif %}
+            <label for="{{ form.title.id_for_label }}">Question title</label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="community-field-error">{{ form.title.errors }}</div>{% endif %}
+
+            <label for="{{ form.category.id_for_label }}">Topic</label>
+            {{ form.category }}
+            {% if form.category.errors %}<div class="community-field-error">{{ form.category.errors }}</div>{% endif %}
+
+            <label for="{{ form.content.id_for_label }}">Details</label>
+            {{ form.content }}
+            {% if form.content.errors %}<div class="community-field-error">{{ form.content.errors }}</div>{% endif %}
+
+            <div class="community-form-actions">
+                <a class="community-secondary-action" href="{% if post %}{% url 'blog:community_post_detail' post.pk %}{% else %}{% url 'blog:community' %}{% endif %}">Cancel</a>
+                <button class="community-primary-action" type="submit">{% if is_edit %}Save changes{% else %}Publish question{% endif %}</button>
+            </div>
+        </form>
+        {% if is_edit %}
+        <form method="post" action="{% url 'blog:community_post_delete' post.pk %}" class="community-delete-form">
+            {% csrf_token %}
+            <button type="submit">Delete this question</button>
+        </form>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

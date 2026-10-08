@@ -1,0 +1,114 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} | Community | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=2">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/community.js' %}?v=1" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="community-page community-detail-page">
+    <a class="community-back-link" href="{% url 'blog:community' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Community</a>
+
+    <article class="community-post community-question-detail">
+        <div class="community-post-header">
+            <a class="community-avatar" href="{% url 'blog:user_profile' post.author.username %}"
+                aria-label="View @{{ post.author.username }}'s profile">
+                {% if post.author_id in visible_photo_user_ids and post.author.profile_data.profile_picture %}
+                <img src="{{ post.author.profile_data.profile_picture.url }}" alt="">
+                {% else %}
+                {{ post.author.profile_data.display_name|default:post.author.username|first|upper }}
+                {% endif %}
+            </a>
+            <div class="community-author">
+                <a href="{% url 'blog:user_profile' post.author.username %}">
+                    {{ post.author.profile_data.display_name|default:post.author.username }}
+                </a>
+                <span>@{{ post.author.username }} · {{ post.created_at|date:"M j, Y · g:i A" }}</span>
+            </div>
+            <span class="community-topic">{{ post.get_category_display }}</span>
+        </div>
+
+        <h1 class="community-post-title">{{ post.title }}</h1>
+        <div class="community-post-content community-full-content">{{ post.content|linebreaks }}</div>
+
+        <div class="community-post-actions">
+            <form method="post" action="{% url 'blog:community_post_like' post.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="{% if is_liked %}is-active{% endif %}" aria-pressed="{{ is_liked|yesno:'true,false' }}">
+                    <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i>
+                    {{ post.like_count }} like{{ post.like_count|pluralize }}
+                </button>
+            </form>
+            <a href="#replies"><i class="bi bi-chat" aria-hidden="true"></i> {{ post.replies.count }} repl{{ post.replies.count|pluralize:"y,ies" }}</a>
+            <form method="post" action="{% url 'blog:community_post_save' post.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="{% if is_saved %}is-active{% endif %}" aria-pressed="{{ is_saved|yesno:'true,false' }}">
+                    <i class="bi {% if is_saved %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}" aria-hidden="true"></i>
+                    {% if is_saved %}Saved{% else %}Save{% endif %}
+                </button>
+            </form>
+            <button type="button" class="community-share-button"
+                data-share-url="{{ request.scheme }}://{{ request.get_host }}{% url 'blog:community_post_detail' post.pk %}"
+                data-share-title="{{ post.title }}">
+                <i class="bi bi-share" aria-hidden="true"></i> Share
+            </button>
+            {% if post.author_id == request.user.pk %}
+            <a href="{% url 'blog:community_post_edit' post.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</a>
+            {% endif %}
+        </div>
+        <p class="community-share-status" aria-live="polite"></p>
+    </article>
+
+    <section class="community-replies-card" id="replies">
+        {% if messages %}
+        {% for message in messages %}
+        <p class="community-message {% if message.tags %}{{ message.tags }}{% endif %}" role="status">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        <div class="community-section-heading">
+            <div><span class="community-eyebrow">Community answers</span><h2>Replies <span>{{ post.replies.count }}</span></h2></div>
+        </div>
+        <form method="post" action="{% url 'blog:community_reply_create' post.pk %}" class="community-reply-form">
+            {% csrf_token %}
+            <label class="community-visually-hidden" for="communityReply">Write a reply</label>
+            <textarea id="communityReply" name="content" rows="4" maxlength="10000" placeholder="Share an answer or ask for more details..." required></textarea>
+            <button class="community-primary-action" type="submit"><i class="bi bi-send" aria-hidden="true"></i> Reply</button>
+        </form>
+
+        {% for reply in replies %}
+        <article class="community-reply">
+            <a class="community-avatar community-avatar-small" href="{% url 'blog:user_profile' reply.author.username %}"
+                aria-label="View @{{ reply.author.username }}'s profile">
+                {% if reply.author_id in visible_photo_user_ids and reply.author.profile_data.profile_picture %}
+                <img src="{{ reply.author.profile_data.profile_picture.url }}" alt="">
+                {% else %}
+                {{ reply.author.profile_data.display_name|default:reply.author.username|first|upper }}
+                {% endif %}
+            </a>
+            <div class="community-reply-body">
+                <header>
+                    <a href="{% url 'blog:user_profile' reply.author.username %}">{{ reply.author.profile_data.display_name|default:reply.author.username }}</a>
+                    <time datetime="{{ reply.created_at|date:'c' }}">{{ reply.created_at|date:"M j, Y · g:i A" }}</time>
+                </header>
+                <div>{{ reply.content|linebreaks }}</div>
+                {% if reply.author_id == request.user.pk %}
+                <form method="post" action="{% url 'blog:community_reply_delete' reply.pk %}">
+                    {% csrf_token %}
+                    <a class="community-delete-reply" href="{% url 'blog:community_reply_edit' reply.pk %}">Edit reply</a>
+                    <button type="submit" class="community-delete-reply">Delete reply</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% empty %}
+        <p class="community-no-replies">No replies yet. Share a helpful answer to get the conversation started.</p>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

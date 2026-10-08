@@ -500,6 +500,66 @@ class Comment(models.Model):
         return self.author.username
 
 
+class CommunityPost(models.Model):
+
+    title = models.CharField(max_length=180)
+    content = models.TextField()
+    category = models.CharField(
+        max_length=20,
+        choices=Post.CATEGORY_CHOICES,
+        default='Other',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='community_posts',
+    )
+    liked_by = models.ManyToManyField(
+        User,
+        related_name='liked_community_posts',
+        blank=True,
+    )
+    saved_by = models.ManyToManyField(
+        User,
+        related_name='saved_community_posts',
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['category', '-created_at']),
+        ]
+
+    def __str__(self):
+        return self.title
+
+
+class CommunityReply(models.Model):
+
+    post = models.ForeignKey(
+        CommunityPost,
+        on_delete=models.CASCADE,
+        related_name='replies',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='community_replies',
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.author.username} replied to {self.post.title}'
+
+
 # =========================================================
 # USER PROFILE
 # =========================================================
@@ -1589,6 +1649,7 @@ class Notification(models.Model):
         ("FOLLOW_ACCEPTED", "Follow Accepted"),
         ("FOLLOW_REJECTED", "Follow Rejected"),
         ("FOLLOW_BACK", "Follow Back"),
+        ("COMMUNITY_REPLY", "Community Reply"),
     ]
 
     recipient = models.ForeignKey(
@@ -1601,6 +1662,14 @@ class Notification(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="sent_notifications"
+    )
+
+    community_post = models.ForeignKey(
+        CommunityPost,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
     )
 
     notification_type = models.CharField(

@@ -13,30 +13,60 @@
         </a>
     </div>
 
-    <form class="workspace-search" action="{% url 'blog:blogpage' %}" method="get" role="search">
-        <i class="bi bi-search" aria-hidden="true"></i>
-        <input type="search" name="search" value="{{ request.GET.search }}"
-            placeholder="Search courses by name or topic" aria-label="Search courses">
-        <button type="submit" aria-label="Search"><i class="bi bi-arrow-return-left" aria-hidden="true"></i></button>
-    </form>
+    <div class="workspace-search-shell">
+        <form class="workspace-search" action="{% url 'blog:blogpage' %}" method="get" role="search" aria-label="Global search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="globalSearchInput" name="search" value="{{ request.GET.search }}"
+                placeholder="Search vGrowHub" aria-label="Search vGrowHub" autocomplete="off">
+            <button type="button" class="workspace-search-clear" id="workspaceSearchClear" aria-label="Clear search" hidden>
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+            <button type="submit" class="workspace-search-submit" aria-label="Search">
+                <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
+            </button>
+        </form>
+        <div class="global-search-results" id="globalSearchResults" hidden aria-live="polite" aria-label="Search results"></div>
+    </div>
 
     <div class="top-navbar-right">
 
         {% if user.is_authenticated %}
-        <a href="{% url 'blog:notifications' %}" class="navbar-notifications" aria-label="Notifications"
+        {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
+        <a href="{% url 'blog:notifications' %}" class="navbar-action-button navbar-notifications" aria-label="Notifications"
             title="Notifications">
             <i class="bi bi-bell" aria-hidden="true"></i>
         </a>
-        <a href="{% url 'blog:profile' %}" class="navbar-user">
-            {% if user.profile_data.profile_picture %}
-            <img class="navbar-avatar" src="{{ user.profile_data.profile_picture.url }}"
-                alt="" aria-hidden="true" style="object-fit:cover;">
-            {% else %}
-            <div class="navbar-avatar" aria-hidden="true">{{ user.profile_data.display_name|default:user.username|first|upper }}</div>
+        <a href="{% url 'blog:messages' %}" class="navbar-action-button navbar-messages" aria-label="Messages" title="Messages">
+            <i class="bi bi-chat-dots" aria-hidden="true"></i>
+            {% if unread_count > 0 %}
+            <span class="navbar-action-badge" aria-label="{{ unread_count }} unread messages">
+                {% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}
+            </span>
             {% endif %}
-            <span>{{ user.profile_data.display_name|default:user.username }} <small>@{{ user.username|lower }}</small></span>
-            <i class="bi bi-chevron-down" aria-hidden="true"></i>
         </a>
+        {% endwith %}
+        <div class="navbar-user-menu">
+            <button type="button" class="navbar-user" id="userMenuToggle" aria-label="Open user menu" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdown">
+                {% if user.profile_data.profile_picture %}
+                <img class="navbar-avatar" src="{{ user.profile_data.profile_picture.url }}" alt="" aria-hidden="true" style="object-fit:cover;">
+                {% else %}
+                <div class="navbar-avatar" aria-hidden="true">{{ user.username|first|upper }}</div>
+                {% endif %}
+                <span class="navbar-user-name">{{ user.username }}</span>
+                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="user-dropdown" id="userDropdown" role="menu" hidden>
+                <div class="user-dropdown-header">
+                    <span>{{ user.username }}</span>
+                </div>
+                <a href="{% url 'blog:profile' %}" class="user-dropdown-item" role="menuitem">Profile</a>
+                <a href="{% url 'blog:settings' %}" class="user-dropdown-item" role="menuitem">Settings</a>
+                <form method="POST" action="{% url 'blog:logout' %}" class="user-dropdown-logout">
+                    {% csrf_token %}
+                    <button type="submit" class="user-dropdown-item logout-item" role="menuitem">Logout</button>
+                </form>
+            </div>
+        </div>
         {% else %}
         <a href="{% url 'blog:login' %}" class="navbar-auth-link">Sign in</a>
         <a href="{% url 'blog:signup' %}" class="navbar-join-link">Get started</a>

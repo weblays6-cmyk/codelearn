@@ -1,0 +1,30 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}Edit reply | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="community-page community-form-page">
+    <a class="community-back-link" href="{% url 'blog:community_post_detail' reply.post_id %}#replies">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to question
+    </a>
+    <section class="community-form-card">
+        <span class="community-eyebrow"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Your reply</span>
+        <h1>Edit reply</h1>
+        <form method="post" class="community-post-form">
+            {% csrf_token %}
+            <label for="{{ form.content.id_for_label }}">Reply</label>
+            {{ form.content }}
+            {% if form.content.errors %}<div class="community-field-error">{{ form.content.errors }}</div>{% endif %}
+            <div class="community-form-actions">
+                <a class="community-secondary-action" href="{% url 'blog:community_post_detail' reply.post_id %}#replies">Cancel</a>
+                <button class="community-primary-action" type="submit">Save reply</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

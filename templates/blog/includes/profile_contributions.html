@@ -1,0 +1,126 @@
+<section id="profile-contributions" class="card-box contributions-card">
+    <div class="card-title">
+        <div class="card-title-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+            <h2>
+                My Contributions
+            </h2>
+            <p>
+                Community posts and projects you've shared
+            </p>
+        </div>
+    </div>
+
+    <div class="contribution-tabs" role="tablist" aria-label="My contributions">
+        <a href="{% url 'blog:profile' %}?tab=community"
+           class="contribution-tab {% if active_tab == 'community' %}is-active{% endif %}"
+           role="tab" aria-selected="{% if active_tab == 'community' %}true{% else %}false{% endif %}"
+           data-profile-tab="community" data-profile-url="{% url 'blog:profile' %}?tab=community">
+            Community {% if community_count %}<span>({{ community_count }})</span>{% endif %}
+        </a>
+
+        <a href="{% url 'blog:profile' %}?tab=projects"
+           class="contribution-tab {% if active_tab == 'projects' %}is-active{% endif %}"
+           role="tab" aria-selected="{% if active_tab == 'projects' %}true{% else %}false{% endif %}"
+           data-profile-tab="projects" data-profile-url="{% url 'blog:profile' %}?tab=projects">
+            Projects {% if project_count %}<span>({{ project_count }})</span>{% endif %}
+        </a>
+    </div>
+
+    {% if active_tab == 'community' %}
+        {% if community_posts %}
+            <div class="contribution-list">
+                {% for post in community_posts %}
+                <a href="{% url 'blog:post_detail' post.slug %}" class="contribution-item">
+                    <div class="contribution-main">
+                        <div class="contribution-title">
+                            {{ post.title }}
+                        </div>
+                        <p class="contribution-preview">
+                            {{ post.description|default:post.content|striptags|truncatechars:160 }}
+                        </p>
+                    </div>
+                    <div class="contribution-meta">
+                        <span><i class="bi bi-calendar3"></i> {{ post.created_at|date:"M d, Y" }}</span>
+                        {% if post.category %}
+                        <span class="tag">{{ post.category }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">
+                <div class="empty-icon">
+                    <i class="bi bi-chat-square-text"></i>
+                </div>
+                <h3>
+                    You haven't shared any community posts yet.
+                </h3>
+                <p>
+                    Start a conversation and help others learn.
+                </p>
+                <a href="{% url 'blog:community' %}" class="browse-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    Ask the Community
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        {% if project_contributions %}
+            <div class="contribution-list">
+                {% for project in project_contributions %}
+                <a href="{% url 'blog:project_detail' project.pk %}" class="contribution-item project-item">
+                    {% if project.images.first %}
+                    <div class="project-thumb">
+                        <img src="{{ project.images.first.image.url }}" alt="{{ project.title }}">
+                    </div>
+                    {% endif %}
+
+                    <div class="contribution-main">
+                        <div class="contribution-title">
+                            {{ project.title }}
+                        </div>
+
+                        <p class="contribution-preview">
+                            {{ project.short_description|truncatechars:160 }}
+                        </p>
+
+                        {% if project.tech_stack %}
+                        <div class="tech-stack">
+                            {{ project.tech_stack|truncatechars:120 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="contribution-meta">
+                        <span><i class="bi bi-calendar3"></i> {{ project.created_at|date:"M d, Y" }}</span>
+
+                        {% if project.category %}
+                        <span class="tag">{{ project.category }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">
+                <div class="empty-icon">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+                <h3>
+                    You haven't shared any projects yet.
+                </h3>
+                <p>
+                    Showcase what you're building and collaborate with others.
+                </p>
+                <a href="{% url 'blog:create_project' %}" class="browse-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    Share a Project
+                </a>
+            </div>
+        {% endif %}
+    {% endif %}
+</section>

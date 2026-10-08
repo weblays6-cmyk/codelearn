@@ -320,9 +320,16 @@ Notifications | {{ SITE_NAME }}
                         <span class="notification-type-label">Course</span>
                     {% elif notification.notification_type == 'ACHIEVEMENT' %}
                         <span class="notification-type-label">Achievement</span>
+                    {% elif notification.notification_type == 'COMMUNITY_REPLY' %}
+                        <span class="notification-type-label">Community reply</span>
                     {% endif %}
 
                     <p>{{ notification.message }}</p>
+                    {% if notification.community_post %}
+                    <div class="notification-actions">
+                        <a href="{% url 'blog:community_post_detail' notification.community_post.pk %}">View question</a>
+                    </div>
+                    {% endif %}
                     <div class="notification-time">{{ notification.created_at|date:"M d, Y • h:i A" }}</div>
 
                     <div class="notification-actions">

@@ -11,6 +11,8 @@ from .models import (
     Comment,
     UserProfile,
     Project,
+    CommunityPost,
+    CommunityReply,
 )
 
 PROFILE_PICTURE_MAX_SIZE = 5 * 1024 * 1024
@@ -109,6 +111,39 @@ class CommentForm(forms.ModelForm):
                 'placeholder': 'Write your comment...'
             })
         }
+
+
+class CommunityPostForm(forms.ModelForm):
+
+    class Meta:
+        model = CommunityPost
+        fields = ['title', 'category', 'content']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'placeholder': 'What would you like help with?',
+                'maxlength': 180,
+            }),
+            'category': forms.Select(),
+            'content': forms.Textarea(attrs={
+                'rows': 8,
+                'placeholder': 'Share the details of your question...',
+            }),
+        }
+
+
+class CommunityReplyForm(forms.ModelForm):
+    content = forms.CharField(
+        max_length=10000,
+        widget=forms.Textarea(attrs={
+            'rows': 5,
+            'maxlength': 10000,
+            'placeholder': 'Share an answer or ask for more details...',
+        }),
+    )
+
+    class Meta:
+        model = CommunityReply
+        fields = ['content']
 
 
 # =========================================================
