@@ -10,6 +10,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const messagesBox =
         document.getElementById("chatMessages");
 
+    const typingIndicator =
+        document.getElementById("typingIndicator");
+
     const form =
         document.getElementById("messageForm");
 
@@ -79,6 +82,14 @@ document.addEventListener("DOMContentLoaded", function () {
     let selectedFiles = [];
 
     let statusTimer = null;
+    let websocket = null;
+    let reconnectTimer = null;
+    let reconnectDelay = 1000;
+    let shouldReconnect = true;
+    let isLocallyTyping = false;
+    let typingIdleTimer = null;
+    let typingHeartbeatTimer = null;
+    let remoteTypingTimer = null;
 
 
     /* =====================================================
@@ -117,6 +128,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const csrfToken =
         getCookie("csrftoken");
+
+
+    function sendTypingStatus(isTyping) {
+        if (
+            websocket &&
+            websocket.readyState === WebSocket.OPEN
+        ) {
+            websocket.send(JSON.stringify({
+                type: "typing",
+                is_typing: isTyping
+            }));
+        }
+    }
+
+
+    function stopLocalTyping() {
+        if (typingIdleTimer) {
+            clearTimeout(typingIdleTimer);
+            typingIdleTimer = null;
+        }
+        if (typingHeartbeatTimer) {
+            clearInterval(typingHeartbeatTimer);
+            typingHeartbeatTimer = null;
+        }
+        if (isLocallyTyping) {
+            sendTypingStatus(false);
+            isLocallyTyping = false;
+        }
+    }
+
+
+    function startLocalTyping() {
+        if (!textarea.value.trim()) {
+            stopLocalTyping();
+            return;
+        }
+        if (!isLocallyTyping) {
+            isLocallyTyping = true;
+            sendTypingStatus(true);
+            typingHeartbeatTimer = window.setInterval(
+                function () {
+                    sendTypingStatus(true);
+                },
+                2000
+            );
+        }
+        if (typingIdleTimer) {
+            clearTimeout(typingIdleTimer);
+        }
+        typingIdleTimer = window.setTimeout(stopLocalTyping, 1600);
+    }
+
+
+    function showRemoteTyping(isTyping) {
+        if (!typingIndicator) {
+            return;
+        }
+        typingIndicator.hidden = !isTyping;
+        if (remoteTypingTimer) {
+            clearTimeout(remoteTypingTimer);
+            remoteTypingTimer = null;
+        }
+        if (isTyping) {
+            remoteTypingTimer = window.setTimeout(
+                function () {
+                    typingIndicator.hidden = true;
+                },
+                5000
+            );
+        }
+    }
+
+
+    textarea.addEventListener("input", startLocalTyping);
 
 
     /* =====================================================
@@ -1559,6 +1644,7 @@ showLatestMessageImmediately();
             textarea.value =
                 "";
 
+            stopLocalTyping();
 
             resizeTextarea();
 
@@ -2209,11 +2295,6 @@ function markMessageAsDeleted(row) {
     pollStatus();
 
 
-    let websocket = null;
-    let reconnectTimer = null;
-    let reconnectDelay = 1000;
-    let shouldReconnect = true;
-
     function connectWebSocket() {
         if (!window.WebSocket || !shouldReconnect) {
             return;
@@ -2225,6 +2306,9 @@ function markMessageAsDeleted(row) {
 
         websocket.addEventListener("open", function () {
             reconnectDelay = 1000;
+            if (isLocallyTyping) {
+                sendTypingStatus(true);
+            }
             if (statusTimer) {
                 clearInterval(statusTimer);
                 statusTimer = null;
@@ -2236,6 +2320,12 @@ function markMessageAsDeleted(row) {
                 const data = JSON.parse(event.data);
                 if (data.type === "message_created") {
                     pollStatus();
+                } else if (
+                    data.type === "typing_status" &&
+                    Number(data.user_id) !==
+                        Number(page.dataset.currentUserId)
+                ) {
+                    showRemoteTyping(Boolean(data.is_typing));
                 }
             } catch (error) {
                 console.error("Invalid chat update received.", error);
@@ -2316,6 +2406,8 @@ function markMessageAsDeleted(row) {
         "beforeunload",
         function () {
 
+            stopLocalTyping();
+
             if (statusTimer) {
 
                 clearInterval(
@@ -2329,6 +2421,15 @@ function markMessageAsDeleted(row) {
             }
             if (websocket) {
                 websocket.close(1000);
+            }
+            if (typingIdleTimer) {
+                clearTimeout(typingIdleTimer);
+            }
+            if (typingHeartbeatTimer) {
+                clearInterval(typingHeartbeatTimer);
+            }
+            if (remoteTypingTimer) {
+                clearTimeout(remoteTypingTimer);
             }
 
         }

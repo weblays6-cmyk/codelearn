@@ -579,3 +579,230 @@
 .btn-run i.spin, .btn-submit i.spin {
     animation: spin .8s linear infinite;
 }
+
+/* Light-theme contrast for the interactive problem solver. The editor
+   remains dark for code readability while the surrounding UI is light. */
+body.light-theme .practice-page .solver {
+    --card: #fff;
+    --border: rgba(15, 23, 42, .12);
+    --ui-muted: #475569;
+    --ui-dim: #64748b;
+    --muted: var(--ui-muted);
+    --dim: var(--ui-dim);
+    color: #334155;
+}
+
+body.light-theme .practice-page .solver-topbar,
+body.light-theme .practice-page .solver-panel {
+    border-color: #e2e8f0;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .045);
+}
+
+body.light-theme .practice-page .solver-back,
+body.light-theme .practice-page .editor-tool-btn,
+body.light-theme .practice-page .tc-case-btn {
+    border-color: #dbe3ef;
+    background: #fff;
+    color: #475569;
+}
+
+body.light-theme .practice-page .solver-back:hover,
+body.light-theme .practice-page .editor-tool-btn:hover {
+    border-color: #a5b4fc;
+    background: #f5f7ff;
+    color: #4338ca;
+}
+
+body.light-theme .practice-page .solver-title,
+body.light-theme .practice-page .desc-tabs .desc-tab-btn.active,
+body.light-theme .practice-page .tc-tab.active {
+    color: #172033;
+}
+
+body.light-theme .practice-page .desc-tabs,
+body.light-theme .practice-page .tc-tabs,
+body.light-theme .practice-page .editor-toolbar {
+    border-color: #e8edf5;
+}
+
+body.light-theme .practice-page .desc-tabs .desc-tab-btn {
+    color: #64748b;
+}
+
+body.light-theme .practice-page .desc-tabs .desc-tab-btn:hover,
+body.light-theme .practice-page .desc-tabs .desc-tab-btn.active {
+    color: #5145cd;
+}
+
+body.light-theme .practice-page .desc-body {
+    color: var(--ui-muted);
+    font-size: 15px;
+    line-height: 1.75;
+}
+
+body.light-theme .practice-page .tc-pane {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+body.light-theme .practice-page .desc-body h2,
+body.light-theme .practice-page .desc-body h3,
+body.light-theme .practice-page .desc-body strong,
+body.light-theme .practice-page .tc-field label,
+body.light-theme .practice-page .verdict-sub b {
+    color: #172033;
+}
+
+body.light-theme .practice-page .desc-body code,
+body.light-theme .practice-page .example {
+    border-color: #c4b5fd;
+    background: #f7f5ff;
+    color: #334155;
+}
+
+body.light-theme .practice-page .constraints-list {
+    color: #475569;
+}
+
+body.light-theme .practice-page .editor-toolbar,
+body.light-theme .practice-page .editor-saved,
+body.light-theme .practice-page .verdict-sub {
+    color: var(--ui-muted);
+}
+
+body.light-theme .practice-page .editor-saved {
+    color: #475569;
+}
+
+body.light-theme .practice-page .btn-run {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+}
+
+body.light-theme .practice-page .btn-run:hover:not(:disabled) {
+    border-color: #a5b4fc;
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+body.light-theme .practice-page .btn-run:disabled {
+    opacity: .8;
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+body.light-theme .practice-page .btn-submit {
+    border-color: #86efac;
+    background: #ecfdf5;
+    color: #166534;
+}
+
+body.light-theme .practice-page .btn-submit:hover:not(:disabled) {
+    background: #dcfce7;
+    color: #14532d;
+}
+
+body.light-theme .practice-page .editor-lang-select {
+    border-color: #dbe3ef;
+    background: #f8fafc;
+    color: #334155;
+}
+
+body.light-theme .practice-page .editor-lang-select option {
+    background: #fff;
+    color: #172033;
+}
+
+body.light-theme .practice-page #codeEditor {
+    background: #f8fafc;
+    color: #1e293b;
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 16px;
+    line-height: 1.6;
+    caret-color: #4f46e5;
+}
+
+body.light-theme .practice-page .tc-tab {
+    color: #64748b;
+}
+
+body.light-theme .practice-page .tc-tab.active {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+body.light-theme .practice-page .tc-case-btn {
+    color: #475569;
+}
+
+body.light-theme .practice-page .tc-case-btn.active {
+    border-color: #8b7cf6;
+    background: #f5f3ff;
+    color: #4338ca;
+}
+
+body.light-theme .practice-page .tc-field label {
+    color: #475569;
+}
+
+body.light-theme .practice-page .tc-field pre {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+body.light-theme .practice-page .submission-row {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+}
+
+body.light-theme .practice-page .submission-row .sub-meta,
+body.light-theme .practice-page .submission-empty,
+body.light-theme .practice-page .hidden-note {
+    color: #64748b;
+}
+
+body.light-theme .practice-page .result-line.pass {
+    background: #ecfdf5;
+    color: #166534;
+}
+
+body.light-theme .practice-page .result-line.fail {
+    background: #fff1f2;
+    color: #9f1239;
+}
+
+body.light-theme .practice-page .result-line small {
+    color: #475569;
+}
+
+body.light-theme .practice-page .verdict.accepted {
+    color: #15803d;
+}
+
+body.light-theme .practice-page .verdict.wrong {
+    color: #be123c;
+}
+
+body.light-theme .practice-page .verdict.error {
+    color: #a16207;
+}
+
+body.light-theme .practice-page .console-block {
+    background: #fff1f2;
+    color: #9f1239;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.light-theme .practice-page .solver *,
+    body.light-theme .practice-page .solver *::before,
+    body.light-theme .practice-page .solver *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

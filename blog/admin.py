@@ -16,8 +16,10 @@ from .models import (
     PracticeProgress,
     PracticeSubmission,
     UserAssignmentProgress,
+    UserLoginSession,
     UserProfile,
 )
+from .session_security import active_session_count
 
 
 class LessonInline(admin.TabularInline):
@@ -256,6 +258,13 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     list_display = (
         'user',
+        'max_successful_logins',
+        'successful_login_count',
+        'max_active_sessions',
+        'active_sessions',
+        'leadership_badge_awarded',
+        'leadership_badge_title',
+        'leadership_badge_awarded_at',
         'goal',
         'created_at',
         'updated_at',
@@ -263,6 +272,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     list_filter = (
         'goal',
+        'leadership_badge_awarded',
         'created_at',
     )
 
@@ -270,6 +280,10 @@ class UserProfileAdmin(admin.ModelAdmin):
         'user__username',
         'user__email',
     )
+
+    @admin.display(description='Active sessions')
+    def active_sessions(self, obj):
+        return active_session_count(obj.user)
 
 
 admin.site.register(Post, PostAdmin)
@@ -291,3 +305,60 @@ class CommunityPostAdmin(admin.ModelAdmin):
 class CommunityReplyAdmin(admin.ModelAdmin):
     list_display = ('post', 'author', 'created_at')
     search_fields = ('content', 'author__username', 'post__title')
+
+
+@admin.register(UserLoginSession)
+class UserLoginSessionAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'device_description',
+        'login_at',
+        'last_activity_at',
+        'expires_at',
+        'active_status',
+    )
+    list_filter = ('is_active', 'login_at', 'expires_at')
+    search_fields = ('user__username', 'user__email', 'device_description')
+    fields = (
+        'user',
+        'device_description',
+        'user_agent',
+        'login_at',
+        'last_activity_at',
+        'expires_at',
+        'is_active',
+        'revoked_at',
+    )
+    readonly_fields = (
+        'user',
+        'device_description',
+        'user_agent',
+        'login_at',
+        'last_activity_at',
+        'expires_at',
+        'is_active',
+        'revoked_at',
+    )
+    actions = ('revoke_selected_sessions',)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(
+            tracking_id_digest__isnull=False,
+        )
+
+    @admin.display(description='Active', boolean=True)
+    def active_status(self, obj):
+        return obj.is_active and obj.expires_at > timezone.now()
+
+    def save_model(self, request, obj, form, change):
+        if change and not obj.is_active:
+            obj.revoked_at = obj.revoked_at or timezone.now()
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description='Revoke selected active sessions')
+    def revoke_selected_sessions(self, request, queryset):
+        count = queryset.filter(is_active=True).update(
+            is_active=False,
+            revoked_at=timezone.now(),
+        )
+        self.message_user(request, f'{count} active session(s) revoked.')

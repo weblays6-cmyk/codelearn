@@ -1,6 +1,19 @@
 from django.shortcuts import redirect
 
 from .models import UserProfile
+from .session_security import enforce_active_session
+
+
+class ActiveSessionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            response = enforce_active_session(request, request.user)
+            if response is not None:
+                return response
+        return self.get_response(request)
 
 
 class AccountLifecycleMiddleware:

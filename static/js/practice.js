@@ -755,6 +755,23 @@ def __build_tree(arr):
     let monacoEditor = null;
     let monacoReady = false;
     let submitInFlight = false;
+    const lightEditorTheme = "vgrowhub-light";
+
+    function isLightTheme() {
+      return document.body.classList.contains("light-theme");
+    }
+
+    function syncEditorTheme() {
+      if (monacoReady && monacoEditor) {
+        monaco.editor.setTheme(isLightTheme() ? lightEditorTheme : "vs-dark");
+      }
+    }
+
+    const themeObserver = new MutationObserver(syncEditorTheme);
+    themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     function ensureBundledProblemCards() {
       const categories = {
@@ -988,11 +1005,42 @@ def __build_tree(arr):
       if (!monacoInitPromise) {
         monacoInitPromise = loadMonaco()
           .then(() => {
+            window.monaco.editor.defineTheme(lightEditorTheme, {
+              base: "vs",
+              inherit: true,
+              rules: [
+                { token: "comment", foreground: "64748B", fontStyle: "italic" },
+                { token: "keyword", foreground: "7C3AED" },
+                { token: "string", foreground: "15803D" },
+                { token: "number", foreground: "B45309" },
+                { token: "type.identifier", foreground: "0369A1" },
+                { token: "delimiter", foreground: "475569" },
+              ],
+              colors: {
+                "editor.background": "#F8FAFC",
+                "editor.foreground": "#1E293B",
+                "editorLineNumber.foreground": "#94A3B8",
+                "editorLineNumber.activeForeground": "#475569",
+                "editorCursor.foreground": "#4F46E5",
+                "editor.lineHighlightBackground": "#F1F5F9",
+                "editor.selectionBackground": "#C7D2FE",
+                "editor.inactiveSelectionBackground": "#E0E7FF",
+                "editorIndentGuide.background": "#E2E8F0",
+                "editorIndentGuide.activeBackground": "#A5B4FC",
+                "editorWhitespace.foreground": "#CBD5E1",
+                "editorWidget.background": "#FFFFFF",
+                "editorWidget.border": "#CBD5E1",
+              },
+            });
             monacoEditor = window.monaco.editor.create(monacoHost, {
               value: "",
               language: "python",
-              theme: "vs-dark",
-              fontSize: 14,
+              theme: isLightTheme() ? lightEditorTheme : "vs-dark",
+              fontSize: 16,
+              lineHeight: 25,
+              fontFamily: "Cascadia Code, Fira Code, Consolas, monospace",
+              fontLigatures: true,
+              padding: { top: 12, bottom: 12 },
               minimap: { enabled: false },
               automaticLayout: true,
               tabSize: 4,

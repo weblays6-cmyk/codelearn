@@ -5,98 +5,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
-<style>
-  .practice-subpage {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 28px 0 40px;
-  }
-
-  .subpage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 18px;
-    margin-bottom: 18px;
-  }
-
-  .subpage-header h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: -0.06em;
-  }
-
-  .leaderboard {
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 18px;
-    overflow: hidden;
-  }
-
-  .leader-row {
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 90px 100px 120px;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  }
-
-  .leader-row.header {
-    background: rgba(148, 163, 184, 0.04);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #94a3b8;
-  }
-
-  .rank {
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-
-  .podium {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: end;
-    gap: 12px;
-    margin: 0 0 20px;
-  }
-
-  .podium-item {
-    text-align: center;
-    padding: 18px 10px;
-    background: rgba(15, 23, 42, .72);
-    border: 1px solid rgba(148, 163, 184, .18);
-    border-radius: 14px;
-  }
-
-  .podium-item:first-child {
-    padding-top: 30px;
-    border-color: rgba(250, 204, 21, .4);
-  }
-
-  @media(max-width:640px) {
-    .leader-row {
-      grid-template-columns: 45px minmax(0, 1fr) 58px 85px 78px;
-      gap: 6px;
-      padding: 12px 8px;
-      font-size: .78rem
-    }
-
-    .leader-row.header {
-      font-size: .62rem
-    }
-
-    .podium-item {
-      padding: 12px 6px
-    }
-  }
-
-  .tool-btn {
-    text-decoration: none;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'css/practice_subpages.css' %}?v=20261009-1">
+<link rel="stylesheet" href="{% static 'css/practice_leaderboard.css' %}?v=20261009-1">
 {% endblock %}
 
 {% block content %}
@@ -109,10 +19,13 @@
     <a href="{% url 'blog:practice' %}" class="tool-btn">Back to Practice</a>
   </div>
 
-  <nav style="display:flex; gap:10px; margin:0 0 18px;" aria-label="Leaderboard period">
-    <a class="tool-btn" href="?period=week" {% if period == 'week' %}aria-current="page" {% endif %}>Weekly</a>
-    <a class="tool-btn" href="?period=month" {% if period == 'month' %}aria-current="page" {% endif %}>Monthly</a>
-    <a class="tool-btn" href="?period=all" {% if period == 'all' %}aria-current="page" {% endif %}>All Time</a>
+  <nav class="leaderboard-periods" aria-label="Leaderboard period">
+    <a class="tool-btn{% if period == 'week' %} is-current{% endif %}" href="?period=week"
+      {% if period == 'week' %}aria-current="page" {% endif %}>Weekly</a>
+    <a class="tool-btn{% if period == 'month' %} is-current{% endif %}" href="?period=month"
+      {% if period == 'month' %}aria-current="page" {% endif %}>Monthly</a>
+    <a class="tool-btn{% if period == 'all' %} is-current{% endif %}" href="?period=all"
+      {% if period == 'all' %}aria-current="page" {% endif %}>All Time</a>
   </nav>
 
   {% if podium %}
@@ -120,13 +33,14 @@
     {% for entry in podium %}
     <div class="podium-item">
       <strong>{% if forloop.counter == 1 %}#1{% elif forloop.counter == 2 %}#2{% else %}#3{% endif %}</strong>
-      <div style="margin:8px 0">{{ entry.user.username }}</div>
+      <div class="podium-name">{{ entry.user.username }}</div>
       <span>{{ entry.points }} pts</span>
     </div>
     {% endfor %}
   </section>
   {% endif %}
 
+  <div class="leaderboard-scroll" role="region" aria-label="Practice leaderboard" tabindex="0">
   <div class="leaderboard">
     <div class="leader-row header">
       <div>Rank</div>
@@ -136,7 +50,7 @@
       <div>Score / Points</div>
     </div>
     {% for entry in leaderboard %}
-    <div class="leader-row" {% if entry.user.id == user.id %}style="background:rgba(59,130,246,.12);" {% endif %}>
+    <div class="leader-row{% if entry.user.id == user.id %} current-user{% endif %}">
       <div class="rank">#{{ leaderboard.start_index|add:forloop.counter0 }}</div>
       <div>{{ entry.user.username }}{% if entry.user.id == user.id %} <strong>(You)</strong>{% endif %}</div>
       <div>{{ entry.solved }}</div>
@@ -153,10 +67,13 @@
     </div>
     {% endfor %}
   </div>
+  </div>
+  <nav class="leaderboard-pagination" aria-label="Leaderboard pages">
   {% if leaderboard.has_previous %}<a class="tool-btn"
     href="?period={{ period }}&page={{ leaderboard.previous_page_number }}">Previous</a>{% endif %}
   {% if leaderboard.has_next %}<a class="tool-btn"
     href="?period={{ period }}&page={{ leaderboard.next_page_number }}">Next</a>{% endif %}
-  {% if current_rank %}<p style="color:#94a3b8; margin-top:14px;">Your rank: #{{ current_rank }}</p>{% endif %}
+  </nav>
+  {% if current_rank %}<p class="leaderboard-current-rank">Your rank: <strong>#{{ current_rank }}</strong></p>{% endif %}
 </div>
 {% endblock %}

@@ -92,8 +92,17 @@ from .models import (
     FollowRequest,
     Notification,
     UserBlock,
+    UserLoginSession,
     AITutorConversation,
     AITutorMessage,
+)
+from .session_security import (
+    LOGIN_ALLOWANCE_EXHAUSTED_MESSAGE,
+    PENDING_LOGIN_EXPIRED_MESSAGE,
+    get_pending_login,
+    reserve_login,
+    revoke_and_complete_login,
+    session_selection_error,
 )
 
 from .services.code_execution import (
@@ -1265,6 +1274,8 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect("blog:dashboard")
 
+    login_error = request.session.pop('_vgh_login_error', None)
+
     if request.method == "POST":
 
         identifier = request.POST.get(
@@ -1294,7 +1305,15 @@ def login_view(request):
                 break
 
         if authenticated_user is not None:
-            request.session['_vgh_login_method'] = 'Password'
+            reservation = reserve_login(request, authenticated_user, 'Password')
+            if reservation.status == 'sessions':
+                return redirect('blog:manage_active_sessions')
+            if reservation.status == 'allowance':
+                return render(
+                    request,
+                    "blog/login.html",
+                    {"error": LOGIN_ALLOWANCE_EXHAUSTED_MESSAGE},
+                )
             login(
                 request,
                 authenticated_user
@@ -1308,13 +1327,81 @@ def login_view(request):
             request,
             "blog/login.html",
             {
-                "error": "Invalid username/email or password."
+                "error": "Invalid username/email or password.",
             }
         )
 
+    return render(request, "blog/login.html", {"error": login_error})
+
+
+@require_GET
+def manage_active_sessions(request):
+    if request.user.is_authenticated:
+        return redirect('blog:dashboard')
+
+    pending = get_pending_login(request)
+    if pending is None:
+        request.session['_vgh_login_error'] = PENDING_LOGIN_EXPIRED_MESSAGE
+        request.session.modified = True
+        return redirect('blog:login')
+
+    sessions = UserLoginSession.objects.filter(
+        user=pending.user,
+        is_active=True,
+        tracking_id_digest__isnull=False,
+        expires_at__gt=timezone.now(),
+    ).only(
+        'id',
+        'device_description',
+        'login_at',
+        'last_activity_at',
+    )
     return render(
         request,
-        "blog/login.html"
+        'blog/manage_active_sessions.html',
+        {
+            'sessions': sessions,
+            'error': request.GET.get('error', ''),
+        },
+    )
+
+
+@require_POST
+def cancel_pending_login(request):
+    pending = get_pending_login(request)
+    if pending is not None:
+        pending.delete()
+    request.session.pop('_vgh_pending_login', None)
+    request.session.modified = True
+    return redirect('blog:login')
+
+
+@require_POST
+def replace_active_session(request):
+    pending = get_pending_login(request)
+    if pending is None:
+        request.session['_vgh_login_error'] = PENDING_LOGIN_EXPIRED_MESSAGE
+        request.session.modified = True
+        return redirect('blog:login')
+
+    session_id = request.POST.get('active_session_id')
+    if not session_id or not session_id.isdecimal():
+        return redirect('blog:manage_active_sessions')
+
+    result = revoke_and_complete_login(
+        request,
+        pending.token,
+        int(session_id),
+    )
+    if result.status == 'completed':
+        return redirect('blog:dashboard')
+    if result.status in ('expired', 'allowance'):
+        request.session['_vgh_login_error'] = session_selection_error(result.status)
+        request.session.modified = True
+        return redirect('blog:login')
+    return redirect(
+        f"{reverse('blog:manage_active_sessions')}?error="
+        f"{session_selection_error(result.status)}"
     )
 
 

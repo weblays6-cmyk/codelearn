@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage active sessions | {{ SITE_NAME }}</title>
+    <style>
+        :root { color-scheme: light; font-family: Arial, sans-serif; color: #172033; }
+        body { margin: 0; background: #f4f6fb; }
+        main { max-width: 760px; margin: 8vh auto; padding: 28px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px #18244218; }
+        h1 { margin: 0 0 12px; font-size: 1.7rem; }
+        .notice { padding: 14px 16px; border-radius: 10px; background: #fff6df; color: #714d00; line-height: 1.5; }
+        .error { margin: 14px 0; color: #a32132; }
+        .session { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid #e5e8ef; }
+        .details { min-width: 0; line-height: 1.6; }
+        .device { font-weight: 700; }
+        .muted { color: #687386; font-size: .92rem; }
+        button { border: 0; border-radius: 8px; padding: 11px 15px; font-weight: 700; cursor: pointer; }
+        .replace { flex: 0 0 auto; background: #2457d6; color: #fff; }
+        .cancel { margin-top: 22px; background: #e9edf4; color: #263247; }
+        @media (max-width: 640px) {
+            main { margin: 16px; padding: 22px; }
+            .session { align-items: stretch; flex-direction: column; gap: 12px; }
+            .replace { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Manage active sessions</h1>
+    <p class="notice">Your active login limit has been reached. Log out an existing session to continue in this window.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    {% for active_session in sessions %}
+        <section class="session">
+            <div class="details">
+                <div class="device">{{ active_session.device_description|default:"Unknown browser or device" }}</div>
+                <div>Login time: {{ active_session.login_at|date:"M j, Y, g:i a T" }}</div>
+                <div class="muted">Last activity: {{ active_session.last_activity_at|date:"M j, Y, g:i a T" }}</div>
+                <div class="muted">Approximate device description based on browser information.</div>
+            </div>
+            <form method="post" action="{% url 'blog:replace_active_session' %}">
+                {% csrf_token %}
+                <input type="hidden" name="active_session_id" value="{{ active_session.pk }}">
+                <button class="replace" type="submit">Log out this session and log in here</button>
+            </form>
+        </section>
+    {% empty %}
+        <p>No active sessions remain. Cancel and sign in again.</p>
+    {% endfor %}
+
+    <form method="post" action="{% url 'blog:cancel_pending_login' %}">
+        {% csrf_token %}
+        <button class="cancel" type="submit">Cancel</button>
+    </form>
+</main>
+</body>
+</html>

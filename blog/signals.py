@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.signals import user_logged_in
+from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -8,8 +8,22 @@ from django.utils import timezone
 
 from .gmail_service import send_gmail
 from .models import UserProfile
+from .session_security import (
+    register_successful_login,
+    remove_logged_out_session,
+)
 
 logger = logging.getLogger(__name__)
+
+
+user_logged_in.connect(
+    register_successful_login,
+    dispatch_uid='blog.register_successful_login_session',
+)
+user_logged_out.connect(
+    remove_logged_out_session,
+    dispatch_uid='blog.remove_logged_out_session',
+)
 
 
 @receiver(post_save, sender=User)

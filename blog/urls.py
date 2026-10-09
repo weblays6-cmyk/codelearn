@@ -126,6 +126,24 @@ urlpatterns = [
     ),
 
     path(
+        "login/manage-sessions/",
+        views.manage_active_sessions,
+        name="manage_active_sessions",
+    ),
+
+    path(
+        "login/manage-sessions/replace/",
+        views.replace_active_session,
+        name="replace_active_session",
+    ),
+
+    path(
+        "login/manage-sessions/cancel/",
+        views.cancel_pending_login,
+        name="cancel_pending_login",
+    ),
+
+    path(
         "logout/",
         auth_views.LogoutView.as_view(next_page="/"),
         name="logout"),

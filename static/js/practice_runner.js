@@ -14,12 +14,27 @@
     const saveUrl = root.dataset.saveUrl;
     let editor = null;
     let sessionId = root.dataset.sessionId || "";
+    const playgroundLightTheme = "vgrowhub-playground-light";
     const originalCode = textarea.value;
     const starterNode = root.querySelector("#practice-starter-codes");
     let starterCodes = {};
     if (starterNode) {
       try { starterCodes = JSON.parse(starterNode.textContent); } catch (_error) { starterCodes = {}; }
     }
+
+    const isLightTheme = () => document.body.classList.contains("light-theme");
+    const syncEditorTheme = () => {
+      if (editor) {
+        window.monaco.editor.setTheme(
+          isLightTheme() ? playgroundLightTheme : "vs-dark",
+        );
+      }
+    };
+    const themeObserver = new MutationObserver(syncEditorTheme);
+    themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     root.querySelectorAll("[data-playground-tab]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -118,13 +133,43 @@
     if (host && textarea && window.require) {
       window.require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
       window.require(["vs/editor/editor.main"], function () {
+        window.monaco.editor.defineTheme(playgroundLightTheme, {
+          base: "vs",
+          inherit: true,
+          rules: [
+            { token: "comment", foreground: "64748B", fontStyle: "italic" },
+            { token: "keyword", foreground: "7C3AED" },
+            { token: "string", foreground: "15803D" },
+            { token: "number", foreground: "B45309" },
+            { token: "type.identifier", foreground: "0369A1" },
+            { token: "delimiter", foreground: "475569" },
+          ],
+          colors: {
+            "editor.background": "#F8FAFC",
+            "editor.foreground": "#1E293B",
+            "editorLineNumber.foreground": "#94A3B8",
+            "editorLineNumber.activeForeground": "#475569",
+            "editorCursor.foreground": "#4F46E5",
+            "editor.lineHighlightBackground": "#F1F5F9",
+            "editor.selectionBackground": "#C7D2FE",
+            "editor.inactiveSelectionBackground": "#E0E7FF",
+            "editorIndentGuide.background": "#E2E8F0",
+            "editorIndentGuide.activeBackground": "#A5B4FC",
+            "editorWidget.background": "#FFFFFF",
+            "editorWidget.border": "#CBD5E1",
+          },
+        });
         editor = window.monaco.editor.create(host, {
           value: textarea.value,
           language: language?.value || "plaintext",
-          theme: "vs-dark",
+          theme: isLightTheme() ? playgroundLightTheme : "vs-dark",
           automaticLayout: true,
           minimap: { enabled: false },
-          fontSize: 14,
+          fontSize: 16,
+          lineHeight: 25,
+          fontFamily: "Cascadia Code, Fira Code, Consolas, monospace",
+          fontLigatures: true,
+          padding: { top: 12, bottom: 12 },
           lineNumbers: "on",
           scrollBeyondLastLine: false,
           tabSize: 4,

@@ -230,3 +230,182 @@
         min-height: 680px;
     }
 }
+
+body.light-theme .playground-page {
+    --playground-line: #e2e8f0;
+    color: var(--ui-text);
+}
+
+body.light-theme .playground-page .solver-topbar,
+body.light-theme .playground-page .solver-panel {
+    border-color: var(--ui-border);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
+}
+
+body.light-theme .playground-page .solver-back,
+body.light-theme .playground-page .editor-tool-btn {
+    border-color: #dbe3ef;
+    color: #475569;
+    background: #fff;
+}
+
+body.light-theme .playground-page .solver-back:hover,
+body.light-theme .playground-page .editor-tool-btn:hover {
+    border-color: #a5b4fc;
+    color: #3730a3;
+    background: #eef2ff;
+}
+
+body.light-theme .playground-page .playground-title input {
+    border-color: transparent;
+    color: var(--ui-text);
+    font-size: 16px;
+}
+
+body.light-theme .playground-page .playground-title input:hover,
+body.light-theme .playground-page .playground-title input:focus {
+    border-color: #c7d2fe;
+    background: #f8faff;
+}
+
+body.light-theme .playground-page .desc-tabs,
+body.light-theme .playground-page .editor-toolbar,
+body.light-theme .playground-page .tc-tabs {
+    border-color: var(--ui-border);
+}
+
+body.light-theme .playground-page .desc-tabs .active,
+body.light-theme .playground-page .desc-tabs .desc-tab-btn.active,
+body.light-theme .playground-page .tc-tab.active {
+    color: #3730a3;
+}
+
+body.light-theme .playground-page .desc-tabs .desc-tab-btn,
+body.light-theme .playground-page .tc-tab {
+    color: var(--ui-muted);
+}
+
+body.light-theme .playground-page .desc-tabs .desc-tab-btn:hover,
+body.light-theme .playground-page .tc-tab:hover {
+    color: #3730a3;
+}
+
+body.light-theme .playground-page .playground-description,
+body.light-theme .playground-page .playground-description p {
+    color: var(--ui-muted);
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+body.light-theme .playground-page .playground-description h2 {
+    color: var(--ui-text);
+    font-size: 22px;
+    line-height: 1.35;
+}
+
+body.light-theme .playground-page .playground-description .eyebrow {
+    color: #4f46e5;
+}
+
+body.light-theme .playground-page .playground-meta span {
+    border-color: #dbe3ef;
+    color: #475569;
+    background: #f8fafc;
+    font-size: 13px;
+}
+
+body.light-theme .playground-page .playground-session {
+    border-color: #e2e8f0;
+    color: #334155;
+    background: #fff;
+    font-size: 14px;
+}
+
+body.light-theme .playground-page .playground-session:hover {
+    border-color: #a5b4fc;
+    background: #f8faff;
+}
+
+body.light-theme .playground-page .playground-session small,
+body.light-theme .playground-page .playground-empty,
+body.light-theme .playground-page .editor-saved {
+    color: var(--ui-muted);
+    font-size: 13px;
+}
+
+body.light-theme .playground-page .editor-lang-select {
+    border-color: #dbe3ef;
+    color: #334155;
+    background: #f8fafc;
+    font-size: 14px;
+}
+
+body.light-theme .playground-page .editor-lang-select option {
+    color: #1e293b;
+    background: #fff;
+}
+
+body.light-theme .playground-page .editor-lang {
+    color: #334155;
+}
+
+body.light-theme .playground-page .tc-tab.active {
+    border-radius: 8px;
+    background: #eef2ff;
+}
+
+body.light-theme .playground-page .tc-field label {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.light-theme .playground-page .playground-stdin,
+body.light-theme .playground-page .playground-output {
+    border-color: #dbe3ef;
+    color: #1e293b;
+    background: #f8fafc;
+    font: 15px/1.65 "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+body.light-theme .playground-page .playground-stdin:focus {
+    border-color: #818cf8;
+    outline: 3px solid rgba(99, 102, 241, .14);
+}
+
+body.light-theme .playground-page .status-message {
+    border-color: #fecaca;
+    color: #991b1b;
+    background: #fef2f2;
+    font-size: 14px;
+}
+
+body.light-theme .playground-page .btn-run {
+    border-color: #cbd5e1;
+    color: #334155;
+    background: #f8fafc;
+}
+
+body.light-theme .playground-page .btn-run:disabled {
+    opacity: .8;
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+body.light-theme .playground-page .btn-submit {
+    border-color: #86efac;
+    color: #166534;
+    background: #ecfdf5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .playground-page *,
+    .playground-page *::before,
+    .playground-page *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

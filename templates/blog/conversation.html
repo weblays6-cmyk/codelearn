@@ -14,7 +14,7 @@
 
 <link
     rel="stylesheet"
-    href="{% static 'css/conversation.css' %}"
+    href="{% static 'css/conversation.css' %}?v=typing-indicator-1"
 >
 
 {% endblock %}
@@ -786,8 +786,21 @@
     </div>
 
 </div>
-        <!-- =================================================
-             COMPOSER
+
+<div
+    id="typingIndicator"
+    class="typing-indicator"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    hidden
+>
+    <span>Typing</span>
+    <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+</div>
+
+<!-- =================================================
+     COMPOSER
         ================================================== -->
 
        <form
@@ -906,6 +919,6 @@
 
 {% block extra_js %}
 
-<script src="{% static 'js/conversation.js' %}"></script>
+<script src="{% static 'js/conversation.js' %}?v=typing-indicator-1"></script>
 
 {% endblock %}

@@ -16,6 +16,7 @@ from unittest.mock import patch
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from datetime import timedelta
+import hashlib
 
 from PIL import Image
 
@@ -43,6 +44,7 @@ from .models import (
 	PracticeProgress,
 	PracticeSubmission,
 	UserProfile,
+	UserLoginSession,
 )
 from .admin import AssignmentSubmissionAdmin
 from .consumers import ConversationConsumer
@@ -697,6 +699,8 @@ class UsernameIdentityTests(TestCase):
 		)
 		self.assertContains(chat_response, 'Message User')
 		self.assertContains(chat_response, '@message-user')
+		self.assertContains(chat_response, 'id="typingIndicator"')
+		self.assertContains(chat_response, 'aria-live="polite"')
 
 	def test_database_rejects_case_insensitive_duplicate_usernames(self):
 		User.objects.create_user('CaseSensitive', password='pass')
@@ -1061,10 +1065,35 @@ class ConversationWebSocketTests(TransactionTestCase):
 	def setUp(self):
 		self.sender = User.objects.create_user('socket-sender', password='pass')
 		self.receiver = User.objects.create_user('socket-receiver', password='pass')
+		self.session_tokens = {}
+		for user in (self.sender, self.receiver):
+			tracking_id = f'test-session-{user.pk}'
+			self.session_tokens[user.pk] = tracking_id
+			UserLoginSession.objects.create(
+				user=user,
+				tracking_id_digest=hashlib.sha256(
+					tracking_id.encode('utf-8'),
+				).hexdigest(),
+				expires_at=timezone.now() + timedelta(hours=1),
+			)
 		self.conversation = Conversation.objects.create(
 			project_owner=self.sender,
 			participant=self.receiver,
 		)
+
+	def _communicator(self, user):
+		communicator = WebsocketCommunicator(
+			ConversationConsumer.as_asgi(),
+			f'/ws/messages/{self.conversation.id}/',
+		)
+		communicator.scope['user'] = user
+		communicator.scope['session'] = {
+			'_vgh_session_tracking_id': self.session_tokens[user.pk],
+		}
+		communicator.scope['url_route'] = {
+			'kwargs': {'conversation_id': self.conversation.id},
+		}
+		return communicator
 
 	def test_personal_websocket_rejects_non_mutual_followers(self):
 		FollowRequest.objects.create(
@@ -1072,14 +1101,7 @@ class ConversationWebSocketTests(TransactionTestCase):
 			receiver=self.receiver,
 			status='ACCEPTED',
 		)
-		communicator = WebsocketCommunicator(
-			ConversationConsumer.as_asgi(),
-			f'/ws/messages/{self.conversation.id}/',
-		)
-		communicator.scope['user'] = self.sender
-		communicator.scope['url_route'] = {
-			'kwargs': {'conversation_id': self.conversation.id},
-		}
+		communicator = self._communicator(self.sender)
 
 		connected, close_code = async_to_sync(communicator.connect)()
 
@@ -1089,14 +1111,7 @@ class ConversationWebSocketTests(TransactionTestCase):
 	def test_deactivated_account_cannot_subscribe_to_websocket(self):
 		self.sender.profile_data.is_deactivated = True
 		self.sender.profile_data.save(update_fields=['is_deactivated'])
-		communicator = WebsocketCommunicator(
-			ConversationConsumer.as_asgi(),
-			f'/ws/messages/{self.conversation.id}/',
-		)
-		communicator.scope['user'] = self.sender
-		communicator.scope['url_route'] = {
-			'kwargs': {'conversation_id': self.conversation.id},
-		}
+		communicator = self._communicator(self.sender)
 
 		connected, close_code = async_to_sync(communicator.connect)()
 
@@ -1114,14 +1129,7 @@ class ConversationWebSocketTests(TransactionTestCase):
 			receiver=self.sender,
 			status='ACCEPTED',
 		)
-		communicator = WebsocketCommunicator(
-			ConversationConsumer.as_asgi(),
-			f'/ws/messages/{self.conversation.id}/',
-		)
-		communicator.scope['user'] = self.sender
-		communicator.scope['url_route'] = {
-			'kwargs': {'conversation_id': self.conversation.id},
-		}
+		communicator = self._communicator(self.sender)
 
 		async def connect_and_receive():
 			connected, _ = await communicator.connect()
@@ -1139,6 +1147,55 @@ class ConversationWebSocketTests(TransactionTestCase):
 		self.assertEqual(event, {
 			'type': 'message_created',
 			'message_id': 47,
+		})
+
+	def test_chat_member_receives_typing_status_from_peer(self):
+		FollowRequest.objects.create(
+			sender=self.sender,
+			receiver=self.receiver,
+			status='ACCEPTED',
+		)
+		FollowRequest.objects.create(
+			sender=self.receiver,
+			receiver=self.sender,
+			status='ACCEPTED',
+		)
+		sender_communicator = self._communicator(self.sender)
+		receiver_communicator = self._communicator(self.receiver)
+
+		async def connect_and_receive_typing():
+			sender_connected, _ = await sender_communicator.connect()
+			receiver_connected, _ = await receiver_communicator.connect()
+			await sender_communicator.send_json_to({
+				'type': 'typing',
+				'is_typing': True,
+				'user_id': self.receiver.pk,
+			})
+			start_event = await receiver_communicator.receive_json_from()
+			await sender_communicator.send_json_to({
+				'type': 'typing',
+				'is_typing': False,
+			})
+			stop_event = await receiver_communicator.receive_json_from()
+			await sender_communicator.disconnect()
+			await receiver_communicator.disconnect()
+			return sender_connected, receiver_connected, start_event, stop_event
+
+		sender_connected, receiver_connected, start_event, stop_event = async_to_sync(
+			connect_and_receive_typing,
+		)()
+
+		self.assertTrue(sender_connected)
+		self.assertTrue(receiver_connected)
+		self.assertEqual(start_event, {
+			'type': 'typing_status',
+			'user_id': self.sender.pk,
+			'is_typing': True,
+		})
+		self.assertEqual(stop_event, {
+			'type': 'typing_status',
+			'user_id': self.sender.pk,
+			'is_typing': False,
 		})
 
 
@@ -1556,6 +1613,19 @@ class PracticeIntegrationTests(TestCase):
 			with self.subTest(route=route_name):
 				response = self.client.get(reverse(f'blog:{route_name}'))
 				self.assertEqual(response.status_code, 200)
+
+	def test_practice_tool_pages_load_consistent_theme_styles(self):
+		expected_stylesheets = {
+			'practice_playground': 'practice_playground.css?v=20261009-1',
+			'practice_mock_tests': 'practice_subpages.css?v=20261009-1',
+			'practice_problem_sets': 'practice_subpages.css?v=20261009-1',
+			'practice_leaderboard': 'practice_leaderboard.css?v=20261009-1',
+		}
+		for route_name, stylesheet in expected_stylesheets.items():
+			with self.subTest(route=route_name):
+				response = self.client.get(reverse(f'blog:{route_name}'))
+				self.assertEqual(response.status_code, 200)
+				self.assertContains(response, stylesheet)
 
 	def test_practice_draft_and_submission_are_persisted(self):
 		draft_response = self.client.post(

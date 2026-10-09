@@ -5,72 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
-<style>
-  .practice-subpage {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 28px 0 40px;
-  }
-
-  .subpage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 18px;
-    margin-bottom: 18px;
-  }
-
-  .subpage-header h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: -0.06em;
-  }
-
-  .test-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-  }
-
-  .test-card {
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 18px;
-    padding: 20px;
-  }
-
-  .test-card h3 {
-    margin: 0 0 8px;
-  }
-
-  .meta {
-    color: #94a3b8;
-    margin-bottom: 10px;
-  }
-
-  .pill {
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .pill.medium {
-    background: rgba(245, 158, 11, .12);
-    color: #fcd34d;
-  }
-
-  .pill.hard {
-    background: rgba(239, 68, 68, .12);
-    color: #fca5a5;
-  }
-
-  .tool-btn {
-    text-decoration: none;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'css/practice_subpages.css' %}?v=20261009-1">
 {% endblock %}
 
 {% block content %}
@@ -83,7 +18,7 @@
     <a href="{% url 'blog:practice' %}" class="tool-btn">Back to Practice</a>
   </div>
 
-  <section class="stats" style="margin-bottom:22px;">
+  <section class="stats mock-test-stats">
     <div class="stat-card">
       <div class="stat-value">{{ stats.mock_tests_completed }}</div>
       <div class="stat-label">Tests Completed</div>
@@ -105,20 +40,20 @@
   <div class="test-grid">
     {% for test in tests %}
     <div class="test-card">
-      <span class="pill {{ test.test.difficulty|lower }}">{{ test.test.get_difficulty_display }}</span>
+      <span class="pill difficulty-pill {{ test.test.difficulty|lower }}">{{ test.test.get_difficulty_display }}</span>
       <h3>{{ test.test.title }}</h3>
       <div class="meta">{{ test.test.question_count }} questions • {{ test.test.duration_minutes }} minutes • {{
         test.test.questions.count }} configured</div>
-      <p style="color:#cbd5e1; margin-bottom: 18px;">{{ test.test.description }}</p>
+      <p class="test-description">{{ test.test.description }}</p>
       {% if test.attempt and test.attempt.status == 'IN_PROGRESS' %}
       <a href="{% url 'blog:practice_mock_test_attempt' test.attempt.pk %}" class="tool-btn">Continue</a>
-      <span class="pill">In Progress</span>
+      <span class="pill status-pill in-progress">In Progress</span>
       {% elif test.attempt and test.attempt.status != 'IN_PROGRESS' %}
       <a href="{% url 'blog:practice_mock_test_result' test.attempt.pk %}" class="tool-btn">View Result</a>
-      <span class="pill">Completed</span>
+      <span class="pill status-pill completed">Completed</span>
       {% else %}
       <a href="{% url 'blog:practice_mock_test_detail' test.test.pk %}" class="tool-btn">View Test</a>
-      <span class="pill">Not Started</span>
+      <span class="pill status-pill not-started">Not Started</span>
       {% endif %}
     </div>
     {% empty %}

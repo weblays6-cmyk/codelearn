@@ -60,6 +60,41 @@ Dashboard | {{ SITE_NAME }}
 </section>
 
 
+<section class="leadership-badge-section" aria-labelledby="leadership-badge-heading">
+    {% if user_profile.leadership_badge_awarded %}
+    <div class="leadership-badge-card">
+        <div class="leadership-badge-icon" aria-hidden="true">
+            <i class="bi bi-award-fill"></i>
+        </div>
+        <div class="leadership-badge-content">
+            <span class="leadership-badge-eyebrow">Leadership badge</span>
+            <h2 id="leadership-badge-heading">{{ user_profile.leadership_badge_title }}</h2>
+            <p class="leadership-badge-name">
+                {{ user_profile.display_name|default:request.user.get_full_name|default:username }}
+            </p>
+            <p class="leadership-badge-description">
+                {{ user_profile.leadership_badge_description }}
+            </p>
+            {% if user_profile.leadership_badge_awarded_at %}
+            <p class="leadership-badge-date">
+                Awarded {{ user_profile.leadership_badge_awarded_at|date:"F j, Y" }}
+            </p>
+            {% endif %}
+        </div>
+        <span class="leadership-badge-status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            Awarded
+        </span>
+    </div>
+    {% else %}
+    <div class="leadership-badge-empty" role="status">
+        <i class="bi bi-award" aria-hidden="true"></i>
+        <h2 id="leadership-badge-heading">No leadership badge awarded yet</h2>
+    </div>
+    {% endif %}
+</section>
+
+
 <!-- =====================================================
      CURRENT GOAL
 ===================================================== -->

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
 from django.utils.text import slugify
 
 
@@ -611,6 +612,47 @@ class UserProfile(models.Model):
         default=True
     )
 
+    max_successful_logins = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Total successful-login allowance',
+        help_text='Leave blank for no lifetime successful-login limit.',
+    )
+
+    successful_login_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Successful logins used',
+    )
+
+    max_active_sessions = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Maximum active sessions',
+        help_text='Leave blank to allow any number of concurrent sessions.',
+    )
+
+    leadership_badge_awarded = models.BooleanField(
+        default=False,
+        verbose_name='Leadership badge awarded',
+    )
+    leadership_badge_title = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name='Leadership badge title',
+    )
+    leadership_badge_description = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        verbose_name='Leadership badge description',
+    )
+    leadership_badge_awarded_at = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Leadership badge award date',
+    )
+
     is_deactivated = models.BooleanField(
         default=False
     )
@@ -640,6 +682,80 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    def clean(self):
+        super().clean()
+        if self.leadership_badge_awarded and not all((
+            self.leadership_badge_title,
+            self.leadership_badge_description,
+            self.leadership_badge_awarded_at,
+        )):
+            message = (
+                'Set a title, description, and award date before awarding '
+                'the leadership badge.'
+            )
+            raise ValidationError({
+                'leadership_badge_title': message,
+                'leadership_badge_description': message,
+                'leadership_badge_awarded_at': message,
+            })
+
+
+class UserLoginSession(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tracked_login_sessions',
+    )
+    tracking_id_digest = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    reservation_id = models.UUIDField(
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    device_description = models.CharField(max_length=255, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+    login_at = models.DateTimeField(default=timezone.now)
+    last_activity_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-last_activity_at',)
+        indexes = [
+            models.Index(fields=('user', 'is_active', 'expires_at')),
+        ]
+
+    def __str__(self):
+        return f'{self.user.username} - {self.device_description or "Unknown device"}'
+
+
+class PendingUserLogin(models.Model):
+    token = models.UUIDField(unique=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='pending_login_selections',
+    )
+    session_binding_digest = models.CharField(max_length=64)
+    login_method = models.CharField(max_length=32, default='Password')
+    backend_path = models.CharField(
+        max_length=255,
+        default='django.contrib.auth.backends.ModelBackend',
+    )
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=('session_binding_digest', 'expires_at')),
+        ]
 
 
 # =========================================================
