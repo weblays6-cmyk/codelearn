@@ -468,6 +468,12 @@ urlpatterns = [
     ),
 
     path(
+        "projects/<int:pk>/edit/",
+        views.edit_project,
+        name="edit_project"
+    ),
+
+    path(
         "projects/<int:pk>/",
         views.project_detail,
         name="project_detail"

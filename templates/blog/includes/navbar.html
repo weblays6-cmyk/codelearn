@@ -36,7 +36,7 @@
             title="Notifications">
             <i class="bi bi-bell" aria-hidden="true"></i>
         </a>
-        <a href="{% url 'blog:messages' %}" class="navbar-action-button navbar-messages" aria-label="Messages" title="Messages">
+        <a href="{% url 'blog:messages' %}" class="navbar-action-button navbar-messages" aria-label="Messages" title="Messages" data-message-unread-link>
             <i class="bi bi-chat-dots" aria-hidden="true"></i>
             {% if unread_count > 0 %}
             <span class="navbar-action-badge" aria-label="{{ unread_count }} unread messages">

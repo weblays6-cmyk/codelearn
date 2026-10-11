@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     */
 
     const actionForms = document.querySelectorAll(
-        ".project-actions form"
+        ".project-actions form:not(.project-share-form)"
     );
 
 
@@ -121,12 +121,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         ${data.following
                             ? "Following"
                             : "Follow"
-                        }
+                        } <span>${data.count}</span>
                     `;
 
                     button.classList.toggle(
                         "active",
                         data.following
+                    );
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(data.following)
                     );
                 }
 
@@ -183,7 +187,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else if (navigator.clipboard?.writeText) {
                     await navigator.clipboard.writeText(shareUrl);
                 } else {
-                    window.prompt("Copy this project link", shareUrl);
+                    if (window.prompt("Copy this project link", shareUrl) === null) {
+                        return;
+                    }
                 }
 
                 const payload = new FormData(shareForm);
@@ -201,7 +207,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     throw new Error(data.error || "Unable to record the share.");
                 }
 
-                status.textContent = platform === "copy" ? "Link copied" : "Shared";
+                status.textContent = platform === "native"
+                    ? "Shared"
+                    : navigator.clipboard?.writeText
+                        ? "Link copied"
+                        : "Link ready to copy";
             } catch (error) {
                 if (error.name !== "AbortError") {
                     status.textContent = "Sharing failed. Try again.";

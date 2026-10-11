@@ -1,7 +1,6 @@
 from django.conf import settings
-from django.db.models import Q
 
-from .models import Message
+from .message_notifications import get_unread_message_count
 
 
 def site_name(request):
@@ -17,14 +16,6 @@ def unread_message_count(request):
             "UNREAD_MESSAGE_COUNT": 0
         }
 
-    count = Message.objects.filter(
-        Q(conversation__project_owner=request.user) |
-        Q(conversation__participant=request.user),
-        is_read=False
-    ).exclude(
-        sender=request.user
-    ).count()
-
     return {
-        "UNREAD_MESSAGE_COUNT": count
+        "UNREAD_MESSAGE_COUNT": get_unread_message_count(request.user.id)
     }

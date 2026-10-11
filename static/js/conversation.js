@@ -185,6 +185,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!typingIndicator) {
             return;
         }
+        const typingLabel = typingIndicator.querySelector("[data-typing-label]");
+        if (typingLabel) {
+            typingLabel.textContent =
+                (page.dataset.chatUserName || "The other person") + " is typing";
+        }
         typingIndicator.hidden = !isTyping;
         if (remoteTypingTimer) {
             clearTimeout(remoteTypingTimer);
@@ -2206,6 +2211,14 @@ function markMessageAsDeleted(row) {
 
     }
 
+    function markOwnMessagesAsSeen() {
+        messagesBox.querySelectorAll(
+            ".chat-message-row.message-row-me[data-message-id]"
+        ).forEach(function (row) {
+            updateMessageStatus(row.dataset.messageId, true, true);
+        });
+    }
+
 
     /* =====================================================
        STATUS POLLING
@@ -2320,6 +2333,12 @@ function markMessageAsDeleted(row) {
                 const data = JSON.parse(event.data);
                 if (data.type === "message_created") {
                     pollStatus();
+                } else if (
+                    data.type === "read_receipt" &&
+                    Number(data.user_id) !==
+                        Number(page.dataset.currentUserId)
+                ) {
+                    markOwnMessagesAsSeen();
                 } else if (
                     data.type === "typing_status" &&
                     Number(data.user_id) !==

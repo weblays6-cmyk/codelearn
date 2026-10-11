@@ -11,6 +11,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from google import genai
 from django.http import (
     HttpResponsePermanentRedirect,
+    HttpResponseBadRequest,
     JsonResponse,
     Http404,
     HttpResponseForbidden,
@@ -44,6 +45,10 @@ from .services.course_progress import (
 )
 
 from .gmail_service import build_site_url, send_gmail
+from .message_notifications import (
+    broadcast_chat_message_popup,
+    broadcast_message_count_update,
+)
 from .forms import (
     CommentForm,
     EmailSignupForm,
@@ -115,6 +120,22 @@ from .services.code_execution import (
 from .services.leaderboard import leaderboard_rows
 
 logger = logging.getLogger(__name__)
+
+
+def _broadcast_conversation_read(conversation_id, reader_id):
+    try:
+        async_to_sync(get_channel_layer().group_send)(
+            f'conversation_{conversation_id}',
+            {
+                'type': 'chat.read',
+                'user_id': reader_id,
+            },
+        )
+    except Exception:
+        logger.exception(
+            'Could not broadcast read receipt for conversation %s.',
+            conversation_id,
+        )
 
 
 def _can_view_user_content(profile_user, viewer):
@@ -1997,6 +2018,7 @@ def cancel_follow_request(request, username):
     receiver = _get_user_by_username(username)
     if _users_blocked(request.user, receiver):
         return JsonResponse({'success': False, 'error': 'This action is unavailable.'}, status=403)
+    conversation_id = None
     with transaction.atomic():
         follow_request = FollowRequest.objects.select_for_update().filter(
             sender=request.user,
@@ -2013,11 +2035,33 @@ def cancel_follow_request(request, username):
             }, status=409)
         follow_request.delete()
         Notification.objects.filter(
-            recipient=receiver,
-            sender=request.user,
-            notification_type='FOLLOW_REQUEST',
-            is_read=False,
-        ).update(is_read=True)
+            Q(recipient=receiver, sender=request.user)
+            | Q(recipient=request.user, sender=receiver),
+            notification_type__in=[
+                'FOLLOW_REQUEST',
+                'FOLLOW_ACCEPTED',
+                'FOLLOW_REJECTED',
+                'FOLLOW_BACK',
+            ],
+        ).delete()
+        conversation = Conversation.objects.filter(
+            project__isnull=True,
+        ).filter(
+            Q(project_owner=request.user, participant=receiver)
+            | Q(project_owner=receiver, participant=request.user),
+        ).first()
+        if conversation:
+            conversation_id = conversation.id
+            conversation.messages.filter(
+                is_read=False,
+            ).update(
+                is_read=True,
+                is_delivered=True,
+            )
+
+    if conversation_id is not None:
+        for user_id in (request.user.id, receiver.id):
+            broadcast_message_count_update(user_id)
     return JsonResponse({'success': True, 'status': 'NONE', 'message': 'Follow request cancelled.'})
 
 
@@ -3730,6 +3774,34 @@ def create_project(request):
     )
 
 
+@login_required
+def edit_project(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    if request.user != project.owner:
+        return HttpResponseForbidden('You do not have permission to edit this project.')
+
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, request.FILES, instance=project)
+        if form.is_valid():
+            form.save()
+            for image in request.FILES.getlist('images'):
+                ProjectImage.objects.create(project=project, image=image)
+            return redirect('blog:project_detail', pk=project.pk)
+    else:
+        form = ProjectForm(instance=project)
+
+    return render(
+        request,
+        'blog/project_form.html',
+        {
+            'form': form,
+            'project': project,
+            'is_edit': True,
+            'username': request.user.username,
+        },
+    )
+
+
 # =========================================================
 # PROJECT DETAIL
 # =========================================================
@@ -3748,7 +3820,7 @@ def project_detail(request, pk):
         pk=pk
     )
 
-    ProjectView.objects.create(
+    ProjectView.objects.get_or_create(
         project=project,
         user=request.user
     )
@@ -3865,31 +3937,26 @@ def project_save(request, pk):
 # =========================================================
 
 @login_required
+@require_POST
 def project_follow(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
-    if request.method == "POST":
-        follow, created = ProjectFollow.objects.get_or_create(
-            project=project,
-            user=request.user
-        )
+    follow, created = ProjectFollow.objects.get_or_create(
+        project=project,
+        user=request.user
+    )
 
-        if not created:
-            follow.delete()
-            following = False
-        else:
-            following = True
-
-        return JsonResponse({
-            "success": True,
-            "following": following,
-            "count": project.follows.count(),
-        })
+    if not created:
+        follow.delete()
+        following = False
+    else:
+        following = True
 
     return JsonResponse({
-        "success": False,
-        "error": "Invalid request"
-    }, status=400)
+        "success": True,
+        "following": following,
+        "count": project.followers.count(),
+    })
 
     
 # =========================================================
@@ -4403,6 +4470,25 @@ def conversation_detail(request, conversation_id):
                 message.id,
             )
 
+        broadcast_message_count_update(chat_user.id)
+        sender_profile = UserProfile.objects.get_or_create(
+            user=request.user,
+        )[0]
+        sender_name = (
+            sender_profile.display_name
+            or request.user.get_full_name()
+            or request.user.username
+        )
+        broadcast_chat_message_popup(
+            chat_user.id,
+            conversation.id,
+            sender_name,
+            content or 'Sent an attachment',
+            reverse(
+                'blog:conversation_detail',
+                args=[conversation.id],
+            ),
+        )
 
         # -------------------------------------------------
         # ATTACHMENT RESPONSE
@@ -4473,13 +4559,16 @@ def conversation_detail(request, conversation_id):
     )
 
 
-    conversation.messages.filter(
+    unread_messages_marked_read = conversation.messages.filter(
         is_read=False
     ).exclude(
         sender=request.user
     ).update(
         is_read=True
     )
+    if unread_messages_marked_read:
+        broadcast_message_count_update(request.user.id)
+        _broadcast_conversation_read(conversation.id, request.user.id)
 
 
     # =====================================================
@@ -4664,13 +4753,16 @@ def conversation_status(request, conversation_id):
         is_delivered=True
     )
 
-    conversation.messages.filter(
+    unread_messages_marked_read = conversation.messages.filter(
         is_read=False
     ).exclude(
         sender=request.user
     ).update(
         is_read=True
     )
+    if unread_messages_marked_read:
+        broadcast_message_count_update(request.user.id)
+        _broadcast_conversation_read(conversation.id, request.user.id)
 
     message_records = conversation.messages.select_related(
         'sender__profile_data',
@@ -4753,6 +4845,7 @@ def project_report(request, pk):
 # =========================================================
 
 @login_required
+@require_POST
 def project_share(request, pk):
 
     project = get_object_or_404(
@@ -4765,11 +4858,27 @@ def project_share(request, pk):
         'copy'
     )
 
+    if platform not in {'copy', 'native'}:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {'success': False, 'error': 'Invalid sharing platform.'},
+                status=400,
+            )
+        return HttpResponseBadRequest('Invalid sharing platform.')
+
     ProjectShare.objects.create(
         project=project,
         user=request.user,
         platform=platform
     )
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'share_url': request.build_absolute_uri(
+                reverse('blog:project_detail', args=[project.pk])
+            ),
+        })
 
     return redirect(
         'blog:project_detail',

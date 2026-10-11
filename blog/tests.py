@@ -19,6 +19,7 @@ from datetime import timedelta
 import hashlib
 
 from PIL import Image
+from channels.db import database_sync_to_async
 
 from .forms import EmailSignupForm
 from .gmail_service import send_gmail
@@ -29,6 +30,7 @@ from .models import (
 	AssignmentOption,
 	AssignmentQuestion,
 	AssignmentSubmission,
+	Message,
 	FollowRequest,
 	Notification,
 	UserBlock,
@@ -36,6 +38,10 @@ from .models import (
 	AITutorMessage,
 	Enrollment,
 	Conversation,
+	Project,
+	ProjectFollow,
+	ProjectShare,
+	ProjectView,
 	Comment,
 	CommunityPost,
 	CommunityReply,
@@ -47,7 +53,7 @@ from .models import (
 	UserLoginSession,
 )
 from .admin import AssignmentSubmissionAdmin
-from .consumers import ConversationConsumer
+from .consumers import ConversationConsumer, MessageNotificationsConsumer
 
 
 class HomeRedirectTests(TestCase):
@@ -701,12 +707,227 @@ class UsernameIdentityTests(TestCase):
 		self.assertContains(chat_response, '@message-user')
 		self.assertContains(chat_response, 'id="typingIndicator"')
 		self.assertContains(chat_response, 'aria-live="polite"')
+		self.assertContains(chat_response, 'data-chat-user-name="Message User"')
+		self.assertContains(chat_response, 'data-typing-label')
 
 	def test_database_rejects_case_insensitive_duplicate_usernames(self):
 		User.objects.create_user('CaseSensitive', password='pass')
 		with self.assertRaises(IntegrityError):
 			with transaction.atomic():
 				User.objects.create_user('casesensitive', password='pass')
+
+
+class ProjectDetailTests(TestCase):
+	def test_user_can_open_multiple_projects_and_revisit_each(self):
+		owner = User.objects.create_user('multiple-project-owner', password='pass')
+		visitor = User.objects.create_user('multiple-project-visitor', password='pass')
+		projects = [
+			Project.objects.create(
+				owner=owner,
+				title=f'Project {number}',
+				short_description='A short project description.',
+				description='Project details.',
+				category='Web',
+			)
+			for number in range(2)
+		]
+		self.client.force_login(visitor)
+
+		for project in projects:
+			for _ in range(2):
+				response = self.client.get(
+					reverse('blog:project_detail', args=[project.pk]),
+				)
+				self.assertEqual(response.status_code, 200)
+
+		self.assertEqual(ProjectView.objects.filter(user=visitor).count(), 2)
+		self.assertEqual(
+			ProjectView.objects.filter(
+				user=visitor,
+				project__owner=owner,
+			).count(),
+			2,
+		)
+
+	def test_project_follow_toggles_and_detail_shows_current_state(self):
+		owner = User.objects.create_user('follow-project-owner', password='pass')
+		follower = User.objects.create_user('follow-project-member', password='pass')
+		project = Project.objects.create(
+			owner=owner,
+			title='Followable project',
+			short_description='A short project description.',
+			description='Project details.',
+			category='Web',
+		)
+		self.client.force_login(follower)
+
+		detail_response = self.client.get(
+			reverse('blog:project_detail', args=[project.pk])
+		)
+		self.assertContains(detail_response, 'Follow')
+		self.assertContains(detail_response, '0')
+
+		follow_response = self.client.post(
+			reverse('blog:project_follow', args=[project.pk]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(follow_response.status_code, 200)
+		self.assertEqual(follow_response.json()['following'], True)
+		self.assertEqual(follow_response.json()['count'], 1)
+
+		detail_response = self.client.get(
+			reverse('blog:project_detail', args=[project.pk])
+		)
+		self.assertContains(detail_response, 'Following')
+
+		unfollow_response = self.client.post(
+			reverse('blog:project_follow', args=[project.pk]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(unfollow_response.status_code, 200)
+		self.assertEqual(unfollow_response.json()['following'], False)
+		self.assertEqual(unfollow_response.json()['count'], 0)
+		self.assertFalse(ProjectFollow.objects.filter(project=project).exists())
+
+	def test_project_owner_can_edit_project_and_other_users_cannot(self):
+		owner = User.objects.create_user('edit-project-owner', password='pass')
+		other_user = User.objects.create_user('edit-project-other', password='pass')
+		project = Project.objects.create(
+			owner=owner,
+			title='Original project title',
+			short_description='Original short description.',
+			description='Original project details.',
+			category='Web',
+		)
+		edit_url = reverse('blog:edit_project', args=[project.pk])
+
+		self.client.force_login(other_user)
+		self.assertEqual(self.client.get(edit_url).status_code, 403)
+		self.assertEqual(
+			self.client.post(edit_url, {'title': 'Unauthorized update'}).status_code,
+			403,
+		)
+
+		self.client.force_login(owner)
+		edit_response = self.client.get(edit_url)
+		self.assertEqual(edit_response.status_code, 200)
+		self.assertContains(edit_response, 'Edit Project')
+		self.assertContains(edit_response, 'Original project title')
+
+		response = self.client.post(
+			edit_url,
+			{
+				'title': 'Updated project title',
+				'short_description': 'Updated short description.',
+				'description': 'Updated project details.',
+				'category': 'AI',
+				'status': 'development',
+				'tech_stack': 'Python',
+				'problem': '',
+				'features': '',
+				'github_url': '',
+				'live_demo_url': '',
+				'looking_for_collaborators': '',
+				'collaborator_types': '',
+			},
+		)
+		self.assertRedirects(
+			response,
+			reverse('blog:project_detail', args=[project.pk]),
+		)
+		project.refresh_from_db()
+		self.assertEqual(project.title, 'Updated project title')
+		self.assertEqual(project.category, 'AI')
+
+	def test_ajax_project_share_records_share_and_returns_json(self):
+		owner = User.objects.create_user('share-project-owner', password='pass')
+		visitor = User.objects.create_user('share-project-visitor', password='pass')
+		project = Project.objects.create(
+			owner=owner,
+			title='Shareable project',
+			short_description='A short project description.',
+			description='Project details.',
+			category='Web',
+		)
+		self.client.force_login(visitor)
+
+		response = self.client.post(
+			reverse('blog:project_share', args=[project.pk]),
+			{'platform': 'native'},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.json()['success'], True)
+		self.assertEqual(
+			response.json()['share_url'],
+			f'http://testserver{reverse("blog:project_detail", args=[project.pk])}',
+		)
+		self.assertTrue(
+			ProjectShare.objects.filter(
+				project=project,
+				user=visitor,
+				platform='native',
+			).exists()
+		)
+
+	def test_regular_project_share_submission_redirects(self):
+		owner = User.objects.create_user('share-form-owner', password='pass')
+		visitor = User.objects.create_user('share-form-visitor', password='pass')
+		project = Project.objects.create(
+			owner=owner,
+			title='Shareable project',
+			short_description='A short project description.',
+			description='Project details.',
+			category='Web',
+		)
+		self.client.force_login(visitor)
+
+		response = self.client.post(
+			reverse('blog:project_share', args=[project.pk]),
+			{'platform': 'copy'},
+		)
+
+		self.assertRedirects(
+			response,
+			reverse('blog:project_detail', args=[project.pk]),
+		)
+		self.assertTrue(
+			ProjectShare.objects.filter(
+				project=project,
+				user=visitor,
+				platform='copy',
+			).exists()
+		)
+
+	def test_project_share_rejects_unknown_platform(self):
+		owner = User.objects.create_user('invalid-share-owner', password='pass')
+		visitor = User.objects.create_user('invalid-share-visitor', password='pass')
+		project = Project.objects.create(
+			owner=owner,
+			title='Shareable project',
+			short_description='A short project description.',
+			description='Project details.',
+			category='Web',
+		)
+		self.client.force_login(visitor)
+
+		response = self.client.post(
+			reverse('blog:project_share', args=[project.pk]),
+			{'platform': 'invalid'},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(response.status_code, 400)
+		self.assertFalse(ProjectShare.objects.filter(project=project).exists())
+
+		response = self.client.post(
+			reverse('blog:project_share', args=[project.pk]),
+			{'platform': 'invalid'},
+		)
+
+		self.assertEqual(response.status_code, 400)
+		self.assertFalse(ProjectShare.objects.filter(project=project).exists())
 
 
 class AccountPrivacyTests(TestCase):
@@ -805,6 +1026,47 @@ class AccountPrivacyTests(TestCase):
 			status='ACCEPTED',
 		).exists())
 
+	@patch('blog.signals.send_gmail')
+	def test_new_notification_emails_its_recipient_after_commit(self, send_gmail):
+		self.viewer.email = 'viewer@example.com'
+		self.viewer.save(update_fields=['email'])
+
+		with self.captureOnCommitCallbacks(execute=True) as callbacks:
+			notification = Notification.objects.create(
+				recipient=self.viewer,
+				sender=self.owner,
+				notification_type='FOLLOW_REQUEST',
+				message='A follow request was received.',
+			)
+
+		self.assertEqual(len(callbacks), 1)
+		send_gmail.assert_called_once()
+		email_to, subject, body = send_gmail.call_args.args[:3]
+		self.assertEqual(email_to, 'viewer@example.com')
+		self.assertIn('Follow Request', subject)
+		self.assertIn(notification.message, body)
+		self.assertIn(reverse('blog:notifications'), body)
+
+	@patch('blog.signals.send_gmail')
+	def test_notification_updates_do_not_send_another_email(self, send_gmail):
+		self.viewer.email = 'viewer@example.com'
+		self.viewer.save(update_fields=['email'])
+		with self.captureOnCommitCallbacks(execute=True):
+			notification = Notification.objects.create(
+				recipient=self.viewer,
+				sender=self.owner,
+				notification_type='FOLLOW_REQUEST',
+				message='A follow request was received.',
+			)
+		send_gmail.assert_called_once()
+
+		send_gmail.reset_mock()
+		with self.captureOnCommitCallbacks(execute=True):
+			notification.is_read = True
+			notification.save(update_fields=['is_read'])
+
+		send_gmail.assert_not_called()
+
 	def test_cancel_after_accept_reports_stale_state_without_alert_response(self):
 		request = FollowRequest.objects.create(
 			sender=self.viewer,
@@ -825,6 +1087,116 @@ class AccountPrivacyTests(TestCase):
 		)
 		request.refresh_from_db()
 		self.assertEqual(request.status, 'ACCEPTED')
+
+	@patch('blog.views.broadcast_message_count_update')
+	def test_cancel_resend_and_approve_clears_pair_alerts_and_reuses_chat(
+		self,
+		broadcast_count_update,
+	):
+		FollowRequest.objects.create(
+			sender=self.viewer,
+			receiver=self.owner,
+			status='PENDING',
+		)
+		FollowRequest.objects.create(
+			sender=self.owner,
+			receiver=self.viewer,
+			status='ACCEPTED',
+		)
+		conversation = Conversation.objects.create(
+			project_owner=self.viewer,
+			participant=self.owner,
+		)
+		incoming_message = Message.objects.create(
+			conversation=conversation,
+			sender=self.owner,
+			content='Earlier message for viewer',
+		)
+		outgoing_message = Message.objects.create(
+			conversation=conversation,
+			sender=self.viewer,
+			content='Earlier message for owner',
+		)
+		Notification.objects.create(
+			recipient=self.owner,
+			sender=self.viewer,
+			notification_type='FOLLOW_REQUEST',
+			message='Old follow request.',
+		)
+		Notification.objects.create(
+			recipient=self.viewer,
+			sender=self.owner,
+			notification_type='FOLLOW_ACCEPTED',
+			message='Old follow acceptance.',
+		)
+		unrelated_notification = Notification.objects.create(
+			recipient=self.owner,
+			sender=self.viewer,
+			notification_type='COMMUNITY_REPLY',
+			message='Community reply notification.',
+		)
+		self.client.force_login(self.viewer)
+
+		cancel_response = self.client.post(
+			reverse('blog:cancel_follow_request', args=[self.owner.username]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(cancel_response.status_code, 200)
+		self.assertCountEqual(
+			[call.args[0] for call in broadcast_count_update.call_args_list],
+			[self.viewer.pk, self.owner.pk],
+		)
+		self.assertFalse(Notification.objects.filter(
+			recipient__in=[self.viewer, self.owner],
+			sender__in=[self.viewer, self.owner],
+			notification_type__in=[
+				'FOLLOW_REQUEST',
+				'FOLLOW_ACCEPTED',
+				'FOLLOW_REJECTED',
+				'FOLLOW_BACK',
+			],
+		).exists())
+		self.assertTrue(Notification.objects.filter(
+			pk=unrelated_notification.pk,
+		).exists())
+		self.assertEqual(conversation.messages.count(), 2)
+		incoming_message.refresh_from_db()
+		outgoing_message.refresh_from_db()
+		self.assertTrue(incoming_message.is_read)
+		self.assertTrue(incoming_message.is_delivered)
+		self.assertTrue(outgoing_message.is_read)
+		self.assertTrue(outgoing_message.is_delivered)
+
+		resend_response = self.client.post(
+			reverse('blog:send_follow_request', args=[self.owner.username]),
+		)
+		self.assertEqual(resend_response.status_code, 200)
+		self.client.force_login(self.owner)
+		accept_response = self.client.post(
+			reverse(
+				'blog:accept_follow_request',
+				args=[resend_response.json()['request_id']],
+			),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(accept_response.status_code, 200)
+		self.assertEqual(
+			accept_response.json()['redirect_url'],
+			reverse('blog:conversation_detail', args=[conversation.pk]),
+		)
+		self.assertEqual(Conversation.objects.filter(
+			project__isnull=True,
+			project_owner=self.viewer,
+			participant=self.owner,
+		).count(), 1)
+		self.assertEqual(conversation.messages.count(), 2)
+		chat_response = self.client.get(
+			reverse('blog:conversation_detail', args=[conversation.pk]),
+		)
+		self.assertContains(chat_response, 'Earlier message for viewer')
+		self.assertContains(chat_response, 'Earlier message for owner')
 
 	def test_notification_center_loads_requests_and_marks_items_read(self):
 		follow_request = FollowRequest.objects.create(
@@ -1137,16 +1509,156 @@ class ConversationWebSocketTests(TransactionTestCase):
 				f'conversation_{self.conversation.id}',
 				{'type': 'chat.message', 'message_id': 47},
 			)
-			event = await communicator.receive_json_from()
+			message_event = await communicator.receive_json_from()
+			await get_channel_layer().group_send(
+				f'conversation_{self.conversation.id}',
+				{'type': 'chat.read', 'user_id': self.receiver.pk},
+			)
+			read_event = await communicator.receive_json_from()
 			await communicator.disconnect()
-			return connected, event
+			return connected, message_event, read_event
 
-		connected, event = async_to_sync(connect_and_receive)()
+		connected, message_event, read_event = async_to_sync(
+			connect_and_receive,
+		)()
 
 		self.assertTrue(connected)
-		self.assertEqual(event, {
+		self.assertEqual(message_event, {
 			'type': 'message_created',
 			'message_id': 47,
+		})
+		self.assertEqual(read_event, {
+			'type': 'read_receipt',
+			'user_id': self.receiver.pk,
+		})
+
+	def test_message_notifications_websocket_sends_live_unread_count(self):
+		Message.objects.create(
+			conversation=self.conversation,
+			sender=self.sender,
+			content='First unread message',
+		)
+		communicator = WebsocketCommunicator(
+			MessageNotificationsConsumer.as_asgi(),
+			'/ws/messages/notifications/',
+		)
+		communicator.scope['user'] = self.receiver
+		communicator.scope['session'] = {
+			'_vgh_session_tracking_id': self.session_tokens[self.receiver.pk],
+		}
+
+		async def connect_and_read_initial_count():
+			connected, _ = await communicator.connect()
+			initial_event = await communicator.receive_json_from()
+			await communicator.disconnect()
+			return connected, initial_event
+
+		connected, initial_event = async_to_sync(
+			connect_and_read_initial_count,
+		)()
+
+		self.assertTrue(connected)
+		self.assertEqual(initial_event, {
+			'type': 'unread_count_updated',
+			'count': 1,
+		})
+
+	def test_unread_count_broadcast_updates_connected_user(self):
+		communicator = WebsocketCommunicator(
+			MessageNotificationsConsumer.as_asgi(),
+			'/ws/messages/notifications/',
+		)
+		communicator.scope['user'] = self.receiver
+		communicator.scope['session'] = {
+			'_vgh_session_tracking_id': self.session_tokens[self.receiver.pk],
+		}
+
+		async def connect_and_receive_update():
+			connected, _ = await communicator.connect()
+			initial_event = await communicator.receive_json_from()
+			message = await database_sync_to_async(Message.objects.create)(
+				conversation=self.conversation,
+				sender=self.sender,
+				content='New unread message',
+			)
+			await get_channel_layer().group_send(
+				f'message_notifications_{self.receiver.pk}',
+				{'type': 'message_count.updated'},
+			)
+			live_event = await communicator.receive_json_from()
+			await database_sync_to_async(
+				Message.objects.filter(pk=message.pk).update,
+			)(is_read=True)
+			await get_channel_layer().group_send(
+				f'message_notifications_{self.receiver.pk}',
+				{'type': 'message_count.updated'},
+			)
+			read_event = await communicator.receive_json_from()
+			await communicator.disconnect()
+			return connected, initial_event, live_event, read_event
+
+		connected, initial_event, live_event, read_event = async_to_sync(
+			connect_and_receive_update,
+		)()
+		self.assertTrue(connected)
+		self.assertEqual(initial_event['count'], 0)
+		self.assertEqual(live_event, {
+			'type': 'unread_count_updated',
+			'count': 1,
+		})
+		self.assertEqual(read_event, {
+			'type': 'unread_count_updated',
+			'count': 0,
+		})
+
+	def test_incoming_chat_message_broadcast_reaches_recipient_popup_socket(self):
+		FollowRequest.objects.create(
+			sender=self.sender,
+			receiver=self.receiver,
+			status='ACCEPTED',
+		)
+		FollowRequest.objects.create(
+			sender=self.receiver,
+			receiver=self.sender,
+			status='ACCEPTED',
+		)
+		communicator = WebsocketCommunicator(
+			MessageNotificationsConsumer.as_asgi(),
+			'/ws/messages/notifications/',
+		)
+		communicator.scope['user'] = self.receiver
+		communicator.scope['session'] = {
+			'_vgh_session_tracking_id': self.session_tokens[self.receiver.pk],
+		}
+
+		async def connect_and_receive_popup():
+			connected, _ = await communicator.connect()
+			initial_event = await communicator.receive_json_from()
+			await get_channel_layer().group_send(
+				f'message_notifications_{self.receiver.pk}',
+				{
+					'type': 'chat.message_popup',
+					'conversation_id': self.conversation.pk,
+					'sender_name': self.sender.username,
+					'preview': 'A live message',
+					'url': f'/messages/{self.conversation.pk}/',
+				},
+			)
+			popup_event = await communicator.receive_json_from()
+			await communicator.disconnect()
+			return connected, initial_event, popup_event
+
+		connected, initial_event, popup_event = async_to_sync(
+			connect_and_receive_popup,
+		)()
+		self.assertTrue(connected)
+		self.assertEqual(initial_event['type'], 'unread_count_updated')
+		self.assertEqual(popup_event, {
+			'type': 'chat_message_popup',
+			'conversation_id': self.conversation.pk,
+			'sender_name': self.sender.username,
+			'preview': 'A live message',
+			'url': f'/messages/{self.conversation.pk}/',
 		})
 
 	def test_chat_member_receives_typing_status_from_peer(self):
@@ -1455,6 +1967,7 @@ class AssignmentAccessTests(TestCase):
 		self.client.force_login(self.other_student)
 		response = self.client.get(reverse('blog:assignments'))
 		self.assertNotContains(response, 'Logic Test')
+		self.assertContains(response, 'No assignments available')
 		self.assertEqual(
 			self.client.get(reverse('blog:assignment_attempt', args=[assignment.pk])).status_code,
 			403,

@@ -6,11 +6,11 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/project_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/project_detail.css' %}?v=2">
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/project_detail.js' %}"></script>
+<script src="{% static 'js/project_detail.js' %}?v=3"></script>
 {% endblock %}
 
 {% block content %}
@@ -36,6 +36,12 @@
             <p class="project-detail-short">
                 {{ project.short_description }}
             </p>
+            {% if request.user == project.owner %}
+            <a class="project-edit-btn" href="{% url 'blog:edit_project' project.pk %}">
+                <i class="bi bi-pencil-square"></i>
+                Edit Project
+            </a>
+            {% endif %}
         </div>
 
         <div class="project-detail-status status-{{ project.status }}">
@@ -172,9 +178,11 @@
                 <form method="POST" action="{% url 'blog:project_follow' project.pk %}">
                     {% csrf_token %}
 
-                    <button type="submit">
-                        <i class="bi bi-bell"></i>
-                        Follow
+                    <button type="submit" class="{% if is_following %}active{% endif %}"
+                        aria-pressed="{{ is_following|yesno:'true,false' }}">
+                        <i class="bi {% if is_following %}bi-bell-fill{% else %}bi-bell{% endif %}"></i>
+                        {% if is_following %}Following{% else %}Follow{% endif %}
+                        <span>{{ follower_count }}</span>
                     </button>
                 </form>
 

@@ -6,7 +6,7 @@ Assignments | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/assignments.css' %}">
+<link rel="stylesheet" href="{% static 'css/assignments.css' %}?v=assignment-layout-2">
 {% endblock %}
 
 {% block content %}
@@ -230,9 +230,14 @@ Assignments | {{ SITE_NAME }}
                 </div>
             </article>
             {% empty %}
-            <article class="assignment">
-                <h3>No assignments available</h3>
-                <p class="assignment-desc">Published assignments for your account will appear here.</p>
+            <article class="assignment assignment-empty">
+                <div class="assignment-empty-icon" aria-hidden="true">
+                    <i class="bi bi-clipboard2-check"></i>
+                </div>
+                <div class="assignment-empty-copy">
+                    <h3>No assignments available</h3>
+                    <p class="assignment-desc">Published assignments for your account will appear here.</p>
+                </div>
             </article>
             {% endfor %}
 

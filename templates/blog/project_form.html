@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block title %}
-Share Project | {{ SITE_NAME }}
+{% if is_edit %}Edit Project{% else %}Share Project{% endif %} | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/project_form.css' %}">
+<link rel="stylesheet" href="{% static 'css/project_form.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -18,14 +18,18 @@ Share Project | {{ SITE_NAME }}
         <div>
             <div class="project-form-eyebrow">
                 <i class="bi bi-rocket-takeoff"></i>
-                BUILD & SHARE
+                {% if is_edit %}EDIT PROJECT{% else %}BUILD & SHARE{% endif %}
             </div>
 
-            <h1>Share Your Project</h1>
+            <h1>{% if is_edit %}Edit Your Project{% else %}Share Your Project{% endif %}</h1>
 
             <p>
+                {% if is_edit %}
+                Update your project details and publish the changes.
+                {% else %}
                 Showcase your project, share your ideas,
                 and connect with other developers.
+                {% endif %}
             </p>
         </div>
 
@@ -379,12 +383,24 @@ Share Project | {{ SITE_NAME }}
                 <i class="bi bi-cloud-arrow-up"></i>
 
                 <h3>
-                    Upload Project Images
+                    {% if is_edit %}Add Project Images{% else %}Upload Project Images{% endif %}
                 </h3>
 
                 <p>
+                    {% if is_edit %}
+                    Existing images will remain. Select additional images to add.
+                    {% else %}
                     You can select multiple images.
+                    {% endif %}
                 </p>
+
+                {% if project.images.all %}
+                <div class="project-existing-images">
+                    {% for image in project.images.all %}
+                    <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:project.title }}">
+                    {% endfor %}
+                </div>
+                {% endif %}
 
                 <input
                     type="file"
@@ -514,7 +530,11 @@ Share Project | {{ SITE_NAME }}
         <div class="project-form-actions">
 
             <a
+                {% if is_edit %}
+                href="{% url 'blog:project_detail' project.pk %}"
+                {% else %}
                 href="{% url 'blog:projects' %}"
+                {% endif %}
                 class="project-cancel-btn"
             >
                 Cancel
@@ -525,8 +545,8 @@ Share Project | {{ SITE_NAME }}
                 type="submit"
                 class="project-submit-btn"
             >
-                <i class="bi bi-rocket-takeoff"></i>
-                Publish Project
+                <i class="bi {% if is_edit %}bi-check-lg{% else %}bi-rocket-takeoff{% endif %}"></i>
+                {% if is_edit %}Save Changes{% else %}Publish Project{% endif %}
             </button>
 
         </div>

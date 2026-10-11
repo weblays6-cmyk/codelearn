@@ -42,11 +42,11 @@
     <!-- Page Specific CSS -->
     {% block extra_css %}
     {% endblock %}
-    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}?v=8">
 
 </head>
 
-<body>
+<body data-message-notifications-path="/ws/messages/notifications/">
     <script>
         document.body.classList.toggle(
             "light-theme",
@@ -79,8 +79,8 @@
             <i class="bi bi-code-slash" aria-hidden="true"></i><span>Practice</span>
         </a>
         {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
-        <a href="{% url 'blog:messages' %}"
-            class="mobile-nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
+        <a href="{% url 'blog:messages' %}" data-message-unread-link
+            class="mobile-messages-link mobile-nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
             <span class="mobile-nav-icon-wrap">
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                 {% if unread_count > 0 %}<span class="mobile-message-unread-count" aria-label="{{ unread_count }} unread messages">{% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}</span>{% endif %}
@@ -112,6 +112,7 @@
         {% endblock %}
 
     </main>
+    <div id="messageToastContainer" class="message-toast-container" aria-live="polite" aria-relevant="additions"></div>
 
     <!-- Footer -->
     {% include "blog/includes/footer.html" %}
@@ -119,6 +120,8 @@
     <!-- Theme JavaScript -->
     <script src="{% static 'js/theme.js' %}?v=2"></script>
     <script src="{% static 'js/password_toggle.js' %}?v=4"></script>
+    <script src="{% static 'js/message_notifications.js' %}?v=2"></script>
+    <script src="{% static 'js/mobile_nav_swipe.js' %}?v=1"></script>
 
     <!-- Page Specific JavaScript -->
     {% block extra_js %}

@@ -14,7 +14,7 @@
 
 <link
     rel="stylesheet"
-    href="{% static 'css/conversation.css' %}?v=typing-indicator-1"
+    href="{% static 'css/conversation.css' %}?v=live-typing-indicator-2"
 >
 
 {% endblock %}
@@ -26,6 +26,7 @@
     class="conversation-page"
     data-conversation-id="{{ conversation.id }}"
     data-current-user-id="{{ request.user.id }}"
+    data-chat-user-name="{{ chat_user.profile_data.display_name|default:chat_user.username }}"
 >
 
     <section class="chat-card">
@@ -795,7 +796,7 @@
     aria-atomic="true"
     hidden
 >
-    <span>Typing</span>
+    <span data-typing-label>Typing</span>
     <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
 </div>
 
@@ -919,6 +920,6 @@
 
 {% block extra_js %}
 
-<script src="{% static 'js/conversation.js' %}?v=typing-indicator-1"></script>
+<script src="{% static 'js/conversation.js' %}?v=live-typing-indicator-2"></script>
 
 {% endblock %}
