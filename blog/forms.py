@@ -55,10 +55,15 @@ class PostForm(forms.ModelForm):
             'difficulty',
             'what_you_learn',
             'content',
-            'image'
+            'image',
+            'is_public',
         ]
 
         widgets = {
+
+            'is_public': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
 
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -331,9 +336,14 @@ class ProjectForm(forms.ModelForm):
             'live_demo_url',
             'looking_for_collaborators',
             'collaborator_types',
+            'is_public',
         ]
 
         widgets = {
+
+            'is_public': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
 
             'title': forms.TextInput(attrs={
                 'class': 'form-control',

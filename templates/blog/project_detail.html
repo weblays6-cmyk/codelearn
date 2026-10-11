@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/project_detail.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/project_detail.css' %}?v=3">
 {% endblock %}
 
 {% block extra_js %}
@@ -29,6 +29,9 @@
             <div class="project-detail-category">
                 <i class="bi bi-grid"></i>
                 {{ project.category }}
+                {% if not project.is_public %}
+                <span class="project-visibility-badge"><i class="bi bi-lock"></i> Private</span>
+                {% endif %}
             </div>
 
             <h1>{{ project.title }}</h1>

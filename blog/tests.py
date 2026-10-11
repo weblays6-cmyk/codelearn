@@ -813,6 +813,7 @@ class ProjectDetailTests(TestCase):
 		self.assertEqual(edit_response.status_code, 200)
 		self.assertContains(edit_response, 'Edit Project')
 		self.assertContains(edit_response, 'Original project title')
+		self.assertContains(edit_response, 'Show this project to all users')
 
 		response = self.client.post(
 			edit_url,
@@ -829,6 +830,7 @@ class ProjectDetailTests(TestCase):
 				'live_demo_url': '',
 				'looking_for_collaborators': '',
 				'collaborator_types': '',
+				'is_public': 'on',
 			},
 		)
 		self.assertRedirects(
@@ -838,6 +840,54 @@ class ProjectDetailTests(TestCase):
 		project.refresh_from_db()
 		self.assertEqual(project.title, 'Updated project title')
 		self.assertEqual(project.category, 'AI')
+
+	def test_private_project_is_owner_only_in_project_discovery_and_detail(self):
+		owner = User.objects.create_user('private-project-owner', password='pass')
+		visitor = User.objects.create_user('private-project-visitor', password='pass')
+		private_project = Project.objects.create(
+			owner=owner,
+			title='Hidden project',
+			short_description='Not listed publicly.',
+			description='Private project details.',
+			category='Web',
+			is_public=False,
+		)
+		public_project = Project.objects.create(
+			owner=owner,
+			title='Visible project',
+			short_description='Listed publicly.',
+			description='Public project details.',
+			category='Web',
+		)
+
+		self.client.force_login(visitor)
+		list_response = self.client.get(reverse('blog:projects'))
+		self.assertNotContains(list_response, private_project.title)
+		self.assertContains(list_response, public_project.title)
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:project_detail', args=[private_project.pk])
+			).status_code,
+			404,
+		)
+
+		self.client.force_login(owner)
+		owner_list = self.client.get(reverse('blog:projects'), {'tab': 'my'})
+		self.assertContains(owner_list, private_project.title)
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:project_detail', args=[private_project.pk])
+			).status_code,
+			200,
+		)
+		self.client.force_login(visitor)
+		self.assertEqual(
+			self.client.post(
+				reverse('blog:project_follow', args=[private_project.pk]),
+				HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+			).status_code,
+			404,
+		)
 
 	def test_ajax_project_share_records_share_and_returns_json(self):
 		owner = User.objects.create_user('share-project-owner', password='pass')
@@ -1798,6 +1848,7 @@ class CourseCreationPermissionTests(TestCase):
 		get_response = self.client.get(reverse('blog:create_post'))
 		self.assertEqual(get_response.status_code, 200)
 		self.assertContains(get_response, 'Create Course')
+		self.assertContains(get_response, 'Show this course to all users')
 
 		post_response = self.client.post(
 			reverse('blog:create_post'),
@@ -1806,14 +1857,87 @@ class CourseCreationPermissionTests(TestCase):
 				'content': 'Course content',
 				'category': 'Python',
 				'difficulty': 'Beginner',
+				'is_public': 'on',
 			},
 		)
 		self.assertRedirects(post_response, reverse('blog:blogpage'))
 		course = Post.objects.get(title='Staff-created course')
 		self.assertEqual(course.author, self.admin)
+		self.assertTrue(course.is_public)
 
 		profile_response = self.client.get(reverse('blog:profile'))
 		self.assertContains(profile_response, 'Create Course')
+
+	def test_staff_can_create_private_course_and_owner_can_view_it(self):
+		self.client.force_login(self.admin)
+
+		response = self.client.post(
+			reverse('blog:create_post'),
+			{
+				'title': 'Private staff course',
+				'content': 'Private course content',
+				'category': 'Python',
+				'difficulty': 'Beginner',
+			},
+		)
+
+		self.assertRedirects(response, reverse('blog:blogpage'))
+		course = Post.objects.get(title='Private staff course')
+		self.assertFalse(course.is_public)
+		self.assertContains(
+			self.client.get(reverse('blog:blogpage')),
+			course.title,
+		)
+
+		self.client.force_login(self.learner)
+		self.assertNotContains(
+			self.client.get(reverse('blog:blogpage')),
+			course.title,
+		)
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:post_detail', args=[course.slug])
+			).status_code,
+			404,
+		)
+
+		self.client.force_login(self.admin)
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:post_detail', args=[course.slug])
+			).status_code,
+			200,
+		)
+
+	def test_course_owner_can_change_visibility_when_editing(self):
+		course = Post.objects.create(
+			title='Course to update',
+			content='Course content',
+			author=self.admin,
+			is_public=False,
+		)
+		self.client.force_login(self.admin)
+		edit_url = reverse('blog:update_post', args=[course.pk])
+
+		form_response = self.client.get(edit_url)
+		self.assertContains(form_response, 'name="is_public"')
+
+		response = self.client.post(
+			edit_url,
+			{
+				'title': course.title,
+				'category': course.category,
+				'description': course.description,
+				'difficulty': course.difficulty,
+				'what_you_learn': course.what_you_learn,
+				'content': course.content,
+				'is_public': 'on',
+			},
+		)
+
+		self.assertRedirects(response, reverse('blog:blogpage'))
+		course.refresh_from_db()
+		self.assertTrue(course.is_public)
 
 	def test_ask_community_link_uses_community_route(self):
 		self.client.force_login(self.learner)
@@ -1827,6 +1951,38 @@ class CourseCreationPermissionTests(TestCase):
 
 
 class CoursePageTests(TestCase):
+	def test_private_course_lessons_are_not_accessible_to_other_users(self):
+		author = User.objects.create_user('private-course-author', password='pass')
+		student = User.objects.create_user('private-course-student', password='pass')
+		course = Post.objects.create(
+			title='Private lesson course',
+			content='Course content',
+			author=author,
+			is_public=False,
+		)
+		lesson = Lesson.objects.create(
+			course=course,
+			title='Hidden lesson',
+			content='Lesson content',
+		)
+		self.client.force_login(student)
+
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:lesson_detail', args=[lesson.slug])
+			).status_code,
+			404,
+		)
+		self.assertEqual(
+			self.client.post(
+				reverse(
+					'blog:start_lesson',
+					args=[course.slug, lesson.slug],
+				)
+			).status_code,
+			404,
+		)
+
 	def test_courses_page_renders(self):
 		response = self.client.get(reverse('blog:blogpage'))
 		self.assertEqual(response.status_code, 200)
@@ -1944,6 +2100,29 @@ class AssignmentAccessTests(TestCase):
 			course=self.course,
 			title='Functions',
 			content='Lesson content',
+		)
+
+	def test_private_course_assignments_are_hidden_from_enrolled_students(self):
+		self.course.is_public = False
+		self.course.save(update_fields=['is_public'])
+		Enrollment.objects.create(student=self.student, course=self.course)
+		assignment = Assignment.objects.create(
+			title='Private course assignment',
+			description='Only the course owner can access this.',
+			course=self.course,
+			assignment_source='COURSE',
+			status='PUBLISHED',
+			created_by=self.admin,
+		)
+		self.client.force_login(self.student)
+
+		response = self.client.get(reverse('blog:assignments'))
+		self.assertNotContains(response, assignment.title)
+		self.assertEqual(
+			self.client.get(
+				reverse('blog:assignment_attempt', args=[assignment.pk])
+			).status_code,
+			403,
 		)
 
 	def test_selected_standalone_assignment_is_private(self):

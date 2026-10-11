@@ -89,6 +89,11 @@ class Post(models.Model):
         default='PUBLISHED',
     )
 
+    is_public = models.BooleanField(
+        default=True,
+        help_text='When enabled, all users can discover and view this course.',
+    )
+
     sequential_learning = models.BooleanField(default=False)
 
     image = models.ImageField(
@@ -887,6 +892,11 @@ class Project(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default="idea"
+    )
+
+    is_public = models.BooleanField(
+        default=True,
+        help_text="When enabled, all users can discover and view this project.",
     )
 
     problem = models.TextField(

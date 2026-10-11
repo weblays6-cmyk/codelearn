@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/project_form.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/project_form.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -493,6 +493,31 @@
 
             </div>
 
+        </section>
+
+
+        <section class="project-form-section">
+            <div class="project-section-heading">
+                <div class="project-section-icon">
+                    <i class="bi bi-eye"></i>
+                </div>
+                <div>
+                    <h2>Project Visibility</h2>
+                    <p>Choose who can discover and view this project.</p>
+                </div>
+            </div>
+            <div class="project-visibility-toggle">
+                {{ form.is_public }}
+                <div>
+                    <label for="{{ form.is_public.id_for_label }}">
+                        Show this project to all users
+                    </label>
+                    <small>Turn this off to keep the project visible only to you.</small>
+                </div>
+            </div>
+            {% if form.is_public.errors %}
+            <div class="project-field-error">{{ form.is_public.errors }}</div>
+            {% endif %}
         </section>
 
 

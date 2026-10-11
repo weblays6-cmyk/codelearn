@@ -231,13 +231,14 @@ def _learning_streak_for_user(user):
     return streak
 
 
-def _user_content_visibility_filter(owner_field, viewer):
+def _user_content_visibility_filter(owner_field, viewer, public_field=None):
     available_profiles = (
         Q(**{f'{owner_field}__profile_data__is_deactivated': False})
         & Q(**{f'{owner_field}__profile_data__scheduled_deletion_at__isnull': True})
     )
     public_profiles = Q(**{f'{owner_field}__profile_data__is_private': False})
     if viewer.is_authenticated:
+        public_profiles |= Q(**{f'{owner_field}_id': viewer.pk})
         blocked_user_ids = UserBlock.objects.filter(
             blocker=viewer
         ).values_list('blocked_id', flat=True).union(
@@ -253,7 +254,13 @@ def _user_content_visibility_filter(owner_field, viewer):
             public_profiles
             | Q(**{f'{owner_field}_id__in': visible_followees})
         ) & ~Q(**{f'{owner_field}_id__in': blocked_user_ids})
-    return public_profiles & available_profiles
+    visibility = public_profiles & available_profiles
+    if public_field:
+        visible_items = Q(**{public_field: True})
+        if viewer.is_authenticated:
+            visible_items |= Q(**{owner_field: viewer})
+        visibility &= visible_items
+    return visibility
 
 
 # =========================================================
@@ -266,7 +273,7 @@ def blog(request):
     category = request.GET.get('category', '').strip()
 
     posts = Post.objects.filter(
-        _user_content_visibility_filter('author', request.user)
+        _user_content_visibility_filter('author', request.user, 'is_public')
     ).order_by('-created_at')
 
     if search:
@@ -290,7 +297,9 @@ def blog(request):
         'posts': posts,
         'search': search,
         'category': category,
-        'categories': Post.objects.exclude(category='').values_list(
+        'categories': Post.objects.filter(
+            _user_content_visibility_filter('author', request.user, 'is_public')
+        ).exclude(category='').values_list(
             'category', flat=True
         ).distinct().order_by('category'),
     }
@@ -316,7 +325,7 @@ def dashboard(request):
         return redirect('blog:choose_goal')
 
     recent_posts = Post.objects.filter(
-        _user_content_visibility_filter('author', request.user)
+        _user_content_visibility_filter('author', request.user, 'is_public')
     ).order_by(
         '-created_at'
     )[:4]
@@ -442,6 +451,8 @@ def post_detail(request, slug):
     if post is None and slug.isdecimal():
         return legacy_post_detail(request, int(slug))
     if post is None:
+        raise Http404
+    if not post.is_public and request.user != post.author:
         raise Http404
     if not _can_view_user_content(post.author, request.user):
         return HttpResponseForbidden('This profile content is private.')
@@ -602,13 +613,16 @@ def _eligible_assignments(user):
         audiences__audience_type='SELECTED_USER',
         audiences__user=user
     )
-    course = Q(
-        assignment_source='COURSE',
-        course_id__in=enrolled_courses
-    ) | Q(
-        assignment_source='COURSE',
-        course_id__isnull=True,
-        lesson__course_id__in=enrolled_courses
+    course = (
+        Q(assignment_source='COURSE', course_id__in=enrolled_courses)
+        & (Q(course__is_public=True) | Q(course__author=user))
+    ) | (
+        Q(
+            assignment_source='COURSE',
+            course_id__isnull=True,
+            lesson__course_id__in=enrolled_courses,
+        )
+        & (Q(lesson__course__is_public=True) | Q(lesson__course__author=user))
     )
     return Assignment.objects.filter(
         Q(standalone) | Q(course),
@@ -630,6 +644,8 @@ def _can_access_assignment(user, assignment):
             audience_type='SELECTED_USER', user=user
         ).exists()
     course = _assignment_course(assignment)
+    if not course or (not course.is_public and course.author_id != user.pk):
+        return False
     return bool(course and Enrollment.objects.filter(student=user, course=course).exists())
 
 
@@ -647,6 +663,11 @@ def start_lesson_view(request, course_slug, lesson_slug):
         )
     if lesson is None:
         raise Http404
+    if (
+        (not lesson.course.is_public and request.user != lesson.course.author)
+        or not _can_view_user_content(lesson.course.author, request.user)
+    ):
+        raise Http404
     if not can_access_lesson(request.user, lesson):
         return HttpResponseForbidden('Enroll in the course and complete earlier lessons first.')
 
@@ -661,6 +682,11 @@ def complete_lesson(request, slug):
     if lesson is None and slug.isdecimal():
         return legacy_complete_lesson(request, int(slug))
     if lesson is None:
+        raise Http404
+    if (
+        (not lesson.course.is_public and request.user != lesson.course.author)
+        or not _can_view_user_content(lesson.course.author, request.user)
+    ):
         raise Http404
     if not can_access_lesson(request.user, lesson):
         return HttpResponseForbidden('Enroll in the course and complete earlier lessons first.')
@@ -710,6 +736,11 @@ def lesson_detail(request, slug):
 
     if not request.user.is_authenticated:
         return redirect('blog:login')
+    if (
+        (not lesson.course.is_public and request.user != lesson.course.author)
+        or not _can_view_user_content(lesson.course.author, request.user)
+    ):
+        raise Http404
 
     enrolled = Enrollment.objects.filter(
         student=request.user,
@@ -1489,7 +1520,7 @@ def global_search(request):
     content_items = []
 
     accessible_posts = Post.objects.filter(
-        _user_content_visibility_filter('author', request.user)
+        _user_content_visibility_filter('author', request.user, 'is_public')
     ).select_related('author').order_by('-created_at')[:12]
     for post in accessible_posts:
         score = score_result(post.title, post.category)
@@ -1516,7 +1547,9 @@ def global_search(request):
                 'score': score,
             })
 
-    projects = Project.objects.select_related('owner').order_by('-created_at')[:12]
+    projects = Project.objects.filter(
+        _user_content_visibility_filter('owner', request.user, 'is_public')
+    ).select_related('owner').order_by('-created_at')[:12]
     for project in projects:
         score = score_result(project.title, project.description or '')
         if score:
@@ -1823,6 +1856,9 @@ def user_profile(request, username):
     projects = Project.objects.filter(
         owner=profile_user
     ).order_by("-created_at") if can_view_content else Project.objects.none()
+    if can_view_content and not is_owner:
+        posts = posts.filter(is_public=True)
+        projects = projects.filter(is_public=True)
 
 
     context = {
@@ -3666,7 +3702,7 @@ def projects(request):
     ).order_by(
         '-created_at'
     ).filter(
-        _user_content_visibility_filter('owner', request.user)
+        _user_content_visibility_filter('owner', request.user, 'is_public')
     )
 
     if search:
@@ -3816,6 +3852,8 @@ def project_detail(request, pk):
             'images',
             'updates',
             'collaborators'
+        ).filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
         ),
         pk=pk
     )
@@ -3876,7 +3914,12 @@ def project_detail(request, pk):
 
 @login_required
 def project_like(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+    project = get_object_or_404(
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
+    )
 
     if request.method == "POST":
         like, created = ProjectLike.objects.get_or_create(
@@ -3907,7 +3950,12 @@ def project_like(request, pk):
 
 @login_required
 def project_save(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+    project = get_object_or_404(
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
+    )
 
     if request.method == "POST":
         saved, created = ProjectSave.objects.get_or_create(
@@ -3939,7 +3987,12 @@ def project_save(request, pk):
 @login_required
 @require_POST
 def project_follow(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+    project = get_object_or_404(
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
+    )
 
     follow, created = ProjectFollow.objects.get_or_create(
         project=project,
@@ -3965,7 +4018,12 @@ def project_follow(request, pk):
 
 @login_required
 def project_comment(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+    project = get_object_or_404(
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
+    )
 
     if request.method == "POST":
 
@@ -4008,8 +4066,12 @@ def project_comment(request, pk):
 def project_comment_like(request, pk):
 
     comment = get_object_or_404(
-        ProjectComment,
-        pk=pk
+        ProjectComment.objects.filter(
+            project__in=Project.objects.filter(
+                _user_content_visibility_filter('owner', request.user, 'is_public')
+            )
+        ),
+        pk=pk,
     )
 
     like = ProjectCommentLike.objects.filter(
@@ -4087,8 +4149,10 @@ def project_update(request, pk):
 def project_collaborate(request, pk):
 
     project = get_object_or_404(
-        Project,
-        pk=pk
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
     )
 
     if request.method != "POST":
@@ -4809,8 +4873,10 @@ def conversation_status(request, conversation_id):
 def project_report(request, pk):
 
     project = get_object_or_404(
-        Project,
-        pk=pk
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
     )
 
     if request.method == "POST":
@@ -4849,8 +4915,10 @@ def project_report(request, pk):
 def project_share(request, pk):
 
     project = get_object_or_404(
-        Project,
-        pk=pk
+        Project.objects.filter(
+            _user_content_visibility_filter('owner', request.user, 'is_public')
+        ),
+        pk=pk,
     )
 
     platform = request.POST.get(
