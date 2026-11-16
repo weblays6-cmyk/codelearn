@@ -66,7 +66,7 @@ def enforce_device_limit(user):
     Session.objects.filter(session_key__in=revoked_keys).delete()
 
 
-def register_device_session(request, user):
+def register_device_session(request, user, enforce_limit=True):
     session_key = getattr(request.session, 'session_key', None)
     if not session_key:
         return None
@@ -107,7 +107,8 @@ def register_device_session(request, user):
                 is_active=True,
             )
 
-        enforce_device_limit(user)
+        if enforce_limit:
+            enforce_device_limit(user)
     return device
 
 

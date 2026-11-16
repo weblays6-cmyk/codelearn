@@ -224,6 +224,7 @@ def revoke_and_complete_login(request, pending_token, session_id):
 
         from django.contrib.auth import login
 
+        request._vgh_session_replacement = True
         login(
             request,
             pending.user,

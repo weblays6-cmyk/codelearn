@@ -22,6 +22,10 @@ from .models import (
     UserProfile,
     UserSession,
 )
+from .session_security import (
+    register_successful_login,
+    remove_logged_out_session,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +87,11 @@ def notify_assignment_audience_added(sender, instance, created, **kwargs):
     dispatch_uid='blog.register_device_session',
 )
 def register_login_device(sender, request, user, **kwargs):
-    register_device_session(request, user)
+    register_device_session(
+        request,
+        user,
+        enforce_limit=not getattr(request, '_vgh_session_replacement', False),
+    )
     from .services.dashboard import award_xp
 
     local_day = timezone.localdate(timezone=timezone.get_default_timezone())
@@ -113,6 +121,22 @@ def deactivate_logout_device(sender, request, user, **kwargs):
             session_key=session_key,
             is_active=True,
         ).update(is_active=False)
+
+
+@receiver(
+    user_logged_in,
+    dispatch_uid='blog.register_tracked_login_session',
+)
+def register_tracked_login_session(sender, request, user, **kwargs):
+    register_successful_login(sender, request, user, **kwargs)
+
+
+@receiver(
+    user_logged_out,
+    dispatch_uid='blog.remove_tracked_login_session',
+)
+def remove_tracked_login_session(sender, request, user, **kwargs):
+    remove_logged_out_session(sender, request, user, **kwargs)
 
 
 @receiver(post_save, sender=User)

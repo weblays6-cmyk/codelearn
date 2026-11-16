@@ -788,6 +788,22 @@ class UserProfile(models.Model):
         default='mutual',
     )
     is_online_visible = models.BooleanField(default=True)
+    max_active_sessions = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Maximum active sessions',
+        help_text='Leave blank to allow any number of concurrent sessions.',
+    )
+    max_successful_logins = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Total successful-login allowance',
+        help_text='Leave blank for no lifetime successful-login limit.',
+    )
+    successful_login_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Successful logins used',
+    )
 
     profile_picture = models.ImageField(
         upload_to='profile_pictures/',
@@ -944,6 +960,62 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.device_label}'
+
+
+class PendingUserLogin(models.Model):
+    token = models.UUIDField(unique=True)
+    session_binding_digest = models.CharField(max_length=64)
+    login_method = models.CharField(max_length=32, default='Password')
+    backend_path = models.CharField(
+        max_length=255,
+        default='django.contrib.auth.backends.ModelBackend',
+    )
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pending_login_selections',
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=('session_binding_digest', 'expires_at'),
+                name='blog_pendin_session_291327_idx',
+            ),
+        ]
+
+
+class UserLoginSession(models.Model):
+    tracking_id_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+    )
+    reservation_id = models.UUIDField(blank=True, null=True, unique=True)
+    device_description = models.CharField(max_length=255, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+    login_at = models.DateTimeField(default=timezone.now)
+    last_activity_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    revoked_at = models.DateTimeField(blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tracked_login_sessions',
+    )
+
+    class Meta:
+        ordering = ('-last_activity_at',)
+        indexes = [
+            models.Index(
+                fields=('user', 'is_active', 'expires_at'),
+                name='blog_userlo_user_id_532e5c_idx',
+            ),
+        ]
 
 
 class LoginHistory(models.Model):

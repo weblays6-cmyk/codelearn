@@ -125,6 +125,8 @@ from .models import (
     MessageReaction,
     MessageReport,
     UserSession,
+    UserLoginSession,
+    PendingUserLogin,
     LoginHistory,
     SiteSettings,
     AITutorConversation,
@@ -157,6 +159,12 @@ from .services.dashboard import (
 )
 from .services.markdown import render_lesson_markdown
 from .services.payments import PaymentsUnavailable, RazorpayProvider, complete_payment
+from .session_security import (
+    get_pending_login,
+    reserve_login,
+    revoke_and_complete_login,
+    session_selection_error,
+)
 from ai.services import AIConfigurationError, ai_configuration, complete_feature, model_for_depth, stream_chat, validate_feature_json
 
 logger = logging.getLogger(__name__)
@@ -2199,7 +2207,20 @@ def login_view(request):
                 break
 
         if authenticated_user is not None:
-            request.session['_vgh_login_method'] = 'Password'
+            reservation = reserve_login(request, authenticated_user, 'Password')
+            if reservation.status == 'allowance':
+                return render(
+                    request,
+                    "blog/login.html",
+                    {
+                        "error": (
+                            "Your total successful login allowance has been exhausted."
+                        )
+                    },
+                )
+            if reservation.status == 'sessions':
+                return redirect('blog:manage_active_sessions')
+
             login(
                 request,
                 authenticated_user
@@ -2221,6 +2242,72 @@ def login_view(request):
         request,
         "blog/login.html"
     )
+
+
+def _pending_login_sessions(user):
+    return UserLoginSession.objects.filter(
+        user=user,
+        is_active=True,
+        tracking_id_digest__isnull=False,
+        expires_at__gt=timezone.now(),
+    ).order_by('-last_activity_at')
+
+
+def manage_active_sessions(request):
+    pending = get_pending_login(request)
+    if pending is None:
+        return redirect('blog:login')
+
+    return render(
+        request,
+        'blog/manage_active_sessions.html',
+        {'sessions': _pending_login_sessions(pending.user)},
+    )
+
+
+@require_POST
+def replace_active_session(request):
+    pending = get_pending_login(request)
+    if pending is None:
+        return redirect('blog:login')
+
+    session_id = request.POST.get('active_session_id')
+    if not session_id or not session_id.isdecimal():
+        return render(
+            request,
+            'blog/manage_active_sessions.html',
+            {
+                'sessions': _pending_login_sessions(pending.user),
+                'error': 'Choose a valid active session.',
+            },
+            status=400,
+        )
+
+    result = revoke_and_complete_login(request, pending.token, int(session_id))
+    if result.status == 'completed':
+        return redirect('blog:dashboard')
+    if result.status in {'expired', 'allowance'}:
+        return redirect('blog:login')
+
+    return render(
+        request,
+        'blog/manage_active_sessions.html',
+        {
+            'sessions': _pending_login_sessions(pending.user),
+            'error': session_selection_error(result.status),
+        },
+        status=409 if result.status == 'sessions' else 400,
+    )
+
+
+@require_POST
+def cancel_pending_login(request):
+    pending = get_pending_login(request)
+    if pending is not None:
+        pending.delete()
+    request.session.pop('_vgh_pending_login', None)
+    request.session.modified = True
+    return redirect('blog:login')
 
 
 @require_GET

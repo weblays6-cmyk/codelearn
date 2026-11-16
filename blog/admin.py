@@ -30,6 +30,7 @@ from .models import (
     UserProfile,
     SiteSettings,
     UserSession,
+    UserLoginSession,
 )
 
 
@@ -376,6 +377,32 @@ class UserSessionAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'created_at')
     search_fields = ('user__username', 'device_label', 'ip')
     exclude = ('session_key',)
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(UserLoginSession)
+class UserLoginSessionAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'device_description',
+        'login_at',
+        'last_activity_at',
+        'expires_at',
+        'is_active',
+    )
+    list_filter = ('is_active', 'login_at')
+    search_fields = ('user__username', 'device_description')
+    actions = ('revoke_selected_sessions',)
+
+    @admin.action(description='Revoke selected login sessions')
+    def revoke_selected_sessions(self, request, queryset):
+        revoked_count = queryset.filter(is_active=True).update(
+            is_active=False,
+            revoked_at=timezone.now(),
+        )
+        self.message_user(request, f'Revoked {revoked_count} login session(s).')
 
     def has_add_permission(self, request):
         return False
