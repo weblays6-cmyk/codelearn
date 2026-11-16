@@ -1,0 +1,37 @@
+{% extends "blog/base.html" %}
+{% load i18n account %}
+
+{% block title %}{% trans "Confirm Email Address" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="allauthHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-envelope-check"></i></div>
+        <h1 id="allauthHeading">{% trans "Confirm Email Address" %}</h1>
+        {% if confirmation %}
+            {% user_display confirmation.email_address.user as user_display %}
+            {% if can_confirm %}
+                <p class="login-subtitle">{% trans "Please confirm that" %} <a href="mailto:{{ confirmation.email_address.email }}">{{ confirmation.email_address.email }}</a> {% trans "is an email address for user" %} {{ user_display }}.</p>
+                {% url 'account_confirm_email' confirmation.key as action_url %}
+                <form class="allauth-form" method="post" action="{{ action_url }}">
+                    {% csrf_token %}
+                    {{ redirect_field }}
+                    <button class="login-submit" type="submit">{% trans "Confirm" %}</button>
+                </form>
+            {% else %}
+                <p class="login-subtitle">{% blocktrans with email=confirmation.email_address.email %}Unable to confirm {{ email }} because it is already confirmed by a different account.{% endblocktrans %}</p>
+            {% endif %}
+        {% else %}
+            {% url 'account_email' as email_url %}
+            <p class="login-subtitle">{% trans "This email confirmation link expired or is invalid." %} <a href="{{ email_url }}">{% trans "Issue a new email confirmation request" %}</a>.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

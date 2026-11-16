@@ -1,0 +1,218 @@
+.allauth-page {
+    width: min(100% - 32px, 560px);
+    margin: 42px auto;
+    color: #f5f7ff;
+    font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+.allauth-page .login-card {
+    width: 100%;
+    max-width: 560px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(25, 27, 52, .94), rgba(10, 12, 27, .96));
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .35);
+}
+
+.allauth-page .login-icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    font-size: 18px;
+}
+
+.allauth-page h1,
+.allauth-page h2 {
+    margin: 17px 0 8px;
+    color: #f8fafc;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.allauth-page p,
+.allauth-page .login-subtitle {
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.allauth-page .login-subtitle {
+    margin: 7px 0 18px;
+}
+
+.allauth-page .allauth-form {
+    margin-top: 18px;
+}
+
+.allauth-page .field {
+    margin: 16px 0;
+}
+
+.allauth-page .field > label {
+    display: block;
+    margin-bottom: 7px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.allauth-page .input-wrap input,
+.allauth-page .input-wrap select,
+.allauth-page .input-wrap textarea,
+.allauth-page .allauth-form > input:not([type="hidden"]) {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 10px;
+    outline: none;
+    color: #f8fafc;
+    background: rgba(3, 5, 15, .6);
+    font: inherit;
+}
+
+.allauth-page .input-wrap input:focus,
+.allauth-page .input-wrap select:focus,
+.allauth-page .input-wrap textarea:focus {
+    border-color: #7c5cff;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .12);
+}
+
+.allauth-page .field--checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.allauth-page .field--checkbox input {
+    accent-color: #7654ff;
+}
+
+.allauth-page .field-help,
+.allauth-page .helptext {
+    display: block;
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.allauth-page .errorlist,
+.allauth-page .form-errors {
+    margin: 7px 0 0;
+    padding-left: 18px;
+    color: #fecdd3;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.allauth-page .form-errors {
+    padding: 11px 13px;
+    border: 1px solid rgba(251, 113, 133, .38);
+    border-radius: 10px;
+    background: rgba(244, 63, 94, .08);
+}
+
+.allauth-page .login-submit {
+    width: 100%;
+    min-height: 43px;
+    margin-top: 18px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #7654ff, #4775ff);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s, opacity .2s;
+}
+
+.allauth-page .login-submit:hover {
+    transform: translateY(-1px);
+    opacity: .94;
+}
+
+.allauth-page .allauth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.allauth-page .allauth-actions .login-submit {
+    flex: 1 1 170px;
+}
+
+.allauth-page .signup-text {
+    margin-top: 18px;
+    color: #94a3b8;
+    font-size: 12px;
+    text-align: center;
+}
+
+.allauth-page a {
+    color: #a78bfa;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.allauth-page a:hover {
+    text-decoration: underline;
+}
+
+.allauth-page .socialaccount-providers {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.allauth-page .socialaccount-providers a,
+.allauth-page a.socialaccount-provider {
+    display: block;
+    padding: 11px 14px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 10px;
+    color: #f8fafc;
+    background: rgba(255, 255, 255, .04);
+    text-align: center;
+}
+
+.allauth-page .email-address-list {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.allauth-page .email-address-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 10px;
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, .035);
+    overflow-wrap: anywhere;
+}
+
+.allauth-page .email-address-option input {
+    accent-color: #7654ff;
+}
+
+@media (max-width: 520px) {
+    .allauth-page {
+        width: calc(100% - 24px);
+        margin: 24px auto;
+    }
+
+    .allauth-page .login-card {
+        padding: 23px 19px;
+    }
+}

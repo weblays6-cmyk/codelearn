@@ -1,0 +1,28 @@
+{% extends "blog/base.html" %}
+{% load allauth i18n %}
+
+{% block title %}{% trans "Sign Out" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="allauthHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-box-arrow-right"></i></div>
+        <h1 id="allauthHeading">{% trans "Sign Out" %}</h1>
+        <p class="login-subtitle">{% trans "Are you sure you want to sign out?" %}</p>
+        {% url 'account_logout' as action_url %}
+        <form class="allauth-form" method="post" action="{{ action_url }}">
+            {% csrf_token %}
+            {% if form %}{% for field in form.hidden_fields %}{{ field }}{% endfor %}{% endif %}
+            {{ redirect_field }}
+            <button class="login-submit" type="submit">{% trans "Sign Out" %}</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "blog/base.html" %}
+{% load allauth i18n %}
+
+{% block title %}{% trans "Sign Up" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="allauthHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
+        <h1 id="allauthHeading">{% trans "Sign Up" %}</h1>
+        <p class="login-subtitle">{% trans "Already have an account?" %} <a href="{{ login_url }}">{% trans "Sign in" %}</a>.</p>
+        {% if not SOCIALACCOUNT_ONLY %}
+            {% url 'account_signup' as action_url %}
+            <form class="allauth-form" method="post" action="{{ action_url }}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+                {% for field in form %}
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% elif field.field.widget.input_type == "checkbox" %}
+                        <div class="field field--checkbox">
+                            <label for="{{ field.id_for_label }}">{{ field }} {{ field.label }}</label>
+                            {% if field.help_text %}<span class="field-help">{{ field.help_text }}</span>{% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% else %}
+                        <div class="field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="input-wrap">{{ field }}</div>
+                            {% if field.help_text %}<span class="field-help">{{ field.help_text }}</span>{% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                {{ redirect_field }}
+                <button class="login-submit" type="submit">{% trans "Sign Up" %}</button>
+            </form>
+        {% endif %}
+        {% if PASSKEY_SIGNUP_ENABLED %}
+            <p class="signup-text"><a href="{{ signup_by_passkey_url }}">{% trans "Sign up using a passkey" %}</a></p>
+        {% endif %}
+        {% if SOCIALACCOUNT_ENABLED %}
+            {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

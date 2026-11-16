@@ -1,0 +1,21 @@
+{% extends "blog/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Your Email Address" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="allauthHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-envelope-check"></i></div>
+        <h1 id="allauthHeading">{% trans "Verify Your Email Address" %}</h1>
+        <p class="login-subtitle">{% blocktrans %}We have sent an email to you for verification. Follow the link provided to finalize the signup process. If you do not see the verification email in your main inbox, check your spam folder. Please contact us if you do not receive the verification email within a few minutes.{% endblocktrans %}</p>
+    </div>
+</section>
+{% endblock %}

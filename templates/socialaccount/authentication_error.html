@@ -1,0 +1,22 @@
+{% extends "blog/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Third-Party Login Failure" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="socialErrorHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></div>
+        <h1 id="socialErrorHeading">{% trans "Third-Party Login Failure" %}</h1>
+        <p class="login-subtitle">{% trans "An error occurred while attempting to login via your third-party account." %}</p>
+        <p class="signup-text"><a href="{% url 'blog:login' %}">{% trans "Back to sign in" %}</a></p>
+    </div>
+</section>
+{% endblock %}

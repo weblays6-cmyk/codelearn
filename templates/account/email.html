@@ -1,0 +1,79 @@
+{% extends "blog/base.html" %}
+{% load static allauth i18n %}
+
+{% block title %}{% trans "Email Addresses" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/allauth_pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="allauth-page" aria-labelledby="allauthHeading">
+    <div class="login-card">
+        <div class="login-icon" aria-hidden="true"><i class="bi bi-envelope"></i></div>
+        <h1 id="allauthHeading">{% trans "Email Addresses" %}</h1>
+        {% if emailaddresses %}
+            <p class="login-subtitle">{% trans "The following email addresses are associated with your account:" %}</p>
+            {% url 'account_email' as email_url %}
+            <form class="allauth-form" method="post" action="{{ email_url }}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="email-address-list">
+                    {% for radio in emailaddress_radios %}
+                        {% with emailaddress=radio.emailaddress %}
+                            <label class="email-address-option" for="{{ radio.id }}">
+                                <input type="radio" name="email" value="{{ emailaddress.email }}" id="{{ radio.id }}" {% if radio.checked %}checked{% endif %}>
+                                <span>
+                                    {{ emailaddress.email }}
+                                    {% if emailaddress.verified %}<strong>{% trans "Verified" %}</strong>{% else %}<strong>{% trans "Unverified" %}</strong>{% endif %}
+                                    {% if emailaddress.primary %}<strong>{% trans "Primary" %}</strong>{% endif %}
+                                </span>
+                            </label>
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+                <div class="allauth-actions">
+                    <button class="login-submit" type="submit" name="action_primary">{% trans "Make Primary" %}</button>
+                    <button class="login-submit" type="submit" name="action_send">{% trans "Re-send Verification" %}</button>
+                    <button class="login-submit" type="submit" name="action_remove">{% trans "Remove" %}</button>
+                </div>
+            </form>
+        {% else %}
+            {% include "account/snippets/warn_no_email.html" %}
+        {% endif %}
+        {% if can_add_email %}
+            <h2>{% trans "Add Email Address" %}</h2>
+            {% url 'account_email' as action_url %}
+            <form class="allauth-form" method="post" action="{{ action_url }}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+                {% for field in form %}
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% else %}
+                        <div class="field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="input-wrap">{{ field }}</div>
+                            {% if field.help_text %}<span class="field-help">{{ field.help_text }}</span>{% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <button class="login-submit" type="submit" name="action_add">{% trans "Add Email" %}</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'account/js/account.js' %}"></script>
+<script src="{% static 'account/js/onload.js' %}"></script>
+<script data-allauth-onload="allauth.account.forms.manageEmailForm" type="application/json">{
+    "i18n": {"confirmDelete": "{% trans 'Do you really want to remove the selected email address?' %}"}
+}
+</script>
+{% endblock %}
