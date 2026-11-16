@@ -14,7 +14,7 @@
 
 <link
     rel="stylesheet"
-    href="{% static 'css/conversation.css' %}"
+    href="{% static 'css/conversation.css' %}?v=live-typing-indicator-2"
 >
 
 {% endblock %}
@@ -26,6 +26,7 @@
     class="conversation-page"
     data-conversation-id="{{ conversation.id }}"
     data-current-user-id="{{ request.user.id }}"
+    data-chat-user-name="{{ chat_user.profile_data.display_name|default:chat_user.username }}"
 >
 
     <section class="chat-card">
@@ -823,8 +824,21 @@
     </div>
 
 </div>
-        <!-- =================================================
-             COMPOSER
+
+<div
+    id="typingIndicator"
+    class="typing-indicator"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    hidden
+>
+    <span data-typing-label>Typing</span>
+    <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+</div>
+
+<!-- =================================================
+     COMPOSER
         ================================================== -->
 
        <form
@@ -937,6 +951,6 @@
 
 {% block extra_js %}
 
-<script src="{% static 'js/conversation.js' %}"></script>
+<script src="{% static 'js/conversation.js' %}?v=live-typing-indicator-2"></script>
 
 {% endblock %}

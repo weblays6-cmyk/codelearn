@@ -1393,6 +1393,31 @@
 
 
 
+                    <div class="form-section">
+                        <div class="section-heading">
+                            <div class="section-icon">
+                                <i class="bi bi-eye"></i>
+                            </div>
+                            <div>
+                                <h2>Course Visibility</h2>
+                                <p>Choose who can discover and view this course</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.is_public.id_for_label }}">
+                                {{ form.is_public }}
+                                Show this course to all users
+                            </label>
+                            <div class="help-text">
+                                Turn this off to keep the course visible only to you.
+                            </div>
+                            {% if form.is_public.errors %}
+                            <div class="error">{{ form.is_public.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+
                     <!-- =================================================
                      ACTIONS
                 ================================================== -->

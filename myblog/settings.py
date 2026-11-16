@@ -121,6 +121,7 @@ MIDDLEWARE = [
     'blog.middleware.HtmlNoCacheMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'blog.middleware.ActiveSessionMiddleware',
     'blog.middleware.AccountLifecycleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'blog.session_middleware.DeviceSessionMiddleware',
@@ -248,6 +249,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
+ACCOUNT_ADAPTER = 'blog.adapters.BlogAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'blog.adapters.BlogSocialAccountAdapter'
 
 # =========================================================
 # EMAIL CONFIGURATION
