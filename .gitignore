@@ -3,6 +3,7 @@ credentials.json
 token.json
 .env
 .env.*
+!.env.example
 
 # Uploaded files
 
@@ -19,4 +20,5 @@ env/
 
 # IDE
 .vscode/
-.idea/
+.idea/db_before_*.sqlite3 
+*_before_repair.csv 

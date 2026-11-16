@@ -85,7 +85,39 @@ Messages | {{ SITE_NAME }}
 
         </div>
 
+        <div class="messages-tabs" role="tablist">
+            <a class="messages-tab {% if request.GET.tab != 'requests' %}active{% endif %}" href="{% url 'blog:messages' %}">Chats</a>
+            <a class="messages-tab {% if request.GET.tab == 'requests' %}active{% endif %}" href="{% url 'blog:messages' %}?tab=requests">Requests <span class="message-request-count">{{ message_requests|length|default:0 }}</span></a>
+        </div>
 
+        <section class="message-requests-list" id="messageRequestsList" {% if request.GET.tab != 'requests' %}hidden{% endif %}>
+            {% for conversation in message_requests %}
+            <article class="message-request-item" data-conversation-id="{{ conversation.id }}">
+                {% if conversation.chat_user.profile_data.profile_picture %}
+                <img class="conversation-avatar" src="{{ conversation.chat_user.profile_data.profile_picture.url }}" alt="">
+                {% else %}
+                <div class="conversation-avatar">{{ conversation.chat_user.profile_data.display_name|default:conversation.chat_user.username|first|upper }}</div>
+                {% endif %}
+                <div class="conversation-info">
+                    <strong>{{ conversation.chat_user.profile_data.display_name|default:conversation.chat_user.username }}</strong>
+                    <small>@{{ conversation.chat_user.username|lower }}</small>
+                    <p>{{ conversation.last_message.content|default:"Message request"|truncatechars:120 }}</p>
+                    <a href="{% url 'blog:conversation_detail' conversation.id %}">View request</a>
+                </div>
+                <div class="message-request-actions">
+                    <form method="post" action="{% url 'blog:accept_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Accept</button></form>
+                    <form method="post" action="{% url 'blog:reject_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Reject</button></form>
+                    <form method="post" action="{% url 'blog:block_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Block</button></form>
+                    <form method="post" action="{% url 'blog:report_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Report</button></form>
+                </div>
+            </article>
+            {% empty %}
+            <div class="messages-empty"><h2>No message requests</h2><p>Requests from people you are not connected to will appear here.</p></div>
+            {% endfor %}
+        </section>
+
+
+        <div id="messageChatsList" {% if request.GET.tab == 'requests' %}hidden{% endif %}>
         {% if conversations %}
 
         <div class="conversation-list" id="conversationList">
@@ -99,6 +131,7 @@ Messages | {{ SITE_NAME }}
             {% with chat_user=conversation.participant %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
+                data-conversation-id="{{ conversation.id }}"
                 data-conversation-search="{{ chat_user.profile_data.display_name|default:chat_user.username }} @{{ chat_user.username|lower }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
                 {% if chat_user.profile_data.profile_picture %}
@@ -161,6 +194,7 @@ Messages | {{ SITE_NAME }}
             {% else %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
+                data-conversation-id="{{ conversation.id }}"
                 data-conversation-search="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }} @{{ conversation.project_owner.username|lower }} {{ conversation.project.title }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
                 {% if conversation.project_owner.profile_data.profile_picture %}
@@ -228,6 +262,7 @@ Messages | {{ SITE_NAME }}
             {% with chat_user=conversation.participant %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
+                data-conversation-id="{{ conversation.id }}"
                 data-conversation-search="{{ chat_user.profile_data.display_name|default:chat_user.username }} @{{ chat_user.username|lower }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
                 {% if chat_user.profile_data.profile_picture %}
@@ -290,6 +325,7 @@ Messages | {{ SITE_NAME }}
             {% else %}
 
             <a href="{% url 'blog:conversation_detail' conversation.id %}" class="conversation-item"
+                data-conversation-id="{{ conversation.id }}"
                 data-conversation-search="{{ conversation.project_owner.profile_data.display_name|default:conversation.project_owner.username }} @{{ conversation.project_owner.username|lower }} {% if conversation.last_message %}{{ conversation.last_message.content }}{% endif %}">
 
                 {% if conversation.project_owner.profile_data.profile_picture %}
@@ -401,6 +437,7 @@ Messages | {{ SITE_NAME }}
         </div>
 
         {% endif %}
+        </div>
 
     </section>
 

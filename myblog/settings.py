@@ -81,11 +81,14 @@ ALLOWED_HOSTS = [
     "https://vgrowhub.hopto.org",
     "127.0.0.1",
     "localhost",
+    "*",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://vgrowhub.hopto.org",
     "http://vgrowhub.hopto.org",
+    "https://*.trycloudflare.com",
+
 ]
 # Application definition
 
@@ -115,10 +118,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'blog.middleware.HtmlNoCacheMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'blog.middleware.AccountLifecycleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'blog.session_middleware.DeviceSessionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -209,9 +214,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [STATIC_DIR]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_BUILD_ID = os.getenv('STATIC_BUILD_ID', '20261028-1')
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': (
+            'blog.storage.VersionedStaticFilesStorage'
+            if DEBUG else
+            'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+        ),
+    },
+}
+STATIC_BUILD_ID = os.getenv('STATIC_BUILD_ID', '20261028-1')
+if not DEBUG:
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'},
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -220,6 +242,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
+MAX_DEVICES = int(os.getenv('MAX_DEVICES', '3'))
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -233,24 +256,26 @@ AUTHENTICATION_BACKENDS = [
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_BACKEND = (
-    'django.core.mail.backends.smtp.EmailBackend'
-    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
-    else (
-        'django.core.mail.backends.console.EmailBackend'
-        if DEBUG
-        else 'django.core.mail.backends.smtp.EmailBackend'
-    )
-)
-
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER or 'webmaster@localhost'
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 10
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').replace(' ', '')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = f'vGrowHub <{EMAIL_HOST_USER}>'
 
 SITE_BASE_URL = os.getenv('SITE_BASE_URL', 'https://vgrowhub.hopto.org' if not DEBUG else 'http://127.0.0.1:8000').rstrip('/')
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '').strip()
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '').strip()
+RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '').strip()
+RAZORPAY_CURRENCY = os.getenv('RAZORPAY_CURRENCY', 'INR').strip().upper()
 
 SITE_ID = 1
+
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_ADAPTER = 'myblog.adapters.VGrowHubAccountAdapter'
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_ADAPTER = 'myblog.adapters.VGrowHubSocialAccountAdapter'
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {

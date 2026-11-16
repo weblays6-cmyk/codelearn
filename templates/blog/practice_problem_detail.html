@@ -115,25 +115,36 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="problem-workspace" data-practice-editor data-problem-id="{{ problem.slug }}"
+<div class="problem-workspace" data-practice-editor data-problem-id="{{ problem.slug }}" data-problem-title="{{ problem.title }}"
+  data-problem-mode="true" data-function-name="{{ problem.function_name }}"
+  data-ai-url="{% url 'blog:ai_tutor' %}"
   data-run-url="{% url 'blog:practice_problem_run' problem.slug %}"
   data-submit-url="{% url 'blog:practice_problem_submit' problem.slug %}"
-  data-save-url="{% url 'blog:practice_save_draft' %}">
+  data-save-url="{% url 'blog:practice_save_draft' %}" data-record-url="{% url 'blog:practice_record' %}">
   {% csrf_token %}
   {{ starter_codes|json_script:'practice-starter-codes' }}
+  {{ problem.public_tests|json_script:'practice-visible-tests' }}
+  {{ problem.hidden_tests|json_script:'practice-hidden-tests' }}
+  {{ hints|json_script:'practice-hints' }}
   <header class="problem-head">
     <div>
-      <div class="eyebrow">Problem {{ problem.pk }} · {{ problem.get_difficulty_display|upper }}</div>
+      <div class="eyebrow">Problem {{ problem.pk }} · {{ problem.get_difficulty_display }}</div>
       <h1 style="margin:8px 0">{{ problem.title }}</h1><span>{{ problem.category|title }}{% for tag in problem.tags %} ·
         {{ tag }}{% endfor %}</span>
     </div>
-    <div><strong>{% if progress.status == 'SOLVED' %}✓ Solved{% elif progress.status == 'ATTEMPTED' %}◐ Attempted{% else
-        %}○ Not started{% endif %}</strong>
+    <div><strong>{% if progress.status == 'SOLVED' %}✓ Solved{% elif progress.status == 'ATTEMPTED' %}◐ Attempted{% else %}○ Not attempted{% endif %}</strong>
       <p><a href="{% url 'blog:practice' %}">Back to Practice</a></p>
+      <nav aria-label="Problem navigation">
+        {% if previous_problem %}<a href="{% url 'blog:practice_problem_detail' previous_problem.slug %}">Previous</a>{% endif %}
+        {% if next_problem %}<a href="{% url 'blog:practice_problem_detail' next_problem.slug %}">Next</a>{% endif %}
+      </nav>
+      <form method="post" action="{% url 'blog:practice_bookmark' problem.slug %}">{% csrf_token %}<button type="submit">{% if progress.bookmarked %}Remove bookmark{% else %}Bookmark problem{% endif %}</button></form>
     </div>
+    <a class="tool-btn" data-ai-explain href="{% url 'blog:ai_tutor' %}">Ask AI about this</a>
   </header>
+  <nav class="desc-tabs" role="tablist" aria-label="Problem resources"><button type="button" class="active" data-problem-tab="description">Description</button><button type="button" data-problem-tab="hints">Hints</button><button type="button" data-problem-tab="submissions">Submissions</button><button type="button" data-problem-tab="discussion">Discussion</button></nav>
   <div class="workspace-grid">
-    <section class="problem-description">
+    <section class="problem-description" data-problem-pane="description">
       <h2>Description</h2>
       <div>{{ problem.description|linebreaksbr }}</div>
       {% if problem.example %}<h3>Examples</h3>{% for key,value in problem.example.items %}
@@ -142,43 +153,42 @@
       <ul>{% for constraint in problem.constraints %}<li>{{ constraint }}</li>{% endfor %}</ul>{% endif %}
       {% if problem.public_tests %}<h3>Sample cases</h3>{% for test in problem.public_tests %}
       <pre>{{ test }}</pre>{% endfor %}{% endif %}
+      {% if solution_unlocked and problem.editorial %}<details><summary>Solution and editorial</summary><p>{{ problem.editorial|linebreaksbr }}</p></details>{% elif solution_available %}<p>Solution unlocks after three attempts or when solved ({{ progress.attempt_count|default:0 }}/3 attempts).</p>{% endif %}
     </section>
+    <section class="problem-description" data-problem-pane="hints" hidden><h2>Hints</h2><div data-hint-output></div><button type="button" data-next-hint>Reveal next hint</button><p>{{ progress.attempt_count|default:0 }} attempts · solution {% if solution_unlocked %}unlocked{% else %}locked{% endif %}</p></section>
     <section class="editor-card">
       <div class="editor-controls">
-        {% if languages %}
         <label>Language
           <select data-language>
             {% for item in languages %}
-            <option value="{{ item }}" {% if item==language %}selected{% endif %}>{{ item|title }}</option>
+            <option value="{{ item }}" {% if item == language %}selected{% endif %}>{{ item|title }}</option>
             {% endfor %}
           </select>
         </label>
+        <button type="button" class="tool-btn" data-action="run">{% if language == 'html' %}Preview{% else %}Run visible cases{% endif %}</button>
+        {% if language != 'html' %}
+        <button type="button" class="tool-btn" data-action="submit">Submit all cases</button>
         {% endif %}
-        <button type="button" class="tool-btn" data-action="run" {% if not languages %}disabled{% endif %}>Run
-          Samples</button>
-        <button type="button" class="tool-btn" data-action="submit" {% if not languages %}disabled{% endif %}>Submit
-          Solution</button>
         <button type="button" class="tool-btn" data-action="save">Save Draft</button>
         <button type="button" class="tool-btn" data-action="reset">Reset</button>
       </div>
-      {% if not languages %}<p class="status-message" data-kind="error">Execution is disabled until a secure runner and
-        a supported starter language are configured.</p>{% endif %}
+      <p>{% if language == 'html' %}Preview runs in a sandboxed browser frame; accessibility criteria are for self-review.{% else %}Code runs in your browser. Results are learner feedback only; client-side checks are not authoritative and hidden cases can be inspected.{% endif %}</p>
+      <p class="status-message" data-runtime-status aria-live="polite">Loading browser runtime…</p>
       <p class="status-message" data-run-status aria-live="polite"></p>
       <div data-monaco-host
         style="height:430px;margin:12px 0;border:1px solid rgba(148,163,184,.18);border-radius:10px;overflow:hidden"
         hidden></div>
       <textarea data-code-input spellcheck="false" aria-label="Solution code">{{ starter_code }}</textarea>
+      <label for="problem-notes">Private notes</label><textarea id="problem-notes" data-problem-notes maxlength="10000">{{ draft_notes }}</textarea>
       <h3>Run and submission result</h3>
       <pre class="test-output" data-run-output
         aria-live="polite">Run the visible examples or submit your solution.</pre>
     </section>
   </div>
-  <section class="history-card">
+  <section class="history-card" data-problem-pane="submissions" hidden>
     <h2>My Submissions</h2>
     {% for submission in history %}
-    <div class="history-row"><span>{{ submission.get_status_display }} · {{ submission.language|title }}</span><span>{{
-        submission.passed_test_cases }}/{{ submission.total_test_cases }} tests · {{ submission.submitted_at|date:'M d,
-        Y H:i' }}</span></div>
+    <div class="history-row"><span>{{ submission.get_status_display }} · {{ submission.language|title }}</span><span>{{ submission.passed_test_cases }}/{{ submission.total_test_cases }} tests · {{ submission.submitted_at|date:'M d, Y H:i' }}</span></div>
     {% empty %}<p>You haven't submitted a solution yet.</p>{% endfor %}
     {% if history.has_previous %}
     <a href="?page={{ history.previous_page_number }}">Previous</a>
@@ -187,9 +197,9 @@
     <a href="?page={{ history.next_page_number }}">Next</a>
     {% endif %}
   </section>
+  <section class="problem-description" data-problem-pane="discussion" hidden><h2>Discussion</h2><p>Join a community discussion from the <a href="{% url 'blog:community' %}">community page</a>.</p></section>
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-<script src="{% static 'js/practice_runner.js' %}"></script>
+<script src="{% static 'js/practice_browser_runner.js' %}" defer></script>
 {% endblock %}

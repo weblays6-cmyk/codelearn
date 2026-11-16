@@ -1,0 +1,39 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}Evaluate {{ assignment.title }} | {{ SITE_NAME }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/assignments.css' %}"><link rel="stylesheet" href="{% static 'css/assignment_features.css' %}">{% endblock %}
+{% block content %}
+<main class="assignment-feature-page">
+  <p class="eyebrow">Staff evaluation</p><h1>{{ assignment.title }}</h1>
+  <form method="get" class="assignment-filter-form"><label>Status <select name="status"><option value="">All</option><option value="Submitted" {% if status_filter == 'Submitted' %}selected{% endif %}>Submitted</option><option value="Evaluated" {% if status_filter == 'Evaluated' %}selected{% endif %}>Evaluated</option></select></label><label>Student <input name="student" value="{{ student_filter }}"></label><button type="submit">Filter</button></form>
+  <form method="post">{% csrf_token %}
+    {% for submission in submissions %}
+    <article class="evaluation-row">
+      <label><input type="checkbox" name="submission_ids" value="{{ submission.pk }}"> Select</label>
+      <h2>{{ submission.student.username }} · {{ submission.get_status_display }}</h2>
+      <p>{{ submission.submitted_at|date:"M j, Y H:i" }} {% if submission.is_late %}· Late submission{% endif %}</p>
+      {% if submission.similar_submissions %}<p role="status">Similarity flag: similar to submission(s) {{ submission.similar_submissions|join:", " }}. Review carefully.</p>{% endif %}
+      {% if submission.file %}<p><a href="{{ submission.file.url }}">Download attachment</a></p>{% endif %}
+      <details><summary>View submitted work</summary><pre>{{ submission.answer }}</pre></details>
+      <label>Score (max {{ assignment.max_score }}) <input type="number" min="0" max="{{ assignment.max_score }}" name="score_{{ submission.pk }}" value="{{ submission.score|default:0 }}"></label>
+      {% for criterion in assignment.rubric %}<div class="rubric-row"><label>{{ criterion.name }} ({{ criterion.points }} points)</label><input type="number" min="0" max="{{ criterion.points }}" data-rubric-criterion="{{ criterion.name }}" value="0"></div>{% endfor %}
+      <input type="hidden" name="rubric_{{ submission.pk }}" value="{}">
+      <label>Feedback<textarea name="feedback_{{ submission.pk }}" rows="4">{{ submission.feedback }}</textarea></label>
+      {% if submission.feedback %}<p>{{ submission.feedback }}</p>{% endif %}
+    </article>
+    {% empty %}<p>No submissions match those filters.</p>{% endfor %}
+    <button name="action" value="draft">Save draft</button><button name="action" value="publish">Publish selected</button><button name="action" value="export">Export selected CSV</button>
+  </form>
+</main>
+{% endblock %}
+{% block extra_js %}<script>
+document.querySelectorAll(".evaluation-row").forEach(row => {
+  const form = row.closest("form");
+  form.addEventListener("submit", () => {
+    const values = {};
+    row.querySelectorAll("[data-rubric-criterion]").forEach(input => { values[input.dataset.rubricCriterion] = Number(input.value) || 0; });
+    const target = row.querySelector('input[name^="rubric_"][type="hidden"]');
+    if (target) target.value = JSON.stringify(values);
+  });
+});
+</script>{% endblock %}

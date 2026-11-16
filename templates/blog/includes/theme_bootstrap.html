@@ -1,0 +1,21 @@
+<script>
+    (function () {
+        var root = document.documentElement;
+        var enabled = root.dataset.themeEnabled === "true";
+        var choice = enabled ? root.dataset.themeChoice : "light";
+        if (enabled) {
+            try {
+                var stored = localStorage.getItem("vgrowhub-theme");
+                if (stored === "light" || stored === "dark" || stored === "system") choice = stored;
+            } catch (error) {
+                choice = root.dataset.themeChoice || "light";
+            }
+        }
+        var theme = choice === "system" && enabled
+            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+            : (choice === "dark" && enabled ? "dark" : "light");
+        root.dataset.themeChoice = choice;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+    })();
+</script>

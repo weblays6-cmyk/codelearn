@@ -1,0 +1,177 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}One last step | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .social-signup-page {
+        width: min(100% - 30px, 470px);
+        margin: 40px auto;
+        color: #f8fafc;
+        font-family: Inter, sans-serif;
+    }
+
+    .social-signup-logo {
+        display: block;
+        width: 220px;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto 24px;
+        padding: 2px 4px;
+        border-radius: 3px;
+        background: #fff;
+    }
+
+    .social-signup-card {
+        padding: 35px 30px;
+        border: 1px solid #2b2e45;
+        border-radius: 22px;
+        background: linear-gradient(145deg, #131525, #0c0e1b);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, .35);
+    }
+
+    .social-signup-card .eyebrow {
+        margin-bottom: 12px;
+        color: #a78bfa;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .social-signup-card h1 {
+        margin: 0 0 7px;
+        font-size: 28px;
+        font-weight: 850;
+    }
+
+    .social-signup-card h1 span {
+        background: linear-gradient(90deg, #a78bfa, #60a5fa, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .social-signup-card .subtitle {
+        margin: 0 0 24px;
+        color: #707791;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .social-signup-card .field {
+        margin-bottom: 16px;
+    }
+
+    .social-signup-card label {
+        display: block;
+        margin-bottom: 8px;
+        color: #dce0ec;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .social-signup-card input {
+        box-sizing: border-box;
+        width: 100%;
+        height: 43px;
+        padding: 0 13px;
+        border: 1px solid #2b2e46;
+        border-radius: 10px;
+        outline: none;
+        background: #0c0e1b;
+        color: #f8fafc;
+        font: inherit;
+        font-size: 13px;
+    }
+
+    .social-signup-card input:focus {
+        border-color: #745bf0;
+        box-shadow: 0 0 0 3px rgba(116, 91, 240, .12);
+    }
+
+    .social-signup-card .errors,
+    .social-signup-card .errorlist {
+        margin: 6px 0 0;
+        color: #ff8294;
+        font-size: 12px;
+    }
+
+    .social-signup-card .signup-btn {
+        width: 100%;
+        height: 44px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #7654ff, #4775ff);
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .social-signup-card .signup-btn:hover {
+        transform: translateY(-1px);
+        opacity: .92;
+    }
+
+    .social-signup-back {
+        display: block;
+        margin-top: 20px;
+        color: #a78bfa;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    @media (max-width: 520px) {
+        .social-signup-page {
+            margin: 20px auto;
+        }
+
+        .social-signup-card {
+            padding: 24px 20px;
+        }
+
+        .social-signup-card h1 {
+            font-size: 25px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="social-signup-page">
+    <img class="social-signup-logo" src="{% static 'images/vgrowhub-logo.svg' %}" alt="{{ SITE_NAME }}">
+    <section class="social-signup-card" aria-labelledby="socialSignupHeading">
+        <div class="eyebrow">Google sign-up</div>
+        <h1 id="socialSignupHeading">One last <span>step</span></h1>
+        <p class="subtitle">Confirm your details to finish creating your {{ SITE_NAME }} account.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+                {% if field.is_hidden %}
+                    {{ field }}
+                {% else %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="subtitle">{{ field.help_text }}</div>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {{ redirect_field }}
+            <button type="submit" class="signup-btn">Continue to {{ SITE_NAME }}</button>
+        </form>
+
+        <a class="social-signup-back" href="{% url 'blog:login' %}">Back to sign in</a>
+    </section>
+</main>
+{% endblock %}

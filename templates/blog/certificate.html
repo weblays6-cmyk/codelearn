@@ -1,0 +1,5 @@
+{% extends "blog/base.html" %}
+{% block title %}{% if printable %}Certificate{% else %}Verify certificate{% endif %} | {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<section class="certificate-sheet"><p class="certificate-brand">{{ SITE_NAME }}</p><h1>{% if printable %}Certificate of Completion{% else %}Certificate verified{% endif %}</h1><p>This certifies that</p><h2>{{ certificate.enrollment.student.get_full_name|default:certificate.enrollment.student.username }}</h2><p>has completed</p><h2>{{ certificate.enrollment.course.title }}</h2><p>Issued {{ certificate.issued_at|date:"F j, Y" }}</p><p>Verification code: <code>{{ certificate.verification_code }}</code></p><p><a href="{% url 'blog:verify_certificate' certificate.verification_code %}">Verify this certificate</a></p>{% if printable %}<button type="button" onclick="window.print()">Print certificate</button>{% endif %}</section>
+{% endblock %}

@@ -9,6 +9,10 @@
 <link rel="stylesheet" href="{% static 'css/ai_tutor.css' %}">
 {% endblock %}
 
+{% block extra_css_end %}
+<link rel="stylesheet" href="{% static 'css/ai_tutor_workspace.css' %}">
+{% endblock %}
+
 
 {% block content %}
 
@@ -19,136 +23,65 @@
     data-history-url="{% url 'blog:ai_tutor_history' %}"
     data-clear-history-url="{% url 'blog:ai_tutor_clear_history' %}"
     data-conversation-url="{% url 'blog:ai_tutor_conversation' 0 %}"
+    data-action-url="{% url 'blog:ai_tutor_conversation_action' 0 %}"
+    data-feedback-url="{% url 'blog:ai_tutor_feedback' 0 %}"
+    data-clear-context-url="{% url 'blog:ai_tutor_clear_context' %}"
+    data-playground-url="{% url 'blog:practice_playground' %}"
     data-site-name="{{ SITE_NAME }}"
+    data-first-name="{{ user.first_name|default:user.username }}"
+    data-user-id="{{ user.pk }}"
+    data-ai-ready="{% if ai_enabled and ai_configured %}true{% else %}false{% endif %}"
 >
 
-    <!-- =========================
-         HERO
-    ========================= -->
-
-    <section class="hero">
-
-        <div class="hero-badge">
-            ✦ AI POWERED LEARNING
+    <div class="ai-workspace">
+    <aside class="ai-sidebar" id="aiSidebar" aria-label="Conversation sidebar">
+        <button type="button" class="ai-sidebar-close" id="aiSidebarClose" aria-label="Close conversation sidebar">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="new-chat-btn" id="sidebarNewChatButton" hidden><i class="bi bi-plus-lg"></i> New chat</button>
+        <label class="ai-sidebar-search"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Search chats</span><input id="aiChatSearch" type="search" placeholder="Search chats"></label>
+        <div class="ai-history-groups">
+            {% for group_name, conversations in history_groups.items %}
+            {% if conversations %}
+            <section><h3>{{ group_name }}</h3>
+                {% for item in conversations %}
+                <div class="ai-history-entry">
+                    <button type="button" class="ai-history-open" data-open-conversation="{{ item.pk }}" title="{{ item.title }}">{{ item.title }}{% if item.pinned %}<span aria-label="Pinned"> · pinned</span>{% endif %}</button>
+                    <div class="ai-history-actions">
+                        <button type="button" data-conversation-action="pin" data-id="{{ item.pk }}" aria-label="{% if item.pinned %}Unpin{% else %}Pin{% endif %} conversation">{% if item.pinned %}Unpin{% else %}Pin{% endif %}</button>
+                        <button type="button" data-conversation-action="rename" data-id="{{ item.pk }}">Rename</button>
+                        <a href="{% url 'blog:ai_tutor_export' item.pk %}">Export</a>
+                        <button type="button" data-conversation-action="{% if item.share_token %}revoke{% else %}share{% endif %}" data-id="{{ item.pk }}">{% if item.share_token %}Revoke share{% else %}Share{% endif %}</button>
+                        <button type="button" data-delete-conversation="{{ item.pk }}" data-title="{{ item.title }}">Delete</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+            {% endfor %}
+            {% if not has_history %}<p class="ai-sidebar-empty">Your chats will appear here.</p>{% endif %}
         </div>
-
-        <h1>
-            vGrowHub AI Tutor
-        </h1>
-
-        <p>
-            Your personal AI coding mentor
-        </p>
-
-        <div class="hero-highlights" aria-label="AI tutor highlights">
-            <span>Learn faster.</span>
-            <span>Debug smarter.</span>
-            <span>Build with confidence.</span>
-        </div>
-
-    </section>
-
-
-    <!-- =========================
-         QUICK PROMPTS
-    ========================= -->
-
-    <div class="quick-prompts">
-
-        <button
-            type="button"
-            class="quick-btn"
-            onclick="setPrompt('Explain Python functions with a simple example')"
-        >
-            🐍 Explain Python
-        </button>
-
-        <button
-            type="button"
-            class="quick-btn"
-            onclick="setPrompt('Explain Django MVT architecture step by step')"
-        >
-            🌐 Django MVT
-        </button>
-
-        <button
-            type="button"
-            class="quick-btn"
-            onclick="setPrompt('Explain SQL JOINs with examples')"
-        >
-            🗄 SQL JOINs
-        </button>
-
-        <button
-            type="button"
-            class="quick-btn"
-            onclick="setPrompt('Explain SQL joins with a simple example')"
-        >
-            🗄 SQL
-        </button>
-
-        <button type="button" class="quick-btn"
-            onclick="setPrompt('Explain the difference between HTML and CSS with examples')">
-            🎨 HTML/CSS
-        </button>
-
-        <button type="button" class="quick-btn"
-            onclick="setPrompt('Explain JavaScript promises with a simple example')">
-            🟨 JavaScript
-        </button>
-
-        <button type="button" class="quick-btn"
-            onclick="setPrompt('Help me debug this code or error: ')">
-            🐞 Debug Code
-        </button>
-
-        <button type="button" class="quick-btn"
-            onclick="setPrompt('Give me a data structures and algorithms practice question')">
-            🧩 DSA
-        </button>
-
-        <button type="button" class="quick-btn"
-            onclick="setPrompt('Ask me a programming interview question and explain the answer')">
-            💼 Interview Prep
-        </button>
-
-    </div>
-
-
-    <!-- =========================
-         CHAT CARD
-    ========================= -->
-
+        <div class="ai-usage"><div><span>Messages today</span><strong id="aiUsageCount">{{ usage_today }} / {{ daily_limit }}</strong></div><progress value="{{ usage_today }}" max="{{ daily_limit|default:1 }}"></progress></div>
+        <footer class="ai-sidebar-footer"><a href="{% url 'blog:settings' %}">Upgrade for more <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></footer>
+    </aside>
+    <button type="button" class="ai-sidebar-backdrop" id="aiSidebarBackdrop" aria-label="Close conversation sidebar" hidden></button>
     <section class="chat-card">
 
         <!-- CHAT HEADER -->
 
         <div class="chat-header">
-
-            <div class="ai-header-icon">
-                ✦
+            <div class="chat-header-leading">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-controls="aiSidebar" aria-expanded="false" aria-label="Open conversation sidebar">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <a class="ai-dashboard-link" href="{% url 'blog:dashboard' %}" aria-label="Back to vGrowHub dashboard" title="Back to vGrowHub dashboard">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    <span>Back to vGrowHub</span>
+                </a>
+                <div class="ai-header-icon" aria-hidden="true"><i class="bi bi-stars"></i></div>
+                <div class="chat-title"><strong>{{ conversation.title|default:"New chat" }}</strong><span>Your patient learning companion</span></div>
             </div>
-
-            <div class="chat-title">
-
-                <strong>
-                    {{ SITE_NAME }} AI
-                </strong>
-
-                <span>
-                    Your personal AI coding mentor
-                </span>
-
-            </div>
-
-            <div class="status">
-
-                <div class="status-dot"></div>
-
-                Online
-
-            </div>
-
+            <div class="status">{% if ai_enabled and ai_configured %}<div class="status-dot"></div>Ready{% else %}<span class="ai-offline-dot"></span>AI offline{% endif %}</div>
         </div>
 
 
@@ -157,45 +90,18 @@
 ========================= -->
 
 <div class="chat-toolbar">
-
-    <!-- NEW CHAT -->
-    <button
-        type="button"
-        class="new-chat-btn"
-        id="newChatButton"
-    >
-        <i class="bi bi-plus-lg"></i>
-        New Chat
-    </button>
+    <button type="button" class="new-chat-btn" id="newChatButton" aria-label="New chat"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>New chat</span></button>
 
     {% if current_messages %}
     <button type="button" class="regenerate-btn" id="regenerateButton">
-        <i class="bi bi-arrow-clockwise"></i>
-        Regenerate
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <span>Regenerate</span>
     </button>
     {% endif %}
 
 
-    <!-- HISTORY -->
-    <button
-        type="button"
-        class="history-btn"
-        id="historyButton"
-    >
-        <i class="bi bi-clock-history"></i>
-        History
-    </button>
-
-
-    <!-- CLEAR HISTORY -->
-    <button
-        type="button"
-        class="clear-history-btn"
-        id="clearHistoryButton"
-    >
-        <i class="bi bi-trash3"></i>
-        Clear History
-    </button>
+    <button type="button" class="history-btn" id="historyButton" aria-label="Search chats"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Search chats</span></button>
+    <button type="button" class="clear-history-btn" id="clearHistoryButton" aria-label="Clear chats"><i class="bi bi-trash3" aria-hidden="true"></i><span>Clear chats</span></button>
 
 </div>
 
@@ -211,24 +117,21 @@
             data-before-id="{% if current_messages %}{{ current_messages.0.pk }}{% endif %}"
         >
             {% if not current_messages %}
-            <div
-                class="message ai-message"
-                id="defaultMessage"
-            >
-
-                <span class="message-label">
-                    ✦ AI Tutor
-                </span>
-
-                👋 Hey! I'm your {{ SITE_NAME }} AI Tutor.
-
-                <br><br>
-
-                Ask me anything about programming.
-                I can explain concepts, debug your code,
-                give examples and help you practice.
-
-            </div>
+            <section class="ai-empty-state" id="aiWelcome">
+                <div class="ai-welcome-mark" aria-hidden="true"><i class="bi bi-stars"></i></div>
+                <p class="ai-welcome-eyebrow">YOUR LEARNING COMPANION</p>
+                <h1>Hi {{ user.first_name|default:user.username }}, what shall we learn today?</h1>
+                <p>Ask a question, bring a tricky bug, or choose a starting point.</p>
+                <div class="ai-suggestion-grid" aria-label="Suggested prompts">
+                    <button type="button" data-prompt="Explain a programming concept to me with a simple example."><i class="bi bi-lightbulb"></i><span><strong>Explain a concept</strong><small>Make a tricky topic clear</small></span></button>
+                    <button type="button" data-prompt="Help me debug my code. I will share the code and error."><i class="bi bi-bug"></i><span><strong>Debug my code</strong><small>Find the cause, then fix it</small></span></button>
+                    <button type="button" data-prompt="Review my code for correctness, clarity, and maintainability."><i class="bi bi-code-square"></i><span><strong>Review my code</strong><small>Get thoughtful feedback</small></span></button>
+                    <button type="button" data-prompt="Quiz me on a programming topic, one question at a time."><i class="bi bi-patch-question"></i><span><strong>Quiz me</strong><small>Practice as you learn</small></span></button>
+                    <button type="button" data-prompt="Run a supportive mock technical interview with me."><i class="bi bi-person-video3"></i><span><strong>Mock interview</strong><small>Build confidence answering</small></span></button>
+                    <button type="button" data-prompt="Build a practical learning roadmap based on my goal."><i class="bi bi-signpost-split"></i><span><strong>Build a roadmap</strong><small>Choose your next steps</small></span></button>
+                </div>
+                {% if lesson_context %}<a class="ai-continue-learning" href="{% url 'blog:lesson_detail' lesson_context.slug %}"><i class="bi bi-play-circle"></i> Continue where you left off <span>{{ lesson_context.title }}</span></a>{% endif %}
+            </section>
             {% else %}
                 {% if has_older_messages %}
                 <button type="button" class="load-earlier-btn" id="loadEarlierButton">
@@ -236,7 +139,7 @@
                 </button>
                 {% endif %}
                 {% for message in current_messages %}
-                <div class="message {% if message.role == 'user' %}user-message{% else %}ai-message{% endif %}" data-role="{{ message.role }}">
+                <div class="message {% if message.role == 'user' %}user-message{% else %}ai-message{% endif %}" data-role="{{ message.role }}" data-message-id="{{ message.pk }}">
                     <span class="message-label">{% if message.role == 'user' %}👤 You{% else %}✦ AI Tutor{% endif %}</span>
                     <span class="message-content">{{ message.content }}</span>
                 </div>
@@ -271,30 +174,67 @@
 
         <div class="input-area">
 
+            {% if lesson_context %}<p class="ai-context-chip"><i class="bi bi-book"></i> {{ lesson_context.title }} <button type="button" id="removeContextButton" aria-label="Remove lesson context">×</button></p>{% endif %}
+            {% if not ai_enabled %}<p class="ai-status-note" role="status">AI is offline right now. Chats are saved.</p>{% elif not ai_configured %}<p class="ai-status-note" role="status">AI is offline right now. Chats are saved.</p>{% endif %}
+            {% if ai_is_admin and not ai_configured %}<aside class="ai-setup-card" role="status"><strong>AI Tutor setup needed</strong><span>Set the missing environment values, then restart the app:</span><code>{% for item in ai_missing_configuration %}{{ item }}{% if not forloop.last %}, {% endif %}{% endfor %}</code></aside>{% endif %}
+            <div class="ai-slash-menu" id="slashCommandMenu" role="listbox" aria-label="Slash commands" hidden>
+                <button type="button" role="option" data-command="/explain">/explain <span>Explain a topic</span></button>
+                <button type="button" role="option" data-command="/debug">/debug <span>Debug an issue</span></button>
+                <button type="button" role="option" data-command="/review">/review <span>Review code</span></button>
+                <button type="button" role="option" data-command="/quiz">/quiz <span>Practice questions</span></button>
+                <button type="button" role="option" data-command="/interview">/interview <span>Mock interview</span></button>
+                <button type="button" role="option" data-command="/roadmap">/roadmap <span>Plan learning</span></button>
+                <button type="button" role="option" data-command="/eli5">/eli5 <span>Explain simply</span></button>
+                <button type="button" role="option" data-command="/summarize">/summarize <span>Summarize this</span></button>
+                <button type="button" role="option" data-command="/test">/test <span>Quiz me</span></button>
+            </div>
             <form
                 method="POST"
                 id="aiForm"
+                enctype="multipart/form-data"
             >
 
                 {% csrf_token %}
 
+                <input type="hidden" name="edit_message_id" id="editMessageId" value="">
                 <div class="input-box">
 
                     <textarea
                         id="questionInput"
                         name="question"
-                        placeholder="Ask vGrowHub AI..."
+                        placeholder="Message your tutor…"
                         required
                         rows="1"
-                    ></textarea>
+                        maxlength="20000"
+                    >{{ prefill_prompt }}</textarea>
 
-                    <button
-                        type="submit"
-                        class="ask-btn"
-                        id="askButton"
-                    >
-                        Send
-                    </button>
+                    <div class="composer-controls">
+                        <div class="composer-tools" aria-label="Message options">
+                            <label class="ai-attachment" title="Attach file">
+                                <span class="visually-hidden">Attach file</span>
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                <input id="aiAttachment" type="file" name="attachment" accept=".py,.js,.sql,.html,.css,.txt,.md" aria-label="Attach file">
+                            </label>
+                            <label class="ai-pill-select" title="Choose tutor mode">
+                                <span class="visually-hidden">Mode</span>
+                                <i class="bi bi-stars" aria-hidden="true"></i>
+                                <select id="aiMode" name="mode" aria-label="Mode" title="Mode"><option value="explain">Explain</option><option value="debug">Debug my code</option><option value="review">Code review</option><option value="quiz">Quiz me</option><option value="interview">Interview practice</option><option value="eli5">ELI5</option><option value="roadmap">Roadmap</option></select>
+                                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                            </label>
+                            <label class="ai-pill-select" title="Choose response depth">
+                                <span class="visually-hidden">Depth</span>
+                                <i class="bi bi-bar-chart-steps" aria-hidden="true"></i>
+                                <select name="depth" aria-label="Depth" title="Depth"><option value="fast">Fast</option><option value="balanced" selected>Balanced</option><option value="deep">Deep</option></select>
+                                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                            </label>
+                            <button type="button" id="voiceButton" aria-label="Start voice input" title="Voice input"><i class="bi bi-mic" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="composer-send">
+                            <span class="ai-char-count" id="aiCharCount">0 / 20,000</span>
+                            <button type="submit" class="ask-btn" id="askButton" aria-label="Send message" title="Send message" {% if not ai_enabled or not ai_configured %}disabled title="AI is offline. Your draft will stay here."{% endif %}><i class="bi bi-arrow-up" aria-hidden="true"></i><span class="visually-hidden">Send</span></button>
+                            <button type="button" class="ask-btn ai-stop-button" id="stopButton" hidden><i class="bi bi-stop-fill" aria-hidden="true"></i><span class="visually-hidden">Stop generating</span></button>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -308,6 +248,7 @@
         </div>
 
     </section>
+    </div>
 
 </div>
 
@@ -382,5 +323,7 @@
 
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
 <script src="{% static 'js/ai_tutor.js' %}" defer></script>
 {% endblock %}

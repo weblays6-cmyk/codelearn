@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% load static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/assignment_features.css' %}">{% endblock %}
 
 {% block title %}{{ assignment.title }} | {{ SITE_NAME }}{% endblock %}
 
@@ -9,15 +10,21 @@
         <div>
             <div class="eyebrow"><i class="bi bi-clipboard-check"></i> Assignment</div>
             <h1>{{ assignment.title }}</h1>
-            <p>{{ assignment.instructions|default:assignment.description }}</p>
+            <div>{{ instructions_html }}</div>
+            {% if assignment.due_date %}<p data-assignment-due="{{ assignment.due_date|date:'c' }}">Due {{ assignment.due_date|date:"M j, Y H:i" }} · <span data-assignment-countdown>Calculating countdown…</span></p>{% endif %}
         </div>
+        {% if is_staff %}<a class="assignment-btn" href="{% url 'blog:assignment_evaluate' assignment.pk %}">Evaluate submissions</a>{% endif %}
     </section>
+    {% if assignment.rubric %}<section class="assignment"><h2>Rubric</h2><ul>{% for criterion in assignment.rubric %}<li>{{ criterion.name }} — {{ criterion.points|default:0 }} points</li>{% endfor %}</ul></section>{% endif %}
+    <nav class="assignment-timeline" aria-label="Assignment status">
+        {% for label,timestamp in status_timeline %}<div class="{% if timestamp %}done{% endif %}"><strong>{{ label }}</strong><span>{% if timestamp %} · {{ timestamp|date:"M j, Y H:i" }}{% else %} · Waiting{% endif %}</span></div>{% endfor %}
+    </nav>
 
     {% if error_message %}<p role="alert" class="assignment-error">{{ error_message }}</p>{% endif %}
 
-    {% if attempt.status != 'IN_PROGRESS' %}
+    {% if attempt and attempt.status != 'IN_PROGRESS' %}
     <section class="content assignment-result" aria-live="polite">
-        <h2>Submission {{ attempt.status|lower }}</h2>
+        <h2>Submission {{ attempt.get_status_display }}</h2>
         {% if attempt.score != None %}
         <p>Score: {{ attempt.score }} / {{ attempt.max_score }} ({{ attempt.percentage }}%)</p>
         <p>{% if attempt.passed %}Passed{% else %}Not passed{% endif %}</p>
@@ -27,12 +34,14 @@
         {% if attempt.feedback %}<p>{{ attempt.feedback }}</p>{% endif %}
         {% if submission and submission.file %}<p><a href="{{ submission.file.url }}">Download submitted file</a></p>{% endif %}
         {% if submission and submission.answer %}<details><summary>View submitted response</summary><pre>{{ submission.answer }}</pre></details>{% endif %}
+        {% if submission %}<p>Submitted {{ submission.submitted_at|date:"M j, Y H:i" }}{% if submission.is_late %} · Late{% endif %}</p>{% endif %}
+        {% if submission and submission.rubric_feedback %}<h3>Rubric feedback</h3><ul>{% for key,value in submission.rubric_feedback.items %}<li>{{ key }}: {{ value }}</li>{% endfor %}</ul>{% endif %}
         {% if can_retry %}<a class="assignment-btn" href="?new=1">Start another attempt</a>{% endif %}
     </section>
     {% else %}
     <form method="post" id="attemptForm" class="content" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ attempt.answer_data|json_script:"savedAnswers" }}
+        {% if attempt %}{{ attempt.answer_data|json_script:"savedAnswers" }}{% else %}{{ empty_answers|json_script:"savedAnswers" }}{% endif %}
         <input type="hidden" name="answer_data" id="answerData">
         <input type="hidden" name="source_code" id="sourceCode">
         <input type="hidden" name="language" id="languageValue">
@@ -56,7 +65,7 @@
         {% elif assignment.assignment_type == 'FILE_UPLOAD' %}
             <article class="assignment">
                 <label for="assignmentFile" class="assignment-desc">Upload your completed work</label>
-                <input id="assignmentFile" type="file" name="file" required>
+                <input id="assignmentFile" type="file" name="file" accept=".pdf,.zip,.txt,.md,.py,.js,.sql,.html,.css,.csv,.png,.jpg,.jpeg" data-max-size="5242880" required>
                 <label for="response" class="assignment-desc">Notes for your instructor</label>
                 <textarea id="response" rows="5">{{ attempt.answer_data.response }}</textarea>
             </article>
@@ -77,6 +86,10 @@
                 <textarea id="response" rows="12">{{ attempt.answer_data.response }}</textarea>
             </article>
         {% endif %}
+        {% if assignment.assignment_type != 'QUIZ' and assignment.assignment_type != 'FILE_UPLOAD' %}
+        <article class="assignment"><label for="responseLink" class="assignment-desc">Submission link (optional)</label><input id="responseLink" type="url" value="{{ attempt.answer_data.link }}"></article>
+        {% endif %}
+        {% if assignment.assignment_type != 'QUIZ' and assignment.assignment_type != 'FILE_UPLOAD' %}<a class="assignment-btn" href="{% url 'blog:ai_tutor' %}?context={{ assignment_context|urlencode }}&prompt=Help%20me%20understand%20this%20assignment">Ask AI about this assignment</a>{% endif %}
 
         <div style="display:flex;gap:12px;margin-top:18px;">
             <button type="button" class="assignment-btn" id="saveButton">Save Draft</button>
@@ -117,6 +130,8 @@
             });
             const response = document.getElementById('response');
             if (response) values.response = response.value;
+            const link = document.getElementById('responseLink');
+            if (link) values.link = link.value;
             const codeResponse = document.getElementById('codeResponse');
             if (codeResponse) sourceCode.value = codeResponse.value;
             const languageSelect = document.getElementById('languageSelect');
@@ -138,8 +153,20 @@
         }
 
         document.getElementById('saveButton').addEventListener('click', save);
-        setInterval(save, 15000);
-        form.addEventListener('submit', collectAnswers);
+        form.addEventListener('submit', function (event) {
+            const file = form.querySelector('#assignmentFile');
+            if (file && file.files.length) {
+                const candidate = file.files[0];
+                const allowed = /\.(pdf|zip|txt|md|py|js|sql|html|css|csv|png|jpe?g)$/i.test(candidate.name);
+                if (!allowed || candidate.size > 5242880) {
+                    event.preventDefault();
+                    saveState.textContent = 'Choose an allowed file no larger than 5 MB.';
+                    return;
+                }
+            }
+            collectAnswers();
+        });
     })();
 </script>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/assignments.js' %}" defer></script>{% endblock %}

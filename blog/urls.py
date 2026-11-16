@@ -8,6 +8,11 @@ app_name = "blog"
 
 
 urlpatterns = [
+    path(
+        "service-worker.js",
+        views.service_worker,
+        name="service_worker",
+    ),
 
     # =========================================================
     # HOME / COURSES
@@ -24,11 +29,50 @@ urlpatterns = [
         views.blog,
         name="blogpage"
     ),
+    path("courses/wishlist/", views.course_wishlist, name="course_wishlist"),
 
     path(
         "course/<slug:slug>/",
         views.post_detail,
         name="post_detail"
+    ),
+    path(
+        "courses/<slug:slug>/",
+        views.post_detail,
+        name="course_detail",
+    ),
+    path(
+        "courses/<slug:slug>/save/",
+        views.course_save,
+        name="course_save",
+    ),
+    path("payments/create-order/<slug:plan_slug>/", views.payment_create_order, name="payment_create_order"),
+    path("payments/confirm/", views.payment_confirm, name="payment_confirm"),
+    path("payments/razorpay/webhook/", views.razorpay_webhook, name="razorpay_webhook"),
+    path(
+        "lesson/<slug:slug>/notes/",
+        views.lesson_notes,
+        name="lesson_notes",
+    ),
+    path(
+        "lesson/<slug:slug>/bookmark/",
+        views.lesson_bookmark,
+        name="lesson_bookmark",
+    ),
+    path(
+        "quizzes/<int:quiz_id>/",
+        views.module_quiz,
+        name="module_quiz",
+    ),
+    path(
+        "certificates/<str:code>/",
+        views.course_certificate,
+        name="course_certificate",
+    ),
+    path(
+        "verify/<str:code>/",
+        views.verify_certificate,
+        name="verify_certificate",
     ),
 
     path(
@@ -57,6 +101,11 @@ urlpatterns = [
         "dashboard/",
         views.dashboard,
         name="dashboard"
+    ),
+    path(
+        "dashboard/leader/",
+        views.dashboard_leader_data,
+        name="dashboard_leader_data",
     ),
 
     path(
@@ -199,6 +248,16 @@ urlpatterns = [
         views.unfollow_user,
         name="unfollow_user"
     ),
+    path(
+        "profile/<str:username>/remove-follower/",
+        views.remove_follower,
+        name="remove_follower"
+    ),
+    path(
+        "profile/<str:username>/mute/",
+        views.toggle_follow_mute,
+        name="toggle_follow_mute"
+    ),
 
     path(
         "profile/<str:username>/block/",
@@ -217,6 +276,11 @@ urlpatterns = [
         views.user_profile,
         name="user_profile"
     ),
+    path(
+        "u/<str:username>/",
+        views.user_profile,
+        name="public_user_profile",
+    ),
 
     path(
         "profile/<str:username>/connect/",
@@ -229,6 +293,16 @@ urlpatterns = [
         "settings/",
         views.settings_view,
         name="settings"
+    ),
+    path(
+        "settings/devices/<uuid:device_id>/revoke/",
+        views.revoke_device_session,
+        name="revoke_device_session",
+    ),
+    path(
+        "settings/devices/revoke-others/",
+        views.revoke_other_device_sessions,
+        name="revoke_other_device_sessions",
     ),
 
     path(
@@ -260,6 +334,16 @@ urlpatterns = [
         views.notifications,
         name="notifications"
     ),
+    path(
+        "follow-requests/",
+        views.notifications,
+        name="follow_requests",
+    ),
+    path(
+        "api/live-counts/",
+        views.live_counts,
+        name="live_counts",
+    ),
 
     # =========================================================
     # AI TUTOR
@@ -276,6 +360,11 @@ urlpatterns = [
         name="ai_tutor_new",
     ),
     path(
+        "ai-tutor/context/clear/",
+        views.ai_tutor_clear_context,
+        name="ai_tutor_clear_context",
+    ),
+    path(
         "ai-tutor/history/",
         views.ai_tutor_history,
         name="ai_tutor_history",
@@ -289,6 +378,51 @@ urlpatterns = [
         "ai-tutor/history/<int:conversation_id>/",
         views.ai_tutor_conversation,
         name="ai_tutor_conversation",
+    ),
+    path(
+        "ai-tutor/history/<int:conversation_id>/action/",
+        views.ai_tutor_conversation_action,
+        name="ai_tutor_conversation_action",
+    ),
+    path(
+        "ai-tutor/history/<int:conversation_id>/export/",
+        views.ai_tutor_export,
+        name="ai_tutor_export",
+    ),
+    path(
+        "ai-tutor/feedback/<int:message_id>/",
+        views.ai_tutor_feedback,
+        name="ai_tutor_feedback",
+    ),
+    path(
+        "ai-tutor/share/<uuid:token>/",
+        views.ai_tutor_share,
+        name="ai_tutor_share",
+    ),
+    path(
+        "ai/features/keep/",
+        views.ai_feature_keep,
+        name="ai_feature_keep",
+    ),
+    path(
+        "ai/features/<slug:feature>/",
+        views.ai_feature,
+        name="ai_feature",
+    ),
+    path(
+        "ai/username-available/",
+        views.username_available,
+        name="username_available",
+    ),
+    path(
+        "account/export/",
+        views.export_user_data,
+        name="export_user_data",
+    ),
+    path(
+        "community/moderation/",
+        views.community_moderation,
+        name="community_moderation",
     ),
 
     # =========================================================
@@ -312,6 +446,11 @@ urlpatterns = [
         views.practice_all,
         name="practice_all"
     ),
+    path(
+        "practice/random/",
+        views.practice_random,
+        name="practice_random",
+    ),
 
     path(
         "practice/playground/",
@@ -323,6 +462,16 @@ urlpatterns = [
         "practice/playground/save/",
         views.playground_save,
         name="playground_save"
+    ),
+    path(
+        "practice/playground/session/<int:pk>/",
+        views.playground_session_action,
+        name="playground_session_action",
+    ),
+    path(
+        "practice/playground/share/<uuid:token>/",
+        views.playground_share,
+        name="playground_share",
     ),
 
     path(
@@ -365,6 +514,11 @@ urlpatterns = [
         "practice/problems/<slug:slug>/submit/",
         views.practice_problem_submit,
         name="practice_problem_submit"
+    ),
+    path(
+        "practice/problems/<slug:slug>/bookmark/",
+        views.practice_bookmark,
+        name="practice_bookmark",
     ),
 
     path(
@@ -426,6 +580,16 @@ urlpatterns = [
         views.assignments,
         name="assignments"
     ),
+    path(
+        "assignments/scores/",
+        views.assignment_scores,
+        name="assignment_scores",
+    ),
+    path(
+        "assignments/<int:pk>/evaluate/",
+        views.assignment_evaluate,
+        name="assignment_evaluate",
+    ),
 
     path(
         "assignments/<int:pk>/",
@@ -447,6 +611,21 @@ urlpatterns = [
         "projects/create/",
         views.create_project,
         name="create_project"
+    ),
+    path(
+        "projects/<int:pk>/edit/",
+        views.edit_project,
+        name="edit_project",
+    ),
+    path(
+        "projects/<int:pk>/delete/",
+        views.delete_project,
+        name="delete_project",
+    ),
+    path(
+        "projects/ideas/",
+        views.project_ideas,
+        name="project_ideas",
     ),
 
     path(
@@ -495,6 +674,11 @@ urlpatterns = [
         "projects/<int:pk>/collaborate/",
         views.project_collaborate,
         name="project_collaborate"
+    ),
+    path(
+        "projects/<int:pk>/collaborators/<int:collaborator_id>/decision/",
+        views.project_collaborator_decision,
+        name="project_collaborator_decision",
     ),
 
     path(
@@ -553,6 +737,51 @@ path(
     views.conversation_status,
     name="conversation_status"
 ),
+path(
+    "messages/<int:conversation_id>/accept-request/",
+    views.accept_message_request,
+    name="accept_message_request"
+),
+path(
+    "messages/<int:conversation_id>/reject-request/",
+    views.reject_message_request,
+    name="reject_message_request"
+),
+path(
+    "messages/<int:conversation_id>/block-request/",
+    views.block_message_request,
+    name="block_message_request"
+),
+path(
+    "messages/<int:conversation_id>/report-request/",
+    views.report_message_request,
+    name="report_message_request"
+),
+path(
+    "messages/<int:conversation_id>/typing/",
+    views.conversation_typing,
+    name="conversation_typing"
+),
+path(
+    "messages/<int:conversation_id>/preferences/",
+    views.set_conversation_preference,
+    name="set_conversation_preference"
+),
+path(
+    "messages/attachment/<int:attachment_id>/",
+    views.message_attachment,
+    name="message_attachment"
+),
+path(
+    "messages/<int:message_id>/edit/",
+    views.edit_message,
+    name="edit_message"
+),
+path(
+    "messages/<int:message_id>/reaction/",
+    views.toggle_message_reaction,
+    name="toggle_message_reaction"
+),
     # =========================================================
     # COMMUNITY
     # =========================================================
@@ -606,5 +835,20 @@ path(
         "community/posts/<int:pk>/save/",
         views.community_post_save,
         name="community_post_save",
+    ),
+    path(
+        "community/posts/<int:pk>/accept/<int:reply_id>/",
+        views.community_accept_answer,
+        name="community_accept_answer",
+    ),
+    path(
+        "community/posts/<int:pk>/follow/",
+        views.community_follow,
+        name="community_follow",
+    ),
+    path(
+        "community/report/",
+        views.community_report,
+        name="community_report",
     ),
 ]

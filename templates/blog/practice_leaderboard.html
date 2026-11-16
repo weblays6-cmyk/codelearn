@@ -5,123 +5,34 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
-<style>
-  .practice-subpage {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 28px 0 40px;
-  }
-
-  .subpage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 18px;
-    margin-bottom: 18px;
-  }
-
-  .subpage-header h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: -0.06em;
-  }
-
-  .leaderboard {
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 18px;
-    overflow: hidden;
-  }
-
-  .leader-row {
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 90px 100px 120px;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  }
-
-  .leader-row.header {
-    background: rgba(148, 163, 184, 0.04);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #94a3b8;
-  }
-
-  .rank {
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-
-  .podium {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: end;
-    gap: 12px;
-    margin: 0 0 20px;
-  }
-
-  .podium-item {
-    text-align: center;
-    padding: 18px 10px;
-    background: rgba(15, 23, 42, .72);
-    border: 1px solid rgba(148, 163, 184, .18);
-    border-radius: 14px;
-  }
-
-  .podium-item:first-child {
-    padding-top: 30px;
-    border-color: rgba(250, 204, 21, .4);
-  }
-
-  @media(max-width:640px) {
-    .leader-row {
-      grid-template-columns: 45px minmax(0, 1fr) 58px 85px 78px;
-      gap: 6px;
-      padding: 12px 8px;
-      font-size: .78rem
-    }
-
-    .leader-row.header {
-      font-size: .62rem
-    }
-
-    .podium-item {
-      padding: 12px 6px
-    }
-  }
-
-  .tool-btn {
-    text-decoration: none;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'css/practice_leaderboard.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="practice-subpage">
+<main class="practice-subpage practice-leaderboard-page">
   <div class="subpage-header">
     <div>
       <div class="eyebrow"><i class="bi bi-trophy"></i> Leaderboard</div>
       <h1>See how your practice compares.</h1>
+      <p>Rankings use practice submissions and completed test scores.</p>
     </div>
     <a href="{% url 'blog:practice' %}" class="tool-btn">Back to Practice</a>
   </div>
 
-  <nav style="display:flex; gap:10px; margin:0 0 18px;" aria-label="Leaderboard period">
-    <a class="tool-btn" href="?period=week" {% if period == 'week' %}aria-current="page" {% endif %}>Weekly</a>
-    <a class="tool-btn" href="?period=month" {% if period == 'month' %}aria-current="page" {% endif %}>Monthly</a>
-    <a class="tool-btn" href="?period=all" {% if period == 'all' %}aria-current="page" {% endif %}>All Time</a>
+  <nav class="leaderboard-period" aria-label="Leaderboard period">
+    <a class="{% if period == 'week' %}active{% endif %}" href="?period=week" {% if period == 'week' %}aria-current="page"{% endif %}>Weekly</a>
+    <a class="{% if period == 'month' %}active{% endif %}" href="?period=month" {% if period == 'month' %}aria-current="page"{% endif %}>Monthly</a>
+    <a class="{% if period == 'all' %}active{% endif %}" href="?period=all" {% if period == 'all' %}aria-current="page"{% endif %}>All Time</a>
   </nav>
 
   {% if podium %}
   <section class="podium" aria-label="Top three learners">
     {% for entry in podium %}
-    <div class="podium-item">
-      <strong>{% if forloop.counter == 1 %}#1{% elif forloop.counter == 2 %}#2{% else %}#3{% endif %}</strong>
-      <div style="margin:8px 0">{{ entry.user.username }}</div>
-      <span>{{ entry.points }} pts</span>
+    <div class="podium-item podium-{{ forloop.counter }}">
+      <span class="podium-rank">{% if forloop.counter == 1 %}Gold{% elif forloop.counter == 2 %}Silver{% else %}Bronze{% endif %}</span>
+      {% if entry.user.profile_data.profile_picture %}<img class="leader-avatar" src="{{ entry.user.profile_data.profile_picture.url }}" alt="">{% else %}<span class="leader-avatar leader-avatar-fallback">{{ entry.user.username|first|upper }}</span>{% endif %}
+      <strong>{{ entry.user.get_full_name|default:entry.user.username }}</strong>
+      <span>@{{ entry.user.username }} · {{ entry.points }} pts</span>
     </div>
     {% endfor %}
   </section>
@@ -130,33 +41,24 @@
   <div class="leaderboard">
     <div class="leader-row header">
       <div>Rank</div>
-      <div>Student</div>
+      <div>Learner</div>
       <div>Solved</div>
       <div>Tests</div>
       <div>Score / Points</div>
     </div>
     {% for entry in leaderboard %}
-    <div class="leader-row" {% if entry.user.id == user.id %}style="background:rgba(59,130,246,.12);" {% endif %}>
+    <div class="leader-row{% if entry.user.id == user.id %} is-you{% endif %}">
       <div class="rank">#{{ leaderboard.start_index|add:forloop.counter0 }}</div>
-      <div>{{ entry.user.username }}{% if entry.user.id == user.id %} <strong>(You)</strong>{% endif %}</div>
+      <div class="leader-student">{% if entry.user.profile_data.profile_picture %}<img class="leader-avatar" src="{{ entry.user.profile_data.profile_picture.url }}" alt="">{% else %}<span class="leader-avatar leader-avatar-fallback">{{ entry.user.username|first|upper }}</span>{% endif %}<span>{{ entry.user.get_full_name|default:entry.user.username }}<small>@{{ entry.user.username }}{% if entry.user.id == user.id %} · You{% endif %}</small></span></div>
       <div>{{ entry.solved }}</div>
       <div>{{ entry.tests }}</div>
       <div>{{ entry.score|floatformat:0 }}% · {{ entry.points }} pts</div>
     </div>
     {% empty %}
-    <div class="leader-row">
-      <div class="rank">-</div>
-      <div>No ranking data is available yet.</div>
-      <div>-</div>
-      <div>-</div>
-      <div>-</div>
-    </div>
+    <div class="leaderboard-empty"><i class="bi bi-trophy" aria-hidden="true"></i><strong>Solve a problem to appear here</strong><a href="{% url 'blog:practice' %}">Browse problems</a></div>
     {% endfor %}
   </div>
-  {% if leaderboard.has_previous %}<a class="tool-btn"
-    href="?period={{ period }}&page={{ leaderboard.previous_page_number }}">Previous</a>{% endif %}
-  {% if leaderboard.has_next %}<a class="tool-btn"
-    href="?period={{ period }}&page={{ leaderboard.next_page_number }}">Next</a>{% endif %}
-  {% if current_rank %}<p style="color:#94a3b8; margin-top:14px;">Your rank: #{{ current_rank }}</p>{% endif %}
-</div>
+  {% if leaderboard.paginator.num_pages > 1 %}<nav class="practice-pagination" aria-label="Leaderboard pages">{% if leaderboard.has_previous %}<a href="?period={{ period }}&page={{ leaderboard.previous_page_number }}">Prev</a>{% endif %}{% for link in page_links %}{% if link.ellipsis %}<span>…</span>{% else %}<a class="{% if link.current %}active{% endif %}" href="{{ link.url }}">{{ link.label }}</a>{% endif %}{% endfor %}{% if leaderboard.has_next %}<a href="?period={{ period }}&page={{ leaderboard.next_page_number }}">Next</a>{% endif %}</nav><p class="practice-pagination-summary">Showing {{ leaderboard.start_index }}-{{ leaderboard.end_index }} of {{ leaderboard.paginator.count }}</p>{% endif %}
+  {% if current_rank %}<p class="current-rank">Your rank: #{{ current_rank }}</p>{% endif %}
+</main>
 {% endblock %}

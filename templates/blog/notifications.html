@@ -1,9 +1,7 @@
 {% extends "blog/base.html" %}
 {% load static %}
 
-{% block title %}
-Notifications | {{ SITE_NAME }}
-{% endblock %}
+{% block title %}{% if follow_requests_page %}Follow Requests{% else %}Notifications{% endif %} | {{ SITE_NAME }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -26,7 +24,7 @@ Notifications | {{ SITE_NAME }}
         align-items: center;
         gap: 8px;
         color: #6d5ef3;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 800;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -148,7 +146,7 @@ Notifications | {{ SITE_NAME }}
         border-radius: 999px;
         background: #eef2ff;
         color: #3749d3;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         letter-spacing: 0.03em;
         text-transform: uppercase;
@@ -260,25 +258,59 @@ Notifications | {{ SITE_NAME }}
     <header class="notifications-header">
         <div>
             <div class="notifications-eyebrow"><i class="bi bi-bell-fill"></i> Updates</div>
-            <h1>Notifications</h1>
+            <h1>{% if follow_requests_page %}Follow Requests{% else %}Notifications{% endif %}</h1>
             <p>Stay updated with your {{ SITE_NAME }} activity.</p>
         </div>
     </header>
 
     <div class="notification-shell">
         <div class="notification-toolbar">
-            <h2>Recent Notifications</h2>
-            <form method="post" action="{% url 'blog:notifications' %}">
+            <h2>{% if follow_requests_page %}Pending Follow Requests{% else %}Recent Notifications{% endif %}</h2>
+            {% if follow_requests_page %}
+            <form method="post" action="{% url 'blog:follow_requests' %}" id="bulkFollowRequests">
                 {% csrf_token %}
-                <input type="hidden" name="mark_all_read" value="1">
-                <button type="submit" class="mark-read">Mark all as read</button>
+                <button type="submit" name="bulk_action" value="accept" class="mark-read">Accept selected</button>
+                <button type="submit" name="bulk_action" value="reject" class="mark-read">Reject selected</button>
             </form>
+            {% else %}
+            <form method="post" action="{% url 'blog:notifications' %}">{% csrf_token %}<input type="hidden" name="mark_all_read" value="1"><button type="submit" class="mark-read">Mark all as read</button></form>
+            {% endif %}
         </div>
 
-        {% if notifications %}
+        {% if follow_requests_page %}
+            {% for follow_request in follow_requests %}
+            <article class="notification follow-request-item">
+                <label><input type="checkbox" name="request_ids" value="{{ follow_request.id }}" form="bulkFollowRequests" aria-label="Select request from @{{ follow_request.sender.username }}"></label>
+                <a class="notification-actor-avatar" href="{% url 'blog:user_profile' follow_request.sender.username %}" aria-label="View {{ follow_request.sender.profile_data.display_name|default:follow_request.sender.username }}'s profile">
+                    {% if follow_request.sender.profile_data.profile_picture %}
+                    <img class="notification-icon" src="{{ follow_request.sender.profile_data.profile_picture.url }}" alt="" aria-hidden="true" style="object-fit:cover;">
+                    {% else %}
+                    <span class="notification-icon" aria-hidden="true">{{ follow_request.sender.username|first|upper }}</span>
+                    {% endif %}
+                </a>
+                <div class="notification-content">
+                    <h3><a href="{% url 'blog:user_profile' follow_request.sender.username %}">{{ follow_request.sender.profile_data.display_name|default:follow_request.sender.username }} · @{{ follow_request.sender.username|lower }}</a></h3>
+                    <span class="notification-type-label">Follow Request</span>
+                    <p>{{ follow_request.sender.profile_data.display_name|default:follow_request.sender.username }} wants to follow you.</p>
+                    <div class="notification-time">{{ follow_request.created_at|date:"M d, Y • h:i A" }}</div>
+                    <div class="notification-actions">
+                        <form method="post" action="{% url 'blog:accept_follow_request' follow_request.id %}">{% csrf_token %}<input type="hidden" name="return_to" value="follow_requests"><button type="submit">Accept</button></form>
+                        <form method="post" action="{% url 'blog:reject_follow_request' follow_request.id %}">{% csrf_token %}<input type="hidden" name="return_to" value="follow_requests"><button type="submit">Reject</button></form>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-person-plus"></i></div>
+                <h3>No pending follow requests</h3>
+                <p>New requests will appear here.</p>
+            </div>
+            {% endfor %}
+        {% elif notifications %}
             {% for notification in notifications %}
-            <article class="notification {% if not notification.is_read %}unread{% endif %}">
-                <a class="notification-actor-avatar" href="{% url 'blog:user_profile' notification.sender.username %}" aria-label="View {{ notification.sender.profile_data.display_name|default:notification.sender.username }}'s profile">
+            <article class="notification {% if not notification.is_read %}unread{% endif %}"
+                data-notification-id="{{ notification.id }}">
+                <a class="notification-actor-avatar" href="{% if notification.notification_type == 'FOLLOW_REQUEST' or notification.notification_type == 'FOLLOW_BACK' %}{% url 'blog:follow_requests' %}{% elif notification.notification_type == 'MESSAGE_REQUEST' %}{% url 'blog:messages' %}?tab=requests{% elif notification.notification_type == 'MESSAGE' %}{% url 'blog:messages' %}{% else %}{% url 'blog:user_profile' notification.sender.username %}{% endif %}" aria-label="View {{ notification.sender.profile_data.display_name|default:notification.sender.username }}'s profile">
                     {% if notification.sender.profile_data.profile_picture %}
                         <img class="notification-icon" src="{{ notification.sender.profile_data.profile_picture.url }}" alt="" aria-hidden="true" style="object-fit:cover;">
                     {% else %}
@@ -298,18 +330,22 @@ Notifications | {{ SITE_NAME }}
 
                 <div class="notification-content">
                     <h3>
-                        <a href="{% url 'blog:user_profile' notification.sender.username %}">
+                        <a href="{% if notification.notification_type == 'FOLLOW_REQUEST' or notification.notification_type == 'FOLLOW_BACK' %}{% url 'blog:follow_requests' %}{% elif notification.notification_type == 'MESSAGE_REQUEST' %}{% url 'blog:messages' %}?tab=requests{% elif notification.notification_type == 'MESSAGE' %}{% url 'blog:messages' %}{% elif notification.community_post %}{% url 'blog:community_post_detail' notification.community_post.pk %}{% elif notification.notification_type == 'COURSE' %}{% url 'blog:blogpage' %}{% else %}{% url 'blog:user_profile' notification.sender.username %}{% endif %}">
                             {{ notification.sender.profile_data.display_name|default:notification.sender.username }}
                             · @{{ notification.sender.username|lower }}
                         </a>
                     </h3>
 
-                    {% if notification.notification_type == 'FOLLOW_REQUEST' %}
+                    {% if notification.notification_type == 'FOLLOW_REQUEST' or notification.notification_type == 'FOLLOW_BACK' %}
                         <span class="notification-type-label">Follow Request</span>
+                    {% elif notification.notification_type == 'NEW_FOLLOWER' %}
+                        <span class="notification-type-label">New follower</span>
                     {% elif notification.notification_type == 'FOLLOW_ACCEPTED' %}
                         <span class="notification-type-label">Follow Request Accepted</span>
                     {% elif notification.notification_type == 'MESSAGE' %}
                         <span class="notification-type-label">Message</span>
+                    {% elif notification.notification_type == 'MESSAGE_REQUEST' %}
+                        <span class="notification-type-label">Message Request</span>
                     {% elif notification.notification_type == 'COMMENT' %}
                         <span class="notification-type-label">Comment</span>
                     {% elif notification.notification_type == 'LIKE' %}
@@ -365,4 +401,38 @@ Notifications | {{ SITE_NAME }}
         {% endif %}
     </div>
 </section>
+<script>
+    document.addEventListener("click", async function (event) {
+        const link = event.target.closest(".notification a");
+        if (!link || event.target.closest(".notification-actions")) return;
+        const item = link.closest("[data-notification-id]");
+        if (!item || !link.href) return;
+        event.preventDefault();
+        const token = document.cookie.split(";").map((part) => part.trim())
+            .find((part) => part.startsWith("csrftoken="));
+        const body = new URLSearchParams({
+            notification_id: item.dataset.notificationId,
+        });
+        try {
+            const response = await fetch("{% url 'blog:notifications' %}?format=json", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-CSRFToken": token ? decodeURIComponent(token.slice("csrftoken=".length)) : "",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body,
+            });
+            if (!response.ok) throw new Error("Could not mark this notification as read.");
+            item.classList.remove("unread");
+            item.querySelector(".unread-dot")?.remove();
+            document.dispatchEvent(new Event("vgrowhub:refresh-counts"));
+        } catch (error) {
+            console.warn(error.message);
+        } finally {
+            window.location.assign(link.href);
+        }
+    });
+</script>
 {% endblock %}

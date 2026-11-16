@@ -13,6 +13,32 @@
         margin: 0 auto;
     }
 
+    .profile-badge-case {
+        margin: 0 0 22px;
+        padding: 20px;
+        border: 1px solid #292d48;
+        border-radius: 16px;
+        background: #101321;
+    }
+
+    .profile-badge-case .dashboard-badge-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .profile-badge-case .dashboard-badge {
+        padding: 7px 10px;
+        border-radius: 99px;
+        background: rgba(118, 87, 255, .14);
+        font-size: 12px;
+    }
+
+    .profile-badge-case .is-locked {
+        opacity: .58;
+    }
+
 
     /* =====================================================
    PROFILE HERO
@@ -35,6 +61,9 @@
 
         margin-bottom: 22px;
     }
+
+    .user-profile-banner {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.2;}
+    .user-profile-main {position:relative;z-index:1;}
 
 
     .user-profile-main {
@@ -84,7 +113,7 @@
 
         color: #8878ff;
 
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 800;
 
         letter-spacing: 1.3px;
@@ -189,7 +218,7 @@
 
         color: #777e98;
 
-        font-size: 11px;
+        font-size: 12px;
     }
 
 
@@ -612,6 +641,7 @@
     ================================================== -->
 
     <section class="user-profile-hero">
+        {% if can_view_content and user_profile.profile_banner %}<img class="user-profile-banner" src="{{ user_profile.profile_banner.url }}" alt="" width="1100" height="220" loading="lazy">{% endif %}
 
         <div class="user-profile-main">
 
@@ -642,11 +672,11 @@
                 </h1>
                 <p>@{{ profile_user.username|lower }}</p>
 
-                <p>
-
-                    Developer • Learner • {{ SITE_NAME }} Member
-
-                </p>
+                {% if can_view_content %}
+                {% if user_profile.headline %}<p>{{ user_profile.headline }}</p>{% endif %}
+                {% if user_profile.location %}<p>{{ user_profile.location }}</p>{% endif %}
+                {% if user_profile.bio %}<p>{{ user_profile.bio }}</p>{% endif %}
+                {% endif %}
 
             </div>
 
@@ -687,11 +717,14 @@
                 </div>
                 {% elif is_following %}
 
-                <button type="button" class="profile-connect-btn profile-follow-btn following" data-action="unfollow"
-                    data-url="{% url 'blog:unfollow_user' profile_user.username %}">
-                    <i class="bi bi-person-check-fill"></i>
-                    Following
-                </button>
+                <details class="profile-follow-menu">
+                    <summary class="profile-connect-btn following"><i class="bi bi-person-check-fill"></i>Following <i class="bi bi-chevron-down"></i></summary>
+                    <div class="profile-follow-menu-items">
+                        <button type="button" class="profile-follow-btn" data-action="unfollow" data-url="{% url 'blog:unfollow_user' profile_user.username %}">Unfollow</button>
+                        <button type="button" class="profile-follow-btn" data-action="mute" data-url="{% url 'blog:toggle_follow_mute' profile_user.username %}">{% if is_muted %}Unmute{% else %}Mute{% endif %}</button>
+                        <form method="post" action="{% url 'blog:block_user' profile_user.username %}">{% csrf_token %}<button type="submit">Block</button></form>
+                    </div>
+                </details>
 
                 {% elif outgoing_pending %}
 
@@ -710,13 +743,13 @@
                 </button>
 
                 {% endif %}
-                <form method="post" action="{% url 'blog:block_user' profile_user.username %}">
+                {% if not is_following %}<form method="post" action="{% url 'blog:block_user' profile_user.username %}">
                     {% csrf_token %}
                     <button type="submit" class="profile-connect-btn">
                         <i class="bi bi-person-slash"></i>
                         Block
                     </button>
-                </form>
+                </form>{% endif %}
                 {% endif %}
                 {% endif %}
 
@@ -731,7 +764,7 @@
         <div class="profile-stats">
 
 
-            <a href="{% url 'blog:followers_list' profile_user.username %}" class="profile-stat profile-stat-link">
+            <a href="#followers" data-follow-list="followers" data-endpoint="{% url 'blog:followers_list' profile_user.username %}" class="profile-stat profile-stat-link">
 
                 <strong>
                     {{ follower_count }}
@@ -743,7 +776,7 @@
 
             </a>
 
-            <a href="{% url 'blog:following_list' profile_user.username %}" class="profile-stat profile-stat-link">
+            <a href="#following" data-follow-list="following" data-endpoint="{% url 'blog:following_list' profile_user.username %}" class="profile-stat profile-stat-link">
                 <strong>
                     {{ following_count }}
                 </strong>
@@ -754,20 +787,7 @@
             </a>
 
 
-            <div class="profile-stat">
-
-                <strong>
-                    {{ profile_like_count }}
-                </strong>
-
-                <span>
-                    Profile Likes
-                </span>
-
-            </div>
-
-
-            <div class="profile-stat">
+            <a href="#projects" class="profile-stat profile-stat-link">
 
                 <strong>
                     {{ project_count }}
@@ -777,10 +797,10 @@
                     Projects
                 </span>
 
-            </div>
+            </a>
 
 
-            <div class="profile-stat">
+            <a href="#posts" class="profile-stat profile-stat-link">
 
                 <strong>
                     {{ post_count }}
@@ -790,13 +810,26 @@
                     Posts
                 </span>
 
-            </div>
+            </a>
 
+            <div class="profile-stat">
+                <strong>{{ daily_leader_wins|default:0 }}</strong>
+                <span>Daily Leader wins</span>
+            </div>
 
         </div>
 
     </section>
 
+    {% if can_view_content and show_public_badges %}
+    <section class="profile-card profile-badge-case">
+        <div class="profile-card-header">
+            <i class="bi bi-award"></i>
+            <h2>Badge case</h2>
+        </div>
+        {% include "blog/includes/badge_case.html" with badges=badges %}
+    </section>
+    {% endif %}
 
     <!-- =================================================
          CONTENT
@@ -823,7 +856,7 @@
 
             <!-- PROJECTS -->
 
-            <section class="profile-card">
+            <section class="profile-card" id="projects">
 
                 <div class="profile-card-header">
 
@@ -877,7 +910,7 @@
 
             <!-- POSTS -->
 
-            <section class="profile-card">
+            <section class="profile-card" id="posts">
 
                 <div class="profile-card-header">
 
@@ -1015,14 +1048,336 @@
 
 </div>
 
+<div class="follow-list-modal" id="followListModal" hidden>
+    <section class="follow-list-dialog" role="dialog" aria-modal="true" aria-labelledby="followListTitle" tabindex="-1">
+        <header class="follow-list-header">
+            <h2 id="followListTitle">Followers</h2>
+            <button class="follow-list-action" type="button" data-close-follow-list aria-label="Close">Close</button>
+        </header>
+        <div class="follow-list-tabs" role="tablist">
+            <button class="follow-list-tab" type="button" role="tab" data-list-tab="followers" aria-selected="false">Followers</button>
+            <button class="follow-list-tab" type="button" role="tab" data-list-tab="following" aria-selected="false">Following</button>
+        </div>
+        <label class="follow-list-search">
+            <span class="visually-hidden">Search followers and following</span>
+            <input type="search" id="followListSearch" placeholder="Search people">
+        </label>
+        <div class="follow-list-rows" id="followListRows" aria-live="polite"></div>
+    </section>
+</div>
+
 {% endblock %}
 
 
 {% block extra_js %}
 
+<style>
+    .follow-list-modal[hidden] { display: none; }
+    .profile-follow-menu { position: relative; }
+    .profile-follow-menu summary { list-style: none; cursor: pointer; }
+    .profile-follow-menu summary::-webkit-details-marker { display: none; }
+    .profile-follow-menu-items { position: absolute; z-index: 2; top: 100%; right: 0; min-width: 150px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: 0 10px 25px rgba(15, 23, 42, .16); }
+    .profile-follow-menu-items button { width: 100%; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
+    .profile-follow-menu-items button:hover { background: var(--surface-2); }
+    .follow-list-modal { position: fixed; z-index: 1600; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(15, 23, 42, .55); }
+    .follow-list-dialog { display: flex; flex-direction: column; width: min(560px, 100%); max-height: min(720px, 90vh); overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); box-shadow: 0 24px 70px rgba(15, 23, 42, .24); }
+    .follow-list-header, .follow-list-tabs, .follow-list-search { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .follow-list-header { display: flex; align-items: center; justify-content: space-between; }
+    .follow-list-header h2 { margin: 0; font-size: 20px; }
+    .follow-list-tabs { display: flex; gap: 8px; }
+    .follow-list-tab { min-height: 40px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface-2); cursor: pointer; }
+    .follow-list-tab[aria-selected="true"] { color: #fff; background: var(--primary); }
+    .follow-list-search input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface); }
+    .follow-list-rows { min-height: 180px; overflow-y: auto; padding: 8px 16px; }
+    .follow-list-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .follow-list-row img, .follow-list-avatar { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%; object-fit: cover; }
+    .follow-list-avatar { display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-soft-text); font-weight: 700; }
+    .follow-list-user { min-width: 0; flex: 1; }
+    .follow-list-user strong, .follow-list-user small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .follow-list-user small { color: var(--muted); }
+    .follow-list-action { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface); cursor: pointer; }
+    @media (max-width: 600px) {
+        .follow-list-modal { padding: 0; }
+        .follow-list-dialog { width: 100%; height: 100%; max-height: none; border: 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); }
+        .follow-list-rows { flex: 1; }
+    }
+</style>
 <script>
 
     document.addEventListener("DOMContentLoaded", function () {
+        const followListModal = document.getElementById('followListModal');
+        const followListRows = document.getElementById('followListRows');
+        const followListSearch = document.getElementById('followListSearch');
+        const followListTabs = Array.from(document.querySelectorAll('[data-list-tab]'));
+        let activeListType = 'followers';
+        let listEndpoint = '';
+        let nextPage = 1;
+        let listHasNext = false;
+        let listLoading = false;
+        let listQueryTimer = null;
+
+        function loadFollowList(reset) {
+            if (!followListRows || !listEndpoint || listLoading) return;
+            if (reset) {
+                nextPage = 1;
+                listHasNext = false;
+                followListRows.replaceChildren();
+            }
+            if (!reset && !listHasNext) return;
+            listLoading = true;
+            const params = new URLSearchParams({
+                format: 'json',
+                page: String(nextPage),
+                q: followListSearch?.value.trim() || '',
+            });
+            fetch(`${listEndpoint}?${params}`, { credentials: 'same-origin', cache: 'no-store' })
+                .then((response) => response.ok ? response.json() : Promise.reject(new Error('This list is unavailable.')))
+                .then((data) => {
+                    data.items.forEach((person) => {
+                        const row = document.createElement('div');
+                        row.className = 'follow-list-row';
+                        const avatar = person.avatar ? document.createElement('img') : document.createElement('span');
+                        if (person.avatar) avatar.src = person.avatar;
+                        else {
+                            avatar.className = 'follow-list-avatar';
+                            avatar.textContent = (person.name || person.username || '?').slice(0, 1).toUpperCase();
+                        }
+                        avatar.alt = person.avatar ? '' : '';
+                        const details = document.createElement('a');
+                        details.className = 'follow-list-user';
+                        details.href = person.profile_url;
+                        const name = document.createElement('strong');
+                        name.textContent = person.name;
+                        const username = document.createElement('small');
+                        username.textContent = `@${person.username}`;
+                        details.append(name, username);
+                        if (person.mutual_text) {
+                            const mutual = document.createElement('small');
+                            mutual.textContent = person.mutual_text;
+                            details.append(mutual);
+                        }
+                        row.append(avatar, details);
+
+                        const action = document.createElement('button');
+                        action.type = 'button';
+                        action.className = 'follow-list-action';
+                        action.dataset.followPerson = 'true';
+                        action.dataset.status = person.status;
+                        action.dataset.url = person.status === 'requested'
+                            ? person.cancel_url
+                            : person.status === 'following'
+                                ? person.unfollow_url
+                                : person.relationship_url;
+                        if (person.can_remove) {
+                            action.textContent = 'Remove';
+                            action.dataset.url = person.remove_url;
+                            action.dataset.status = 'remove';
+                        } else if (person.can_unfollow) {
+                            action.textContent = 'Following';
+                            action.dataset.url = person.unfollow_url;
+                            action.dataset.status = 'following';
+                        } else if (person.status === 'following') {
+                            action.remove();
+                            const menu = document.createElement('details');
+                            menu.className = 'follow-list-menu';
+                            const summary = document.createElement('summary');
+                            summary.className = 'follow-list-action';
+                            summary.textContent = 'Following';
+                            const options = document.createElement('div');
+                            options.className = 'profile-follow-menu-items';
+                            [
+                                ['Unfollow', person.unfollow_url, 'unfollow'],
+                                ['Mute', person.mute_url, 'mute'],
+                                ['Block', person.block_url, 'block'],
+                            ].forEach(([label, url, type]) => {
+                                const option = document.createElement('button');
+                                option.type = 'button';
+                                option.textContent = label;
+                                option.dataset.followRowAction = type;
+                                option.dataset.url = url;
+                                options.append(option);
+                            });
+                            menu.append(summary, options);
+                            row.append(menu);
+                        } else if (person.status === 'incoming') {
+                            action.remove();
+                            const actions = document.createElement('div');
+                            actions.className = 'follow-list-incoming-actions';
+                            ['accept', 'reject'].forEach((type) => {
+                                const option = document.createElement('button');
+                                option.type = 'button';
+                                option.className = 'follow-list-action';
+                                option.textContent = type === 'accept' ? 'Accept' : 'Reject';
+                                option.dataset.followRowAction = type;
+                                option.dataset.url = type === 'accept'
+                                    ? person.accept_url
+                                    : person.reject_url;
+                                actions.append(option);
+                            });
+                            row.append(actions);
+                        } else {
+                            action.textContent = person.status === 'following'
+                                ? 'Following'
+                                : person.status === 'requested'
+                                    ? 'Requested'
+                                    : person.status === 'follow_back'
+                                        ? 'Follow back'
+                                        : 'Follow';
+                            if (person.status === 'self') action.hidden = true;
+                        }
+                        action.dataset.followUrl = person.relationship_url;
+                        action.dataset.cancelUrl = person.cancel_url;
+                        action.dataset.unfollowUrl = person.unfollow_url;
+                        row.append(action);
+                        followListRows.append(row);
+                    });
+                    listHasNext = data.has_next;
+                    if (listHasNext) nextPage = data.next_page;
+                    if (!followListRows.children.length) {
+                        const empty = document.createElement('p');
+                        empty.className = 'follow-list-empty';
+                        empty.textContent = 'No people found.';
+                        followListRows.append(empty);
+                    }
+                })
+                .catch((error) => {
+                    const message = document.createElement('p');
+                    message.setAttribute('role', 'alert');
+                    message.textContent = error.message;
+                    followListRows.append(message);
+                })
+                .finally(() => { listLoading = false; });
+        }
+
+        function openFollowList(type, endpoint) {
+            activeListType = type;
+            listEndpoint = endpoint;
+            followListModal.hidden = false;
+            document.body.classList.add('follow-list-open');
+            followListTabs.forEach((tab) => {
+                tab.setAttribute('aria-selected', String(tab.dataset.listTab === type));
+            });
+            document.getElementById('followListTitle').textContent = type === 'followers' ? 'Followers' : 'Following';
+            if (followListSearch) followListSearch.value = '';
+            loadFollowList(true);
+            followListModal.querySelector('[role="dialog"]').focus();
+        }
+
+        document.querySelectorAll('[data-follow-list]').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                openFollowList(link.dataset.followList, link.dataset.endpoint);
+            });
+        });
+        followListTabs.forEach((tab) => tab.addEventListener('click', () => {
+            activeListType = tab.dataset.listTab;
+            const link = document.querySelector(`[data-follow-list="${activeListType}"]`);
+            if (link) openFollowList(activeListType, link.dataset.endpoint);
+        }));
+        followListModal.addEventListener('click', (event) => {
+            if (event.target === followListModal || event.target.closest('[data-close-follow-list]')) {
+                followListModal.hidden = true;
+                document.body.classList.remove('follow-list-open');
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && followListModal && !followListModal.hidden) {
+                followListModal.hidden = true;
+                document.body.classList.remove('follow-list-open');
+            }
+        });
+        followListRows?.addEventListener('scroll', () => {
+            if (followListRows.scrollTop + followListRows.clientHeight >= followListRows.scrollHeight - 80) {
+                loadFollowList(false);
+            }
+        });
+        followListSearch?.addEventListener('input', () => {
+            window.clearTimeout(listQueryTimer);
+            listQueryTimer = window.setTimeout(() => loadFollowList(true), 220);
+        });
+        let listTouchStartX = null;
+        followListModal.addEventListener('touchstart', (event) => {
+            if (event.touches.length) listTouchStartX = event.touches[0].clientX;
+        }, { passive: true });
+        followListModal.addEventListener('touchend', (event) => {
+            if (listTouchStartX === null || !event.changedTouches.length) return;
+            const deltaX = event.changedTouches[0].clientX - listTouchStartX;
+            listTouchStartX = null;
+            if (Math.abs(deltaX) < 80) return;
+            const type = deltaX < 0 ? 'following' : 'followers';
+            const link = document.querySelector(`[data-follow-list="${type}"]`);
+            if (link) openFollowList(type, link.dataset.endpoint);
+        }, { passive: true });
+
+        followListRows?.addEventListener('click', async (event) => {
+            const rowAction = event.target.closest('[data-follow-row-action]');
+            if (rowAction && !rowAction.disabled) {
+                const originalText = rowAction.textContent;
+                rowAction.disabled = true;
+                try {
+                    const response = await fetch(rowAction.dataset.url, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                    });
+                    if (!response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        throw new Error(data.error || 'Could not update this relationship.');
+                    }
+                    if (['unfollow', 'block', 'accept', 'reject'].includes(rowAction.dataset.followRowAction)) {
+                        rowAction.closest('.follow-list-row')?.remove();
+                    } else if (rowAction.dataset.followRowAction === 'mute') {
+                        const data = await response.json();
+                        rowAction.textContent = data.is_muted ? 'Unmute' : 'Mute';
+                        rowAction.dataset.followRowAction = 'mute';
+                    }
+                } catch (error) {
+                    rowAction.textContent = originalText;
+                    window.alert(error.message);
+                } finally {
+                    rowAction.disabled = false;
+                }
+                return;
+            }
+            const action = event.target.closest('[data-follow-person]');
+            if (!action || action.disabled) return;
+            const originalStatus = action.dataset.status;
+            const originalText = action.textContent;
+            const targetStatus = originalStatus === 'requested' ? 'follow' : 'requested';
+            action.disabled = true;
+            action.dataset.status = targetStatus;
+            action.textContent = targetStatus === 'requested' ? 'Requested' : 'Follow';
+            try {
+                const response = await fetch(action.dataset.url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCookie('csrftoken') },
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Could not update follow status.');
+                if (originalStatus === 'remove' || originalStatus === 'following') {
+                    action.closest('.follow-list-row')?.remove();
+                } else if (originalStatus !== 'requested') {
+                    const accepted = data.status === 'ACCEPTED';
+                    action.dataset.status = accepted ? 'following' : 'requested';
+                    action.dataset.url = accepted ? action.dataset.unfollowUrl : action.dataset.cancelUrl;
+                    action.textContent = accepted ? 'Following' : 'Requested';
+                } else {
+                    action.dataset.status = 'follow';
+                    action.dataset.url = action.dataset.followUrl;
+                    action.textContent = 'Follow';
+                }
+            } catch (error) {
+                action.dataset.status = originalStatus;
+                action.textContent = originalText;
+                window.alert(error.message);
+            } finally {
+                action.disabled = false;
+            }
+        });
 
         document.addEventListener("click", async function (event) {
 
@@ -1140,6 +1495,10 @@
 
                 else if (action === "unfollow") {
                     window.location.reload();
+                    return;
+                }
+                else if (action === "mute") {
+                    button.textContent = data.is_muted ? "Unmute" : "Mute";
                     return;
                 }
 

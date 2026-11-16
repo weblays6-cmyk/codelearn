@@ -4,7 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <style>
-.practice-subpage{max-width:1100px;margin:0 auto;padding:28px 0 40px}.set-header,.problem-row{background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:18px;margin-bottom:12px}.problem-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center}.state{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:rgba(148,163,184,.12)}.tool-btn{text-decoration:none}.problem-row p{color:#94a3b8;margin:6px 0 0}@media(max-width:650px){.problem-row{grid-template-columns:36px 1fr}.problem-row>a{grid-column:2}}
+.practice-subpage{max-width:1100px;margin:0 auto;padding:28px 0 40px}.set-header,.problem-row{background:var(--surface,#fff);color:var(--text,#1f2937);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:0 12px 32px rgba(15,23,42,.08)}.problem-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center}.state{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:var(--surface-2,#f1f5f9);color:var(--text,#1f2937)}.tool-btn{text-decoration:none}.problem-row p{color:var(--muted,#64748b);margin:6px 0 0}@media(max-width:650px){.problem-row{grid-template-columns:36px 1fr}.problem-row>a{grid-column:2}}
 </style>
 {% endblock %}
 {% block content %}

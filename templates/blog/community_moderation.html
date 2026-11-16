@@ -1,0 +1,25 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Community moderation | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="page-container">
+    <h1>Community moderation</h1>
+    <p>Review reports and choose an action. Content is never removed automatically.</p>
+    {% for report in reports %}
+    <article class="card">
+        <p><strong>Reported by</strong> {{ report.reporter.username }} · {{ report.created_at }}</p>
+        <p><strong>Reason</strong> {{ report.reason }}</p>
+        {% if report.post %}<p><a href="{% url 'blog:community_post_detail' report.post_id %}">{{ report.post.title }}</a><br>{{ report.post.content|truncatechars:300 }}</p>{% else %}<p>{{ report.reply.content|truncatechars:300 }}</p>{% endif %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="report_type" value="community"><input type="hidden" name="report_id" value="{{ report.pk }}"><label>Moderator note <input name="note" maxlength="500"></label><button name="action" value="dismiss">Dismiss</button><button name="action" value="review">Mark reviewed</button><button name="action" value="hide">Hide content</button><button name="action" value="warn">Warn author</button><button name="action" value="delete">Delete content</button></form>
+    </article>
+    {% empty %}<p>No open community reports.</p>{% endfor %}
+    <h2>Project reports</h2>
+    {% for report in project_reports %}
+    <article class="card">
+        <p><strong>Reported by</strong> {{ report.reporter.username }} · {{ report.created_at }}</p><p><strong>Reason</strong> {{ report.reason }}</p><p><a href="{% url 'blog:project_detail' report.project_id %}">{{ report.project.title }}</a> — {{ report.description|truncatechars:300 }}</p>
+        <form method="post">{% csrf_token %}<input type="hidden" name="report_type" value="project"><input type="hidden" name="report_id" value="{{ report.pk }}"><label>Moderator note <input name="note" maxlength="500"></label><button name="action" value="dismiss">Dismiss</button><button name="action" value="review">Mark reviewed</button><button name="action" value="hide">Hide project</button><button name="action" value="warn">Warn owner</button><button name="action" value="delete">Delete project</button></form>
+    </article>
+    {% empty %}<p>No open project reports.</p>{% endfor %}
+</section>
+{% endblock %}

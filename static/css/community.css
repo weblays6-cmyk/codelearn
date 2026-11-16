@@ -40,7 +40,7 @@
 }
 
 .community-header h1 span {
-    color: var(--purple);
+    color: var(--primary);
 }
 
 .community-header p,
@@ -634,7 +634,7 @@
 }
 
 .community-reply-body time {
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .community-reply-body form {

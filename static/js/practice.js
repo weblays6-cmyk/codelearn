@@ -277,7 +277,6 @@
   };
 
   (window.PRACTICE_DATABASE_PROBLEMS || []).forEach((storedProblem, index) => {
-    if (PROBLEMS[storedProblem.slug]) return;
     const starterCode = storedProblem.starter_code || {};
     const visibleTests = (storedProblem.public_tests || []).map((testCase) => ({
       ...testCase,
@@ -317,6 +316,7 @@
       category: storedProblem.category,
     };
   });
+  const PRACTICE_PROBLEM_IDS = (window.PRACTICE_DATABASE_PROBLEMS || []).map((problem) => problem.slug);
 
   /* ===========================================================
      2. PERSISTED STATE (stands in for the UserProblemProgress /
@@ -624,22 +624,21 @@ def __build_tree(arr):
   const api = {
     // GET /api/problems?includeProgress=true
     async getProblems() {
-      return Object.keys(PROBLEMS).map((id) => ({ id, ...PROBLEMS[id], progress: getProgress(id) }));
+      return PRACTICE_PROBLEM_IDS.map((id) => ({ id, ...PROBLEMS[id], progress: getProgress(id) }));
     },
 
     // GET /api/users/me/progress
     async getProgress() {
-      const all = Object.keys(PROBLEMS).map((id) => getProgress(id));
       const byDifficulty = { Easy: { solved: 0, total: 0 }, Medium: { solved: 0, total: 0 }, Hard: { solved: 0, total: 0 } };
       let solved = 0, attempted = 0;
-      Object.keys(PROBLEMS).forEach((id) => {
+      PRACTICE_PROBLEM_IDS.forEach((id) => {
         const diff = PROBLEMS[id].difficulty;
         byDifficulty[diff].total += 1;
         const st = getProgress(id).status;
         if (st === "SOLVED") { solved += 1; byDifficulty[diff].solved += 1; }
         else if (st === "ATTEMPTED") attempted += 1;
       });
-      return { solved, attempted, total: Object.keys(PROBLEMS).length, byDifficulty };
+      return { solved, attempted, total: PRACTICE_PROBLEM_IDS.length, byDifficulty };
     },
 
     // GET /api/problems/{id}/submissions
@@ -756,71 +755,16 @@ def __build_tree(arr):
     let monacoReady = false;
     let submitInFlight = false;
 
-    function ensureBundledProblemCards() {
-      const categories = {
-        "longest-substring": "javascript",
-        "valid-bst": "django",
-        "valid-parentheses": "django",
-      };
-      const existingIds = new Set([...problemsContainer.querySelectorAll(".problem")].map((card) => card.dataset.id));
-      Object.entries(PROBLEMS).forEach(([id, problem]) => {
-        if (existingIds.has(id)) return;
-        const card = document.createElement("div");
-        card.className = "problem";
-        card.dataset.id = id;
-        card.dataset.category = categories[id] || problem.category || "python";
-        card.dataset.name = problem.title.replace(/^\d+\.\s*/, "").toLowerCase();
-
-        const icon = document.createElement("div");
-        icon.className = "problem-status pending-status";
-        icon.innerHTML = '<i class="bi bi-circle"></i>';
-        const info = document.createElement("div");
-        info.className = "problem-info";
-        const title = document.createElement("h3");
-        title.textContent = problem.title;
-        const description = document.createElement("p");
-        description.textContent = problem.description.replace(/<[^>]*>/g, "");
-        const tags = document.createElement("div");
-        tags.className = "tags";
-        problem.tags.forEach((tag) => {
-          const tagElement = document.createElement("span");
-          tagElement.className = "tag";
-          tagElement.textContent = tag;
-          tags.appendChild(tagElement);
-        });
-        info.append(title, description, tags);
-
-        const meta = document.createElement("div");
-        meta.className = "problem-meta";
-        const difficulty = document.createElement("span");
-        difficulty.className = `difficulty ${problem.difficulty.toLowerCase()}`;
-        difficulty.textContent = problem.difficulty.toUpperCase();
-        const progress = document.createElement("div");
-        progress.className = "solve-rate";
-        progress.textContent = "Not started";
-        meta.append(difficulty, progress);
-
-        const solveButton = document.createElement("button");
-        solveButton.className = "solve-btn";
-        solveButton.type = "button";
-        solveButton.textContent = "Solve";
-        card.append(icon, info, meta, solveButton);
-        problemsContainer.appendChild(card);
-      });
-      problemsContainer.querySelector(".empty-state")?.remove();
-    }
-
-    ensureBundledProblemCards();
-
     /* -------- topic filter options, built from PROBLEMS -------- */
     const allTopics = new Set();
-    Object.values(PROBLEMS).forEach((p) => p.tags.forEach((t) => allTopics.add(t)));
+    PRACTICE_PROBLEM_IDS.forEach((id) => PROBLEMS[id].tags.forEach((tag) => allTopics.add(tag)));
     [...allTopics].sort().forEach((topic) => {
       const opt = document.createElement("option");
       opt.value = topic;
       opt.textContent = topic;
       topicFilter.appendChild(opt);
     });
+    if (topicFilter.dataset.selected) topicFilter.value = topicFilter.dataset.selected;
 
     /* -------- list rendering: status + combined filters -------- */
 
@@ -866,7 +810,8 @@ def __build_tree(arr):
 
       // search
       const q = (problemSearch.value || "").toLowerCase().trim();
-      if (q && !el.dataset.name.includes(q)) return false;
+      const searchableText = (el.dataset.searchText || el.textContent).toLowerCase();
+      if (q && !(el.dataset.name || "").includes(q) && !searchableText.includes(q)) return false;
 
       if (!problem) {
         // Demo-only cards (not backed by PROBLEMS) skip difficulty/topic/status
@@ -897,12 +842,20 @@ def __build_tree(arr):
         el.style.display = show ? "grid" : "none";
         if (show) visibleCount++;
       });
+      document.querySelectorAll("[data-problem-summary]").forEach((summary) => {
+        summary.textContent = `Showing ${visibleCount} problem${visibleCount === 1 ? "" : "s"}`;
+      });
       let emptyMsg = problemsContainer.querySelector(".no-results");
-      if (visibleCount === 0) {
+      if (visibleCount === 0 && cards.length > 0) {
         if (!emptyMsg) {
           emptyMsg = document.createElement("div");
           emptyMsg.className = "no-results";
-          emptyMsg.textContent = "No problems match your filters.";
+          emptyMsg.textContent = "No matches. ";
+          const clearButton = document.createElement("button");
+          clearButton.type = "button";
+          clearButton.textContent = "Clear filters";
+          clearButton.addEventListener("click", () => filtersClear.click());
+          emptyMsg.appendChild(clearButton);
           problemsContainer.appendChild(emptyMsg);
         }
       } else if (emptyMsg) {
@@ -922,10 +875,12 @@ def __build_tree(arr):
       solvedEl.textContent = summary.solved;
       progressEl.textContent = summary.attempted;
       pendingEl.textContent = Math.max(0, pending);
+      const pendingNote = document.getElementById("pendingNote");
+      if (pendingNote) pendingNote.textContent = `${Math.max(0, pending)} remaining`;
 
       const totalSubmissions = submissions.length;
       const accepted = submissions.filter((s) => s.status === "ACCEPTED").length;
-      accuracyEl.textContent = totalSubmissions ? Math.round((accepted / totalSubmissions) * 100) + "%" : "—";
+      accuracyEl.textContent = totalSubmissions ? Math.round((accepted / totalSubmissions) * 100) + "%" : "0%";
 
       const legendSolved = document.getElementById("legendSolved");
       const legendProgress = document.getElementById("legendProgress");
@@ -980,6 +935,7 @@ def __build_tree(arr):
           reject(e);
         }
       });
+
     }
 
     let monacoInitPromise = null;
@@ -1433,5 +1389,17 @@ def __build_tree(arr):
     refreshDashboard();
     const requestedProblem = new URLSearchParams(window.location.search).get("problem");
     if (requestedProblem && PROBLEMS[requestedProblem]) openProblem(requestedProblem);
+  });
+  document.querySelectorAll("[data-challenge-countdown]").forEach((counter) => {
+    let remaining = Math.max(0, Number(counter.dataset.challengeCountdown) || 0);
+    const value = counter.querySelector("[data-countdown-value]");
+    const update = () => {
+      const hours = Math.floor(remaining / 3600);
+      const minutes = Math.floor((remaining % 3600) / 60);
+      if (value) value.textContent = `${hours}h ${minutes}m`;
+      if (remaining > 0) remaining -= 1;
+    };
+    update();
+    window.setInterval(update, 1000);
   });
 })();

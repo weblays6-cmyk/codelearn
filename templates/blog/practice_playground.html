@@ -102,7 +102,7 @@
         background: rgba(59, 130, 246, .12);
         border: 1px solid rgba(96, 165, 250, .18);
         color: #bfdbfe;
-        font-size: 0.72rem;
+        font-size: 12px;
     }
 
     @media (max-width: 900px) {
@@ -115,8 +115,9 @@
 
 {% block content %}
 <div class="playground-page solver" data-practice-editor data-run-url="{% url 'blog:playground_run' %}"
-    data-save-url="{% url 'blog:playground_save' %}" data-session-id="{% if session %}{{ session.pk }}{% endif %}">
+    data-save-url="{% url 'blog:playground_save' %}" data-session-action-url="{% url 'blog:playground_session_action' 0 %}" data-record-url="{% url 'blog:practice_record' %}" data-ai-url="{% url 'blog:ai_tutor' %}" data-session-id="{% if session %}{{ session.pk }}{% endif %}">
     {% csrf_token %}
+    {{ starter_codes|json_script:'playground-starter-codes' }}
     <header class="solver-topbar playground-topbar">
         <a href="{% url 'blog:practice' %}" class="solver-back"><i class="bi bi-arrow-left"></i> Back</a>
         <div class="solver-title playground-title">
@@ -124,7 +125,7 @@
                 value="{% if session %}{{ session.title }}{% else %}Untitled session{% endif %}">
         </div>
         <div class="solver-actions playground-actions">
-            <button class="btn-run" type="button" data-action="run" {% if not runner_configured %}disabled{% endif %}>
+            <button class="btn-run" type="button" data-action="run">
                 <i class="bi bi-play-fill"></i> <span data-action-label>Run</span>
             </button>
             <button class="btn-submit" type="button" data-action="save">
@@ -132,9 +133,6 @@
             </button>
         </div>
     </header>
-
-    {% if not runner_configured %}<p class="status-message" data-kind="error">Code execution is unavailable until a
-        sandbox runner and supported languages are configured.</p>{% endif %}
 
     <div class="solver-body">
         <section class="solver-left playground-left">
@@ -150,17 +148,20 @@
                     <p>Private workspace</p>
                     <div class="playground-meta">
                         <span>{% if session %}{{ session.language|title }}{% else %}New session{% endif %}</span>
-                        <span>{{ sessions|length }} saved session{{ sessions|length|pluralize }}</span>
+                        <span>{% if sessions %}{{ sessions|length }} saved session{{ sessions|length|pluralize }}{% else %}0 saved sessions{% endif %}</span>
                     </div>
                 </div>
                 <div class="tc-pane playground-description" data-playground-pane="sessions" hidden>
                     <div class="playground-sessions">
                         {% for item in sessions %}
-                        <a class="playground-session" href="?session={{ item.pk }}">
+                        <div class="playground-session">
+                            <a href="?session={{ item.pk }}">
                             <span>{{ item.title }}<small>{{ item.language|title }} · {{ item.updated_at|timesince }}
                                     ago</small></span>
-                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                        </a>
+                            </a>
+                            <button type="button" data-session-action="duplicate" data-session-id="{{ item.pk }}">Duplicate</button>
+                            <button type="button" data-session-action="delete" data-session-id="{{ item.pk }}">Delete</button>
+                        </div>
                         {% empty %}
                         <p class="playground-empty">No saved sessions yet.</p>
                         {% endfor %}
@@ -170,7 +171,7 @@
         </section>
 
         <section class="solver-right playground-right">
-            <div class="solver-panel editor-panel playground-editor">
+            <div class="solver-panel editor-panel playground-editor editor-loading" data-editor-loading>
                 <div class="editor-toolbar">
                     <div class="playground-language">
                         {% if languages %}
@@ -178,25 +179,30 @@
                             <select id="playgroundLanguage" class="editor-lang-select" data-language
                                 aria-label="Execution language">
                                 {% for item in languages %}
-                                <option value="{{ item }}" {% if item == selected_language %}selected{% endif %}>{{
-                                    item|title }}</option>
+                                <option value="{{ item }}" {% if item == selected_language %}selected{% endif %}>{{ item|title }}</option>
                                 {% endfor %}
                             </select>
                         </label>
-                        {% else %}
-                        <span class="editor-lang">No runner</span>
-                        {% endif %}
+                        <span data-runtime-status role="status">Loading runtime…</span>
                         <span class="editor-saved" data-run-status aria-live="polite"></span>
+                        {% else %}
+                        <p role="alert">No browser runner is available. Refresh to retry.</p>
+                        {% endif %}
                     </div>
                     <div class="playground-editor-tools">
                         <button class="editor-tool-btn" type="button" data-action="reset" title="Reset code">
                             <i class="bi bi-arrow-counterclockwise"></i> <span data-action-label>Reset</span>
                         </button>
+                        <button class="editor-tool-btn" type="button" data-action="format">Format</button>
+                        <button class="editor-tool-btn" type="button" data-action="fullscreen">Fullscreen</button>
+                        {% if session %}<button class="editor-tool-btn" type="button" data-session-action="duplicate" data-session-id="{{ session.pk }}">Duplicate</button><button class="editor-tool-btn" type="button" data-session-action="share" data-session-id="{{ session.pk }}">Share read-only</button><button class="editor-tool-btn" type="button" data-session-action="revoke" data-session-id="{{ session.pk }}">Revoke share</button><button class="editor-tool-btn" type="button" data-session-action="delete" data-session-id="{{ session.pk }}">Delete</button>{% endif %}
+                        <a class="editor-tool-btn" data-ai-explain href="{% url 'blog:ai_tutor' %}">Explain this error</a>
+                        <button class="editor-tool-btn" type="button" data-runtime-retry>Retry runtime</button>
                     </div>
                 </div>
                 <div data-monaco-host class="playground-monaco" hidden></div>
-                <textarea data-code-input spellcheck="false" aria-label="Source code" class="playground-code">{% if session %}{{ session.source_code }}{% else %}print("Hello {{ SITE_NAME }}")
-{% endif %}</textarea>
+                <textarea data-code-input spellcheck="false" aria-label="Source code" class="playground-code editor-loading-code">{{ initial_code }}</textarea>
+                <div class="playground-file-actions"><button type="button" data-file-download>Download</button><label>Import file<input type="file" data-file-import accept=".py,.js,.sql,.html,.txt,text/plain"></label><button type="button" data-save-snippet>Save snippet</button><select data-snippet-list aria-label="Saved snippets"><option value="">Snippet library</option></select><button type="button" data-load-snippet>Load snippet</button></div>
             </div>
 
             <section class="solver-panel testcase-panel playground-console">
@@ -220,6 +226,7 @@
                         <label>Output</label>
                         <pre class="playground-output" data-run-output
                             aria-live="polite">Run your code to see the result.</pre>
+                        <iframe data-html-preview title="HTML preview" sandbox="allow-scripts" hidden></iframe>
                     </div>
                 </div>
             </section>
@@ -229,6 +236,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-<script src="{% static 'js/practice_runner.js' %}"></script>
+<script src="{% static 'js/practice_browser_runner.js' %}" defer></script>
 {% endblock %}

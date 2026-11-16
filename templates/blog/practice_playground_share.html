@@ -1,0 +1,5 @@
+{% extends "blog/base.html" %}
+{% block title %}Shared code | {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<main class="practice-subpage"><section class="panel"><p class="eyebrow">Read-only shared session</p><h1>{{ session.title }}</h1><p>{{ session.language|title }}</p><pre class="playground-output">{{ session.source_code }}</pre>{% if session.stdin %}<h2>Standard input</h2><pre>{{ session.stdin }}</pre>{% endif %}</section></main>
+{% endblock %}

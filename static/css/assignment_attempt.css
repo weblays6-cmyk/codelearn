@@ -41,7 +41,7 @@
 .assignment-eyebrow,
 .result-kicker {
     color: #a78bfa;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.2px;
     text-transform: uppercase;
@@ -92,7 +92,7 @@
     display: block;
     margin-bottom: 7px;
     color: var(--attempt-dim);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .assignment-attempt-meta strong {

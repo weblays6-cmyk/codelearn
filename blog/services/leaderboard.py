@@ -52,7 +52,7 @@ def leaderboard_rows(period='all'):
             test_percentages[user_id].append(round(score * 100 / total_score, 1))
 
     user_ids = set(points_by_user) | set(solved_by_user) | set(tests_by_user)
-    users = User.objects.filter(id__in=user_ids).order_by('username')
+    users = User.objects.filter(id__in=user_ids).select_related('profile_data').order_by('username')
     rows = [
         {
             'user': user,

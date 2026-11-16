@@ -9,6 +9,34 @@
     padding-bottom: 40px;
 }
 
+.messages-page {
+    color: var(--text);
+}
+
+.messages-title-icon,
+.new-message-btn,
+.messages-empty-btn {
+    background: var(--primary);
+}
+
+.messages-eyebrow,
+.modal-eyebrow,
+.messages-empty-label,
+.messages-title-icon {
+    color: var(--primary);
+}
+
+.messages-header h1,
+.messages-page h2,
+.messages-page h3 {
+    color: var(--text);
+}
+
+.messages-header p,
+.messages-header-stat {
+    color: var(--muted);
+}
+
 .messages-header {
     display: flex;
     align-items: center;
@@ -41,7 +69,7 @@
     display: block;
     margin-bottom: 5px;
     color: #7c86ff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.5px;
 }
@@ -229,7 +257,7 @@
 .conversation-time {
     margin-left: auto;
     color: #6f7690;
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
 }
 
@@ -243,7 +271,7 @@
     border-radius: 999px;
     background: #5865f2;
     color: #fff;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
 }
 
@@ -254,7 +282,7 @@
     gap: 6px;
     margin-top: 5px;
     color: #8b93aa;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .conversation-preview {
@@ -464,7 +492,7 @@
     display: block;
     margin-top: 3px;
     color: #6f7790;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .user-search-item > i {
@@ -501,7 +529,7 @@
 .user-search-no-results span {
     display: block;
     margin-top: 4px;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 
@@ -661,4 +689,124 @@ body::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
+}
+
+.messages-title-icon {
+    border-color: var(--primary-soft);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.messages-eyebrow,
+.modal-eyebrow,
+.messages-empty-label {
+    color: var(--primary);
+}
+
+.new-message-btn,
+.messages-empty-btn {
+    border-color: var(--primary);
+    background: var(--primary);
+}
+
+.new-message-btn:hover,
+.messages-empty-btn:hover {
+    background: var(--primary-hover);
+}
+
+.messages-page .messages-header h1,
+.messages-page .conversation-top strong,
+.messages-page .messages-empty h2,
+.messages-page .messages-no-results h3,
+.messages-page .message-modal-header h2 {
+    color: var(--text);
+}
+
+.messages-page .messages-header p,
+.messages-page .messages-empty p,
+.messages-page .messages-no-results p {
+    color: var(--muted);
+}
+.messages-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 20px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.messages-tab {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.messages-tab.active {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.message-request-count {
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    border-radius: 10px;
+    color: var(--primary-soft-text);
+    background: var(--primary-soft);
+    font-size: 12px;
+}
+
+.message-requests-list {
+    padding: 0 18px 18px;
+}
+
+.message-request-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.message-request-item .conversation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.message-request-item p {
+    margin: 4px 0;
+    overflow: hidden;
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-request-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.message-request-actions button,
+.message-request-banner button {
+    min-height: 40px;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .message-request-item { align-items: flex-start; flex-wrap: wrap; }
+    .message-request-actions { width: 100%; padding-left: 54px; }
 }

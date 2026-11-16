@@ -1,0 +1,27 @@
+<dialog class="course-upgrade-dialog" id="courseUpgradeDialog" data-payments-available="{{ payments_available|yesno:'true,false' }}" aria-labelledby="courseUpgradeTitle">
+    <div class="course-upgrade-content">
+        <div class="course-upgrade-header">
+            <div><span class="goal-label">COURSE ACCESS</span><h2 id="courseUpgradeTitle">Choose how to learn</h2></div>
+            <button class="course-upgrade-close" type="button" data-close-upgrade aria-label="Close enrollment options"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+        <p class="course-upgrade-intro">Choose free lessons now or unlock every advanced lesson and video explanation.</p>
+        <strong class="course-upgrade-course-name" data-upgrade-course-name></strong>
+        <section class="course-option course-option--free" data-free-option>
+            <h3>Learn Free</h3>
+            <p>Beginner and intermediate lessons, with progress tracking.</p>
+            <ul><li>Beginner lessons</li><li>Intermediate lessons</li><li>Progress saved to your account</li></ul>
+            <form method="post" data-course-enroll-form>
+                {% csrf_token %}<input type="hidden" name="action" value="enroll_free">
+                <button class="course-option-action" type="submit">Learn Free</button>
+            </form>
+        </section>
+        <section class="course-option course-option--premium">
+            <h3>Go Premium</h3>
+            <p>Advanced lessons, video explanations, and all premium learning features.</p>
+            {% if premium_lessons %}<ul data-upgrade-lesson-list>{% for premium_lesson in premium_lessons %}<li>{{ premium_lesson.title }}{% if premium_lesson.video_url %} · Video lesson{% endif %}</li>{% endfor %}</ul>{% else %}<ul><li>All advanced lessons and video explanations</li></ul>{% endif %}
+            {% for plan in subscription_plans %}<button class="course-option-action course-premium-plan" type="button" data-plan-slug="{{ plan.slug }}" data-plan-name="{{ plan.name }}">Go Premium · {{ plan.price }} {{ plan.currency }} / {{ plan.duration_days }} days</button>{% empty %}<p>No active premium plans are available right now.</p>{% endfor %}
+            <p class="course-payment-status" data-payment-status role="status" aria-live="polite">{% if not payments_available %}Payments coming soon.{% endif %}</p>
+        </section>
+    </div>
+</dialog>
+<form hidden id="courseUpgradeCsrf">{% csrf_token %}</form>

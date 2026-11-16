@@ -6,11 +6,11 @@ Settings | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/settings.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page settings-page">
 
     <div class="container">
 
@@ -29,9 +29,18 @@ Settings | {{ SITE_NAME }}
 
         </div>
 
+        <nav class="settings-tabs" aria-label="Settings sections">
+            <a href="#settings-account">Account</a>
+            <a href="#settings-privacy">Privacy</a>
+            <a href="#settings-notifications">Notifications</a>
+            <a href="#settings-appearance">Appearance &amp; Learning</a>
+            <a href="#settings-security">Security</a>
+            <a href="#settings-app">App</a>
+            <a href="#settings-danger">Danger Zone</a>
+        </nav>
 
         <!-- ACCOUNT -->
-        <div class="settings-card">
+        <div class="settings-card" id="settings-account">
 
             <div class="section-title">
                 <h2>Account</h2>
@@ -55,24 +64,42 @@ Settings | {{ SITE_NAME }}
         </div>
 
 
-        <div class="settings-card">
+        <div class="settings-card" id="settings-privacy">
             <div class="section-title">
                 <h2>Account Privacy</h2>
                 <p>Choose whether your posts and projects are public.</p>
             </div>
 
-            <form method="post" action="{% url 'blog:settings' %}" class="setting-row">
+            <form method="post" action="{% url 'blog:settings' %}" class="privacy-settings-form">
                 {% csrf_token %}
-                <label class="setting-info" for="accountPrivacy">
-                    <span class="setting-icon"><i class="bi bi-shield-lock"></i></span>
-                    <span class="setting-text">
-                        <strong>Private account</strong>
-                        <span>Only approved followers can see your posts and projects.</span>
-                    </span>
+                <input type="hidden" name="privacy_settings" value="1">
+                <input type="hidden" name="approve_pending" id="approvePendingFollowRequests" value="false">
+                <div class="setting-row">
+                    <span class="setting-info"><span class="setting-icon"><i class="bi bi-shield-lock"></i></span><span class="setting-text"><strong>Private account</strong><span>Only approved followers can see your posts and projects.</span></span></span>
+                    <label class="switch" for="accountPrivacy"><input id="accountPrivacy" type="checkbox" name="is_private" {% if user_profile.is_private %}checked{% endif %}><span class="slider"></span></label>
+                </div>
+                <label class="setting-row" for="whoCanMessage">
+                    <span class="setting-info"><span class="setting-text"><strong>Who can message me</strong><span>Choose who may start a private conversation.</span></span></span>
+                    <select id="whoCanMessage" name="who_can_message" class="select-box">{% for value, label in user_profile.WHO_CAN_MESSAGE_CHOICES %}<option value="{{ value }}" {% if user_profile.who_can_message == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
                 </label>
-                <input id="accountPrivacy" type="checkbox" name="is_private"
-                    {% if user_profile.is_private %}checked{% endif %}>
-                <button type="submit" class="action-btn">Save</button>
+                <div class="setting-row">
+                    <span class="setting-info"><span class="setting-text"><strong>Show when I am online</strong><span>Let other members see your online status.</span></span></span>
+                    <input type="hidden" name="is_online_visible" value="off">
+                    <label class="switch" for="onlineVisibility"><input id="onlineVisibility" type="checkbox" name="is_online_visible" {% if user_profile.is_online_visible %}checked{% endif %}><span class="slider"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-info"><span class="setting-text"><strong>Weekly XP leaderboard</strong><span>Show your profile on the weekly leaderboard.</span></span></span>
+                    <label class="switch" for="leaderboardOptIn"><input id="leaderboardOptIn" type="checkbox" name="leaderboard_opt_in" {% if user_profile.leaderboard_opt_in %}checked{% endif %}><span class="slider"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-info"><span class="setting-text"><strong>Public achievements</strong><span>Show achievements and Daily Leader awards on your profile.</span></span></span>
+                    <label class="switch" for="publicBadges"><input id="publicBadges" type="checkbox" name="show_public_badges" {% if user_profile.show_public_badges %}checked{% endif %}><span class="slider"></span></label>
+                </div>
+                <label class="setting-row" for="dailyTaskGoal">
+                    <span class="setting-info"><span class="setting-text"><strong>Daily task goal</strong><span>Choose the number of tasks you aim to complete each day.</span></span></span>
+                    <select id="dailyTaskGoal" name="daily_task_goal" class="select-box">{% for value, label in user_profile.DAILY_TASK_GOAL_CHOICES %}<option value="{{ value }}" {% if user_profile.daily_task_goal == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+                </label>
+                <div class="setting-row privacy-save-row"><span></span><button type="submit" class="action-btn primary-btn">Save</button></div>
             </form>
         </div>
 
@@ -93,7 +120,36 @@ Settings | {{ SITE_NAME }}
             </div>
         </div>
 
-        <div class="settings-card danger-zone">
+        <div class="settings-card" id="settings-notifications">
+            <div class="section-title"><h2>Notifications</h2><p>Choose which in-app alerts you receive. Email notices follow the email preference.</p></div>
+            <form method="post" action="{% url 'blog:settings' %}">
+                {% csrf_token %}<input type="hidden" name="notification_preferences" value="1">
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Follows and requests</strong><span>Get alerts when someone follows you or sends a request.</span></span></span><span class="switch"><input type="checkbox" name="notify_follows" {% if user_profile.notify_follows %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Messages</strong><span>Get alerts for new private messages.</span></span></span><span class="switch"><input type="checkbox" name="notify_messages" {% if user_profile.notify_messages %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Community replies and mentions</strong><span>Get alerts for replies and mentions.</span></span></span><span class="switch"><input type="checkbox" name="notify_community" {% if user_profile.notify_community %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Assignments</strong><span>Get reminders about assigned work.</span></span></span><span class="switch"><input type="checkbox" name="notify_assignments" {% if user_profile.notify_assignments %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>System notifications</strong><span>Get important account and platform updates.</span></span></span><span class="switch"><input type="checkbox" name="notify_system" {% if user_profile.notify_system %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Email notifications</strong><span>Receive eligible notices by email.</span></span></span><span class="switch"><input type="checkbox" name="email_notifications" {% if user_profile.email_notifications %}checked{% endif %}><span class="slider"></span></span></label>
+                <label class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Desktop notifications</strong><span>Show browser notifications when available.</span></span></span><span class="switch"><input type="checkbox" name="desktop_notifications" {% if user_profile.desktop_notifications %}checked{% endif %}><span class="slider"></span></span></label>
+                <div class="quiet-hours-row">
+                    <label for="quietStart">From<input id="quietStart" type="time" name="quiet_hours_start" value="{{ user_profile.quiet_hours_start|time:'H:i' }}"></label>
+                    <label for="quietEnd">To<input id="quietEnd" type="time" name="quiet_hours_end" value="{{ user_profile.quiet_hours_end|time:'H:i' }}"></label>
+                </div>
+                <div class="settings-form-footer"><button type="submit" class="action-btn primary-btn">Save notification preferences</button></div>
+            </form>
+        </div>
+
+        <div class="settings-card" id="settings-appearance">
+            <div class="section-title"><h2>Appearance and Learning</h2><p>Adjust readability and daily learning goals.</p></div>
+            <form method="post" action="{% url 'blog:settings' %}" class="appearance-settings-form">{% csrf_token %}<input type="hidden" name="appearance_settings" value="1">
+                <label class="setting-row font-size-row" for="fontSize"><span class="setting-info"><span class="setting-text"><strong>Font size</strong><span>Adjust text size across the site.</span></span></span><select id="fontSize" name="font_size" class="select-box"><option value="small" {% if user_profile.font_size == 'small' %}selected{% endif %}>Small</option><option value="default" {% if user_profile.font_size == 'default' %}selected{% endif %}>Default</option><option value="large" {% if user_profile.font_size == 'large' %}selected{% endif %}>Large</option></select></label>
+                <div class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Reduce motion</strong><span>Limit animations and motion effects.</span></span></span><label class="switch" for="reduceMotion"><input id="reduceMotion" type="checkbox" name="reduce_motion" {% if user_profile.reduce_motion %}checked{% endif %}><span class="slider"></span></label></div>
+                <div class="setting-row"><span class="setting-info"><span class="setting-text"><strong>Swipe navigation</strong><span>Swipe between pages on narrow touch screens.</span></span></span><label class="switch" for="appearanceSwipeNavigation"><input id="appearanceSwipeNavigation" class="setting-feature-toggle" type="checkbox" name="swipe_navigation" data-feature-toggle="swipe-navigation" {% if user_profile.swipe_navigation %}checked{% endif %}><span class="slider"></span></label></div>
+                <div class="settings-form-footer"><button type="submit" class="action-btn primary-btn">Save preferences</button></div>
+            </form>
+        </div>
+
+        <div class="settings-card danger-zone" id="settings-danger">
             <div class="section-title">
                 <h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Danger Zone</h2>
                 <p>Account recovery is available for 30 days after deactivation or a deletion request.</p>
@@ -250,7 +306,7 @@ Settings | {{ SITE_NAME }}
 
 
         <!-- PREFERENCES -->
-        <div class="settings-card">
+        <div class="settings-card" id="settings-preferences">
 
             <div class="section-title">
                 <h2>Preferences</h2>
@@ -258,51 +314,48 @@ Settings | {{ SITE_NAME }}
             </div>
 
 
-            <!-- Notifications -->
+            <!-- Notification sounds -->
             <div class="setting-row">
-
                 <div class="setting-info">
-
                     <div class="setting-icon">
                         <i class="bi bi-bell"></i>
                     </div>
-
                     <div class="setting-text">
-                        <h3>Notifications</h3>
-                        <p>Receive learning and course notifications.</p>
+                        <h3>Notification sound</h3>
+                        <p>Play a short chime when a notification arrives.</p>
                     </div>
-
                 </div>
-
-                <label class="switch">
-                    <input type="checkbox" checked>
+                <label class="switch" for="notificationSoundToggle">
+                    <input class="setting-sound-toggle" id="notificationSoundToggle" type="checkbox" data-sound-toggle="notification_sound" {% if user_profile.notification_sound %}checked{% endif %}>
                     <span class="slider"></span>
                 </label>
-
             </div>
 
-
-            <!-- Email -->
             <div class="setting-row">
-
                 <div class="setting-info">
-
                     <div class="setting-icon">
-                        <i class="bi bi-envelope"></i>
+                        <i class="bi bi-chat-dots"></i>
                     </div>
-
                     <div class="setting-text">
-                        <h3>Email Updates</h3>
-                        <p>Receive important updates through email.</p>
+                        <h3>Message sound</h3>
+                        <p>Play a short chime when an unread message arrives.</p>
                     </div>
-
                 </div>
-
-                <label class="switch">
-                    <input type="checkbox" checked>
+                <label class="switch" for="messageSoundToggle">
+                    <input class="setting-sound-toggle" id="messageSoundToggle" type="checkbox" data-sound-toggle="message_sound" {% if user_profile.message_sound %}checked{% endif %}>
                     <span class="slider"></span>
                 </label>
+            </div>
 
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-icon"><i class="bi bi-volume-up"></i></div>
+                    <div class="setting-text"><h3>Sound and desktop alerts</h3><p>Test your chime or explicitly enable browser notifications.</p></div>
+                </div>
+                <div class="setting-actions">
+                    <button class="action-btn" id="testNotificationSound" type="button">Play test sound</button>
+                    <button class="action-btn" id="enableDesktopNotifications" type="button">Enable desktop notifications</button>
+                </div>
             </div>
 
 
@@ -329,11 +382,30 @@ Settings | {{ SITE_NAME }}
 
             </div>
 
+            {% if DARK_THEME_ENABLED %}
+            <form method="post" action="{% url 'blog:settings' %}" class="setting-row appearance-row">
+                {% csrf_token %}
+                <div class="setting-info">
+                    <span class="setting-icon"><i class="bi bi-circle-half"></i></span>
+                    <span class="setting-text">
+                        <strong>Appearance</strong>
+                        <span>Choose Light, Dark, or follow your system setting.</span>
+                    </span>
+                </div>
+                <select class="select-box" name="theme_preference" data-theme-choice aria-label="Appearance theme">
+                    <option value="light" {% if user_profile.theme_preference == 'light' %}selected{% endif %}>Light</option>
+                    <option value="dark" {% if user_profile.theme_preference == 'dark' %}selected{% endif %}>Dark</option>
+                    <option value="system" {% if user_profile.theme_preference == 'system' %}selected{% endif %}>System</option>
+                </select>
+                <button class="action-btn primary-btn" type="submit">Save</button>
+            </form>
+            {% endif %}
+
         </div>
 
 
         <!-- SECURITY -->
-        <div class="settings-card">
+        <div class="settings-card" id="settings-security">
 
             <div class="section-title">
                 <h2>Security</h2>
@@ -354,39 +426,82 @@ Settings | {{ SITE_NAME }}
                         <p>Change your account password.</p>
                     </div>
 
-                </div>
+                        </div>
 
                 <a class="action-btn" href="{% url 'blog:change_password' %}">
-                    Change
+                    Change password
                 </a>
 
             </div>
 
-
-            <div class="setting-row">
-
-                <div class="setting-info">
-
-                    <div class="setting-icon">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </div>
-
-                    <div class="setting-text">
-                        <h3>Logout</h3>
-                        <p>Sign out from your {{ SITE_NAME }} account.</p>
-                    </div>
-
+            <section class="active-devices" aria-labelledby="activeDevicesTitle">
+                <div class="device-security-summary">
+                    <strong id="activeDevicesTitle">Active devices</strong>
+                    <span class="device-limit-chip">{{ active_device_count|default:0 }} of {{ device_limit|default:1 }} devices used · {{ user_profile.get_plan_display }}</span>
                 </div>
-
-                <form method="POST" action="{% url 'blog:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="danger-btn">
-                        Logout
-                    </button>
-                </form>
-
+                <div class="device-session-list">
+                    {% for device in active_device_sessions %}
+                    <div class="device-session-row">
+                        <span class="device-icon-chip"><i class="bi bi-laptop" aria-hidden="true"></i></span>
+                        <div class="device-session-details">
+                            <strong>{{ device.device_label }}</strong>
+                            <span>{{ device.ip|default:"Unavailable" }} · Last active {{ device.last_seen|date:"M j, Y, g:i A" }}</span>
+                            {% if device.id == current_device_id %}<span class="current-device-badge">This device</span>{% endif %}
+                        </div>
+                        <form method="post" action="{% url 'blog:revoke_device_session' device.id %}">{% csrf_token %}<button class="danger-btn" type="submit">Log out</button></form>
+                    </div>
+                    {% empty %}
+                    <div class="device-session-row"><span class="device-icon-chip"><i class="bi bi-laptop" aria-hidden="true"></i></span><div class="device-session-details"><span>No active devices found.</span></div></div>
+                    {% endfor %}
+                </div>
+                <div class="device-session-row device-session-revoke">
+                    <div class="device-session-details"><strong>Log out all other devices</strong><span>Keep this device signed in and end other sessions.</span></div>
+                    <form method="post" action="{% url 'blog:revoke_other_device_sessions' %}">{% csrf_token %}<button class="danger-outline-btn" type="submit">Log out all other devices</button></form>
+                </div>
+            </section>
+            <div class="login-history" role="table" aria-label="Recent login history">
+                <h3>Login history</h3>
+                <div class="login-history-heading" role="row"><span role="columnheader">Device</span><span role="columnheader">Browser</span><span role="columnheader">IP address</span><span role="columnheader">Date and time</span></div>
+                {% for login in login_history %}
+                <div class="login-history-row" role="row">
+                    <span data-label="Device" role="cell">{{ login.device_name }}</span>
+                    <span data-label="Browser" role="cell">{{ login.browser_name|default:"Unknown browser" }}</span>
+                    <span data-label="IP address" role="cell">{{ login.ip|default:"Unavailable" }}</span>
+                    <time data-label="Date and time" role="cell" datetime="{{ login.created_at|date:'c' }}">{{ login.created_at|date:"M j, Y, g:i A" }}</time>
+                </div>
+                {% empty %}
+                <p>No recent logins.</p>
+                {% endfor %}
             </div>
 
+
+        </div>
+        <div class="settings-card security-action-card" id="settings-logout">
+            <div class="setting-row">
+                <div class="setting-info"><span class="setting-icon"><i class="bi bi-box-arrow-right"></i></span><span class="setting-text"><h3>Logout</h3><p>Sign out from your {{ SITE_NAME }} account.</p></span></div>
+                <form method="POST" action="{% url 'blog:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="danger-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="settings-card install-app-card" id="settings-app">
+            <div class="section-title"><h2>Install app</h2><p>Use vGrowHub as an app on your device.</p></div>
+            <div class="install-app-content">
+                <div class="install-app-state" data-install-state="ready" hidden>
+                    <div class="setting-info"><span class="setting-icon"><i class="bi bi-phone"></i></span><span class="setting-text"><strong>Install vGrowHub</strong><span>Add the app to your device for quick access.</span></span></div>
+                    <button class="action-btn primary-btn" id="installAppButton" type="button" disabled>Install app</button>
+                </div>
+                <div class="install-app-state" data-install-state="installed" hidden>
+                    <div class="setting-info"><span class="setting-icon"><i class="bi bi-phone"></i></span><span class="setting-text"><strong>vGrowHub is installed</strong><span class="installed-chip"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Installed</span></span></div>
+                    <a class="action-btn primary-btn" href="/dashboard/" data-open-installed-app>Open app</a>
+                    <p class="install-help">To uninstall: open your browser menu and choose “Uninstall vGrowHub”.</p>
+                    <details class="uninstall-help"><summary>How to uninstall</summary><ul><li><strong>Chrome:</strong> Open the app menu and select Uninstall vGrowHub.</li><li><strong>Edge:</strong> Open Apps and choose Manage apps, then uninstall vGrowHub.</li><li><strong>Android:</strong> Long-press the app icon and choose Uninstall.</li><li><strong>iOS:</strong> Touch and hold the Home Screen icon, then choose Remove App.</li></ul></details>
+                </div>
+                <div class="install-app-state" data-install-state="unsupported">
+                    <div class="setting-info"><span class="setting-icon"><i class="bi bi-phone"></i></span><span class="setting-text"><strong>Install is not supported in this browser</strong><span class="install-instructions">Use your browser’s Share menu, then Add to Home Screen on iOS.</span></span></div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -504,5 +619,29 @@ Settings | {{ SITE_NAME }}
                 }
             }
         });
+    </script>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector('input[name="privacy_settings"]')?.closest("form");
+        const privateToggle = document.getElementById("accountPrivacy");
+        const approveInput = document.getElementById("approvePendingFollowRequests");
+        if (!form || !privateToggle || !approveInput) return;
+        let previouslyPrivate = privateToggle.checked;
+        form.addEventListener("submit", function (event) {
+            approveInput.value = "false";
+            if (previouslyPrivate && !privateToggle.checked) {
+                if (!window.confirm("Make your account public now?")) {
+                    event.preventDefault();
+                    privateToggle.checked = true;
+                    return;
+                }
+                approveInput.value = window.confirm("Approve all pending follow requests automatically?") ? "true" : "false";
+            }
+            previouslyPrivate = privateToggle.checked;
+        });
+    });
     </script>
     {% endblock %}

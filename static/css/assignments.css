@@ -4,18 +4,14 @@
 ===================================================== */
 
 .assignments-page {
-    --card: rgba(255,255,255,.045);
-    --card2: #101322;
-    --border: rgba(255,255,255,.08);
-    --text: #f8fafc;
-    --muted: #94a3b8;
-    --dim: #64748b;
-    --purple: #8b5cf6;
-    --blue: #3b82f6;
-    --cyan: #22d3ee;
-    --green: #22c55e;
-    --orange: #f59e0b;
-    --red: #f43f5e;
+    --card: var(--surface);
+    --card2: var(--surface-2);
+    --purple: var(--accent);
+    --blue: var(--primary);
+    --cyan: var(--info);
+    --green: var(--success);
+    --orange: var(--warning);
+    --red: var(--danger);
     color: var(--text);
 }
 
@@ -34,7 +30,7 @@
 
             color: #a78bfa;
 
-            font-size: 9px;
+            font-size: 12px;
             font-weight: 800;
 
             letter-spacing: 1.5px;
@@ -49,17 +45,10 @@
             letter-spacing: -1.8px;
         }
 .assignments-page .page-header h1 span {
-            background:
-                linear-gradient(
-                    90deg,
-                    #a78bfa,
-                    #60a5fa,
-                    #22d3ee
-                );
-
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+            color: var(--primary);
+            background: none;
+            -webkit-text-fill-color: currentColor;
+}
 .assignments-page .page-header p {
             margin-top: 9px;
 
@@ -83,7 +72,7 @@
         }
 .assignments-page .deadline-box small {
             color: #fbbf24;
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 800;
             text-transform: uppercase;
         }
@@ -162,7 +151,7 @@
 
             color: var(--dim);
 
-            font-size: 9px;
+            font-size: 12px;
         }
 /* ================= TOOLBAR ================= */
 .assignments-page .toolbar {
@@ -197,7 +186,7 @@
 
             color: var(--muted);
 
-            font-size: 9px;
+            font-size: 12px;
             font-weight: 700;
 
             cursor: pointer;
@@ -234,12 +223,12 @@
 
             color: #475569;
 
-            font-size: 11px;
+            font-size: 12px;
         }
 .assignments-page .toolbar-search input {
             width: 190px;
 
-            padding: 8px 10px 8px 30px;
+            padding: 8px 10px 8px 38px;
 
             border:
                 1px solid
@@ -254,7 +243,7 @@
 
             color: white;
 
-            font-size: 9px;
+            font-size: 12px;
         }
 /* ================= CONTENT ================= */
 .assignments-page .content {
@@ -336,7 +325,7 @@
 
             color: var(--dim);
 
-            font-size: 9px;
+            font-size: 12px;
             line-height: 1.6;
         }
 .assignments-page .status {
@@ -344,7 +333,7 @@
 
             border-radius: 20px;
 
-            font-size: 7px;
+            font-size: 12px;
             font-weight: 800;
 
             white-space: nowrap;
@@ -379,7 +368,7 @@
 
             color: var(--dim);
 
-            font-size: 8px;
+            font-size: 12px;
         }
 .assignments-page .assignment-meta span {
             display: flex;
@@ -406,7 +395,7 @@
             background:
                 rgba(99,102,241,.09);
 
-            font-size: 7px;
+            font-size: 12px;
             font-weight: 700;
         }
 .assignments-page .assignment-btn {
@@ -423,7 +412,7 @@
                     #4b74ff
                 );
 
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 700;
 
             transition: .2s;
@@ -460,7 +449,7 @@
         }
 .assignments-page .panel-header span {
             color: #8b78ff;
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 700;
         }
 /* ================= COMPLETION ================= */
@@ -516,7 +505,7 @@
         }
 .assignments-page .circle-text span {
             color: var(--dim);
-            font-size: 7px;
+            font-size: 12px;
         }
 .assignments-page .completion-info {
             flex: 1;
@@ -524,7 +513,7 @@
 .assignments-page .completion-info p {
             color: var(--muted);
 
-            font-size: 9px;
+            font-size: 12px;
             line-height: 1.6;
         }
 .assignments-page .mini-progress {
@@ -534,20 +523,15 @@
 
             border-radius: 20px;
 
-            background: #20263a;
+            background: var(--surface-2);
 
             overflow: hidden;
         }
 .assignments-page .mini-progress div {
-            width: 69%;
+            width: 0;
             height: 100%;
 
-            background:
-                linear-gradient(
-                    90deg,
-                    #8b5cf6,
-                    #22d3ee
-                );
+            background: var(--primary);
         }
 /* ================= DEADLINES ================= */
 .assignments-page .deadline-item {
@@ -582,7 +566,7 @@
 .assignments-page .deadline-info strong {
             display: block;
 
-            font-size: 8px;
+            font-size: 12px;
         }
 .assignments-page .deadline-info span {
             display: block;
@@ -591,10 +575,10 @@
 
             color: var(--dim);
 
-            font-size: 7px;
+            font-size: 12px;
         }
 .assignments-page .days {
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 800;
         }
 /* ================= SCORE ================= */
@@ -617,7 +601,7 @@
         }
 .assignments-page .score span {
             color: var(--dim);
-            font-size: 8px;
+            font-size: 12px;
         }
 /* ================= RESPONSIVE ================= */
 
@@ -630,7 +614,7 @@
     }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 767px) {
     .assignments-page .page-header {
         flex-direction: column;
         align-items: flex-start;
@@ -687,7 +671,7 @@
     }
 
     .assignments-page .circle-text span {
-        font-size: 8px;
+        font-size: 12px;
     }
 
     .assignments-page .completion-info {
@@ -696,9 +680,9 @@
 }
 
 /* FINAL READABILITY FIX */
-.assignments-page .eyebrow { font-size:11px !important; }
+.assignments-page .eyebrow { font-size:12px !important; }
 .assignments-page .page-header p { font-size:15px !important; line-height:1.65 !important; }
-.assignments-page .deadline-box small { font-size:11px !important; }
+.assignments-page .deadline-box small { font-size:12px !important; }
 .assignments-page .deadline-box strong { font-size:13px !important; }
 .assignments-page .stat-number { font-size:28px !important; }
 .assignments-page .stat-label { font-size:13px !important; }
@@ -706,12 +690,12 @@
 .assignments-page .toolbar-search input { font-size:13px !important; }
 .assignments-page .assignment h3 { font-size:17px !important; }
 .assignments-page .assignment-desc { font-size:14px !important; line-height:1.6 !important; }
-.assignments-page .status { font-size:10px !important; }
+.assignments-page .status { font-size:12px !important; }
 .assignments-page .assignment-meta { font-size:12px !important; }
-.assignments-page .course-tag { font-size:11px !important; }
+.assignments-page .course-tag { font-size:12px !important; }
 .assignments-page .assignment-btn { font-size:13px !important; }
 .assignments-page .panel-header h2 { font-size:16px !important; }
-.assignments-page .panel-header span { font-size:11px !important; }
+.assignments-page .panel-header span { font-size:12px !important; }
 .assignments-page .deadline-info strong { font-size:13px !important; }
 .assignments-page .deadline-info span, .assignments-page .days { font-size:12px !important; }
 .assignments-page .score strong { font-size:24px !important; }

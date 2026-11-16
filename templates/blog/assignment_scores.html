@@ -1,0 +1,23 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}Assignment Scores | {{ SITE_NAME }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/assignments.css' %}"><link rel="stylesheet" href="{% static 'css/assignment_features.css' %}">{% endblock %}
+{% block content %}
+<main class="assignment-feature-page">
+  <p class="eyebrow">Learning progress</p>
+  <h1>Assignment Scores</h1>
+  <div class="assignment-feature-grid">
+    <section class="assignment-feature-card"><span>Average</span><br><strong>{{ average|default:0 }}%</strong></section>
+    <section class="assignment-feature-card"><span>Highest</span><br><strong>{{ highest|default:0 }}%</strong></section>
+    <section class="assignment-feature-card"><span>Lowest</span><br><strong>{{ lowest|default:0 }}%</strong></section>
+  </div>
+  {% if rows %}
+  <div class="score-bars" role="img" aria-label="Assignment scores chart">
+    {% for row in rows %}<div class="score-bar" style="height:{{ row.percentage }}%" title="{{ row.assignment.title }}: {{ row.percentage }}%"></div>{% endfor %}
+  </div>
+  <table><thead><tr><th>Assignment</th><th>Score</th><th>Percent</th></tr></thead><tbody>
+  {% for row in rows %}<tr><td><a href="{% url 'blog:assignment_attempt' row.assignment.pk %}">{{ row.assignment.title }}</a></td><td>{{ row.score|default:0 }} / {{ row.max_score|default:0 }}</td><td>{{ row.percentage|default:0 }}%</td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<section class="assignment-feature-card"><h2>No evaluated scores yet</h2><p>Submit an assignment and check back after it has been evaluated.</p><a class="assignment-btn" href="{% url 'blog:assignments' %}">Browse assignments</a></section>{% endif %}
+</main>
+{% endblock %}

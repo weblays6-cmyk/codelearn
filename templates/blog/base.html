@@ -1,27 +1,14 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-debug="{{ DEBUG|yesno:'true,false' }}" data-theme="light" data-theme-enabled="{{ DARK_THEME_ENABLED|yesno:'true,false' }}" data-theme-choice="{% if DARK_THEME_ENABLED %}{{ USER_THEME_PREFERENCE }}{% else %}light{% endif %}" data-notification-sound="{% if user.is_authenticated %}{{ user.profile_data.notification_sound|yesno:'true,false' }}{% else %}false{% endif %}" data-message-sound="{% if user.is_authenticated %}{{ user.profile_data.message_sound|yesno:'true,false' }}{% else %}false{% endif %}">
 
 <head>
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script>
-        (function () {
-            let theme = "light";
-            try {
-                const savedTheme = localStorage.getItem("codelearn-theme");
-                if (savedTheme === "light" || savedTheme === "dark") {
-                    theme = savedTheme;
-                }
-            } catch (error) {
-                // Keep the existing light-theme default when storage is unavailable.
-            }
-            document.documentElement.classList.toggle("light-theme", theme === "light");
-        })();
-    </script>
+    {% include "blog/includes/theme_bootstrap.html" %}
 
     <title>
         {% block title %}
@@ -33,7 +20,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- Global CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+    <meta name="theme-color" content="#2F5BEA">
+    <link rel="icon" href="{% static 'images/vgrowhub-icon.svg' %}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{% static 'images/vgrowhub-icon.svg' %}">
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
@@ -42,18 +36,24 @@
     <!-- Page Specific CSS -->
     {% block extra_css %}
     {% endblock %}
-    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/learning_ui.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/ai-feature-panel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    {% block extra_css_end %}{% endblock %}
 
 </head>
 
 <body>
     <script>
-        document.body.classList.toggle(
-            "light-theme",
-            document.documentElement.classList.contains("light-theme")
-        );
-        document.documentElement.classList.remove("light-theme");
+        document.body.classList.toggle("light-theme", document.documentElement.dataset.theme === "light");
     </script>
+
+    {% if messages %}
+    <div class="django-toasts" aria-live="polite">
+        {% for message in messages %}<div class="django-toast" role="status">{{ message }}</div>{% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Navbar -->
     {% include "blog/includes/navbar.html" %}
@@ -71,30 +71,24 @@
             <i class="bi bi-grid" aria-hidden="true"></i><span>Home</span>
         </a>
         <a href="{% url 'blog:blogpage' %}"
-            class="mobile-nav-link {% if request.resolver_match.url_name == 'blogpage' or request.resolver_match.url_name == 'post_detail' %}active{% endif %}">
-            <i class="bi bi-book" aria-hidden="true"></i><span>Courses</span>
+            class="mobile-nav-link {% if request.resolver_match.url_name == 'blogpage' or request.resolver_match.url_name == 'post_detail' or request.resolver_match.url_name == 'my_learning' or request.resolver_match.url_name == 'lesson_detail' %}active{% endif %}">
+            <i class="bi bi-book" aria-hidden="true"></i><span>Learn</span>
         </a>
         <a href="{% url 'blog:practice' %}"
             class="mobile-nav-link {% if 'practice' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-code-slash" aria-hidden="true"></i><span>Practice</span>
         </a>
-        {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
-        <a href="{% url 'blog:messages' %}"
-            class="mobile-nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation_detail' %}active{% endif %}">
-            <span class="mobile-nav-icon-wrap">
-                <i class="bi bi-chat-dots" aria-hidden="true"></i>
-                {% if unread_count > 0 %}<span class="mobile-message-unread-count" aria-label="{{ unread_count }} unread messages">{% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}</span>{% endif %}
-            </span>
-            <span>Messages</span>
+        <a href="{% url 'blog:community' %}"
+            class="mobile-nav-link {% if 'community' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-people" aria-hidden="true"></i><span>Community</span>
         </a>
-        {% endwith %}
         <a href="{% url 'blog:profile' %}"
             class="mobile-nav-link {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'user_profile' %}active{% endif %}">
             <i class="bi bi-person" aria-hidden="true"></i><span>Profile</span>
         </a>
         {% else %}
         <a href="{% url 'blog:blogpage' %}" class="mobile-nav-link active">
-            <i class="bi bi-book" aria-hidden="true"></i><span>Courses</span>
+            <i class="bi bi-book" aria-hidden="true"></i><span>Learn</span>
         </a>
         <a href="{% url 'blog:login' %}" class="mobile-nav-link">
             <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Sign in</span>
@@ -113,12 +107,31 @@
 
     </main>
 
+    {% if user.is_authenticated and AI_ENABLED and SITE_SETTINGS.ai_feature_assistant %}
+    <button type="button" class="ai-feature-launch" id="aiFeatureLaunch" aria-controls="aiFeaturePanel" aria-expanded="false"><i class="bi bi-stars" aria-hidden="true"></i> Ask AI</button>
+    <section class="ai-feature-panel" id="aiFeaturePanel" aria-labelledby="aiFeatureTitle" hidden data-endpoint="{% url 'blog:ai_feature' feature='assistant' %}" data-context-type="{{ AI_CONTEXT_TYPE }}" data-context-id="{{ AI_CONTEXT_ID }}">
+        <div id="aiFeatureCsrf" hidden>{% csrf_token %}</div>
+        <div class="ai-feature-panel__heading"><h2 id="aiFeatureTitle">Ask AI</h2><button type="button" id="aiFeatureClose" aria-label="Close Ask AI panel">×</button></div>
+        <label for="aiFeatureSelect">What do you need?</label>
+        <select id="aiFeatureSelect">
+            {% for feature, label in AI_FEATURE_OPTIONS %}<option value="{{ feature }}">{{ label }}</option>{% endfor %}
+        </select>
+        <label for="aiFeaturePrompt">Question or context</label>
+        <textarea id="aiFeaturePrompt" rows="4" maxlength="8000" placeholder="What would you like help with?"></textarea>
+        <button type="button" class="ai-feature-submit" id="aiFeatureSubmit">Get suggestion</button>
+        <p class="ai-feature-status" id="aiFeatureStatus" role="status" aria-live="polite"></p>
+        <div class="ai-feature-result" id="aiFeatureResult"></div>
+    </section>
+    {% endif %}
+
     <!-- Footer -->
     {% include "blog/includes/footer.html" %}
 
     <!-- Theme JavaScript -->
-    <script src="{% static 'js/theme.js' %}?v=2"></script>
-    <script src="{% static 'js/password_toggle.js' %}?v=4"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/password_toggle.js' %}"></script>
+    <script src="{% static 'js/platform_features.js' %}" defer></script>
+    <script src="{% static 'js/ai_feature_panel.js' %}" defer></script>
 
     <!-- Page Specific JavaScript -->
     {% block extra_js %}

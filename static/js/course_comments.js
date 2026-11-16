@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const button = form.querySelector('button[type="submit"]');
     const textarea = form.querySelector('textarea[name="content"]');
+    const characterCount = document.querySelector('[data-comment-length]');
     const initialButtonMarkup = button ? button.innerHTML : "Add Comment";
     let submitting = false;
 
@@ -64,11 +65,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const actions = document.createElement("div");
         actions.className = "comment-actions";
-        addAction(actions, "Edit", comment.edit_url, "edit-btn");
-        addAction(actions, "Delete", comment.delete_url, "delete-btn");
+        const reply = document.createElement("button");
+        reply.type = "button";
+        reply.className = "reply-btn";
+        reply.textContent = "Reply";
+        reply.dataset.replyName = comment.username;
+        actions.appendChild(reply);
+        if (comment.is_own) {
+            addAction(actions, "Edit", comment.edit_url, "edit-btn");
+            addAction(actions, "Delete", comment.delete_url, "delete-btn");
+        }
         card.appendChild(actions);
         return card;
     }
+
+    document.addEventListener("click", function (event) {
+        const reply = event.target.closest("[data-reply-name]");
+        if (!reply || !textarea) return;
+        textarea.value = `@${reply.dataset.replyName} ${textarea.value}`.trimEnd();
+        textarea.focus();
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    function updateCharacterCount() {
+        if (characterCount && textarea) characterCount.textContent = String(textarea.value.length);
+    }
+
+    textarea?.addEventListener("input", updateCharacterCount);
+    updateCharacterCount();
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -108,6 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             list.prepend(renderComment(result.comment));
             textarea.value = "";
+            updateCharacterCount();
             count.textContent = `${result.count} ${result.count === 1 ? "comment" : "comments"}`;
             status.textContent = "Comment added.";
         } catch (error) {

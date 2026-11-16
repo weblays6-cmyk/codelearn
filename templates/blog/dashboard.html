@@ -1,23 +1,44 @@
 {% extends "blog/base.html" %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const checklist = document.getElementById("setup-checklist");
+    if (checklist) {
+        const key = "vgrowhub-dashboard-checklist-dismissed";
+        if (localStorage.getItem(key) === "1") checklist.hidden = true;
+        checklist.querySelector("[data-dismiss-checklist]")?.addEventListener("click", () => {
+            localStorage.setItem(key, "1");
+            checklist.hidden = true;
+        });
+    }
+    document.querySelectorAll("[data-dismiss-announcement]").forEach((button) => {
+        const announcement = button.closest("[data-announcement-id]");
+        const announcementKey = `vgrowhub-dismissed-announcement-${button.dataset.dismissAnnouncement}`;
+        if (localStorage.getItem(announcementKey) === "1") announcement.hidden = true;
+        button.addEventListener("click", () => {
+            localStorage.setItem(announcementKey, "1");
+            announcement.hidden = true;
+        });
+    });
 
+});
+</script>
+{% endblock %}
 {% block title %}
 Dashboard | {{ SITE_NAME }}
 {% endblock %}
 
 
 {% block content %}
-
-
+<div class="dashboard-page" id="dashboard">
 <!-- =====================================================
      HERO
 ===================================================== -->
 
 <section class="hero">
+    <div class="hero-layout">
 
     <div class="hero-content">
 
@@ -26,16 +47,10 @@ Dashboard | {{ SITE_NAME }}
             YOUR JOURNEY TO SUCCESS
         </div>
 
-        <h1>
-            Learn Code.
-            <span class="gradient-text">
-                Build Future.
-            </span>
-        </h1>
+        <h1 class="page-title">Learn Code. <span class="page-title-accent">Build Future.</span></h1>
 
         <p>
-            Hi <strong>{{ request.user.profile_data.display_name|default:username }}</strong> · @{{ username|lower }} 👋
-            Welcome back to {{ SITE_NAME }}.
+            Welcome back, <strong>{{ request.user.first_name|default:username }}</strong>.
             Learn new skills, practice coding,
             build real-world projects and become
             job ready with AI-powered guidance.
@@ -56,10 +71,15 @@ Dashboard | {{ SITE_NAME }}
         </div>
 
     </div>
-
+    </div>
 </section>
 
-
+<nav class="dashboard-quick-actions" aria-label="Quick actions">
+    <a href="{% url 'blog:practice' %}"><i class="bi bi-code-slash" aria-hidden="true"></i> Practice</a>
+    <a href="{% url 'blog:practice_playground' %}"><i class="bi bi-terminal" aria-hidden="true"></i> Playground</a>
+    <a href="{% url 'blog:ai_tutor' %}"><i class="bi bi-stars" aria-hidden="true"></i> Ask AI</a>
+    <a href="{% url 'blog:create_project' %}"><i class="bi bi-folder-plus" aria-hidden="true"></i> New Project</a>
+</nav>
 <!-- =====================================================
      CURRENT GOAL
 ===================================================== -->
@@ -78,31 +98,29 @@ Dashboard | {{ SITE_NAME }}
                 YOUR CURRENT GOAL
             </span>
 
-            {% if user_profile.goal == "job" %}
+            {% if user_profile.goal == "full_stack" %}
 
-            <h2>Get a Job</h2>
+            <h2>Python Full Stack Developer</h2>
 
             <p>
                 Become job-ready with practical
                 skills, projects and career preparation.
             </p>
 
-            {% elif user_profile.goal == "skill" %}
+            {% elif user_profile.goal == "django" %}
 
-            <h2>Learn New Skills</h2>
+            <h2>Django Developer</h2>
 
             <p>
-                Build strong programming skills
-                through structured learning.
+                Build production-ready web applications with Python and Django.
             </p>
 
-            {% elif user_profile.goal == "projects" %}
+            {% elif user_profile.goal == "data" %}
 
-            <h2>Build Projects</h2>
+            <h2>Data Analyst</h2>
 
             <p>
-                Build real-world applications
-                and strengthen your portfolio.
+                Learn SQL, data analysis and clear ways to communicate insights.
             </p>
 
             {% elif user_profile.goal == "interview" %}
@@ -113,6 +131,12 @@ Dashboard | {{ SITE_NAME }}
                 Practice technical, HR and mock
                 interviews and become interview-ready.
             </p>
+
+            {% elif user_profile.goal == "web" %}
+
+            <h2>Web Basics</h2>
+
+            <p>Build strong foundations in HTML, CSS and JavaScript.</p>
 
             {% else %}
 
@@ -142,7 +166,7 @@ Dashboard | {{ SITE_NAME }}
 
 <section class="stats">
 
-    <div class="stat-card">
+    <a href="{% url 'blog:my_learning' %}" class="stat-card">
 
         <div class="stat-top">
 
@@ -150,9 +174,7 @@ Dashboard | {{ SITE_NAME }}
                 <i class="bi bi-book"></i>
             </div>
 
-            <span class="stat-change">
-                Start
-            </span>
+            <span class="stat-change">This week</span>
 
         </div>
 
@@ -163,11 +185,11 @@ Dashboard | {{ SITE_NAME }}
         <div class="stat-label">
             Courses Enrolled
         </div>
+        <span class="stat-sparkline" aria-hidden="true">{% for item in dashboard_data.weekly_activity %}<i style="--bar-height: {{ item.height }}%"></i>{% endfor %}</span>
+    </a>
 
-    </div>
 
-
-    <div class="stat-card">
+    <a href="{% url 'blog:practice_all' %}" class="stat-card">
 
         <div class="stat-top">
 
@@ -175,9 +197,7 @@ Dashboard | {{ SITE_NAME }}
                 <i class="bi bi-code-square"></i>
             </div>
 
-            <span class="stat-change">
-                {{ dashboard_practice_stats.streak }} day streak
-            </span>
+            <span class="stat-change">{{ dashboard_data.activity_summary.this_week.problems|default:0 }} this week</span>
 
         </div>
 
@@ -188,11 +208,11 @@ Dashboard | {{ SITE_NAME }}
         <div class="stat-label">
             Problems Solved
         </div>
+        <span class="stat-sparkline" aria-hidden="true">{% for item in dashboard_data.weekly_activity %}<i style="--bar-height: {{ item.height }}%"></i>{% endfor %}</span>
+    </a>
 
-    </div>
 
-
-    <div class="stat-card">
+    <a href="{% url 'blog:practice_details' %}" class="stat-card">
 
         <div class="stat-top">
 
@@ -200,24 +220,22 @@ Dashboard | {{ SITE_NAME }}
                 <i class="bi bi-stopwatch"></i>
             </div>
 
-            <span class="stat-change">
-                Assessment
-            </span>
+            <span class="stat-change">{{ dashboard_data.weekly_goal_days }} active days</span>
 
         </div>
 
         <div class="stat-value">
-            {{ dashboard_practice_stats.mock_tests_completed }}
+            {{ dashboard_data.streak|default:0 }}
         </div>
 
         <div class="stat-label">
-            Mock Tests Completed
+            Day Streak
         </div>
+        <span class="stat-sparkline" aria-hidden="true">{% for item in dashboard_data.weekly_activity %}<i style="--bar-height: {{ item.height }}%"></i>{% endfor %}</span>
+    </a>
 
-    </div>
 
-
-    <div class="stat-card">
+    <a href="{% url 'blog:practice_mock_tests' %}" class="stat-card">
 
         <div class="stat-top">
 
@@ -232,17 +250,151 @@ Dashboard | {{ SITE_NAME }}
         </div>
 
         <div class="stat-value">
-            {{ dashboard_practice_stats.average_mock_score|floatformat:0 }}%
+            {{ dashboard_data.average_score|default:0 }}%
         </div>
 
         <div class="stat-label">
-            Mock Test Score
+            Average Score
         </div>
-
-    </div>
+        <span class="stat-sparkline" aria-hidden="true">{% for item in dashboard_data.weekly_activity %}<i style="--bar-height: {{ item.height }}%"></i>{% endfor %}</span>
+    </a>
 
 </section>
 
+<section class="dashboard-extra-grid">
+    <article class="dashboard-extra-card">
+        <div class="dashboard-extra-head xp-card-head">
+            <div>
+                <span class="goal-label">YOUR PROGRESS</span>
+                <h2>Level {{ dashboard_data.level.level|default:1 }}</h2>
+            </div>
+            <div class="xp-level-ring" style="--level-progress: {{ dashboard_data.level.percent|default:0 }}%"><strong>{{ dashboard_data.level.level|default:1 }}</strong></div>
+        </div>
+        <div class="dashboard-xp-track" role="progressbar" aria-label="Level progress" aria-valuenow="{{ dashboard_data.level.percent|default:0 }}" aria-valuemin="0" aria-valuemax="100">
+            <span style="width: {{ dashboard_data.level.percent|default:0 }}%"></span>
+        </div>
+        <p>{{ dashboard_data.xp|default:0 }} total XP · {{ dashboard_data.xp_remaining|default:100 }} XP to Level {{ dashboard_data.next_level|default:2 }}</p>
+        <a href="{% url 'blog:practice_details' %}" class="view-all">Keep learning →</a>
+    </article>
+
+    <article class="dashboard-extra-card streak-week-card">
+        <span class="goal-label">CONSISTENCY</span>
+        <h2><i class="bi bi-fire" aria-hidden="true"></i> {{ dashboard_data.streak|default:0 }} day streak</h2>
+        <div class="streak-week-dots" aria-label="This week's activity">
+            {% for item in dashboard_data.weekly_activity %}<span class="{% if item.count %}is-active{% endif %}" title="{{ item.day }}: {{ item.count }} tasks"><small>{{ item.day|slice:":1" }}</small></span>{% endfor %}
+        </div>
+        <div class="weekly-goal-row">
+            <div class="weekly-goal-ring" style="--goal-progress: {{ dashboard_data.weekly_goal_percent }}%" role="progressbar" aria-label="Weekly goal progress" aria-valuenow="{{ dashboard_data.weekly_goal_percent }}" aria-valuemin="0" aria-valuemax="100"><span>{{ dashboard_data.weekly_goal_days }}/{{ dashboard_data.weekly_goal_target }}</span></div>
+            <div><strong>Weekly goal</strong><span>Active days · target {{ dashboard_data.weekly_goal_target }}</span></div>
+        </div>
+    </article>
+
+    <article class="dashboard-extra-card">
+        <div class="dashboard-extra-head">
+            <div>
+                <span class="goal-label">YOUR ACHIEVEMENTS</span>
+                <h2>Badge case</h2>
+            </div>
+            <a href="{% url 'blog:profile' %}" class="view-all">View profile →</a>
+        </div>
+        {% include "blog/includes/badge_case.html" with badges=dashboard_data.badges %}
+    </article>
+
+    <article class="dashboard-extra-card">
+        <span class="goal-label">SKILL RADAR</span>
+        <h2>Skills practiced</h2>
+        {% for skill in dashboard_data.skill_radar %}
+        <div class="dashboard-skill-row">
+            <span>{{ skill.name }}</span>
+            <div class="dashboard-xp-track"><span style="width: {{ skill.score }}%"></span></div>
+            <small>{{ skill.score }}%</small>
+        </div>
+        {% empty %}
+        <p>No verified skills yet.</p>
+        <a class="view-all" href="{% url 'blog:practice_all' %}">Start practicing →</a>
+        {% endfor %}
+    </article>
+
+    <article class="dashboard-extra-card">
+        <span class="goal-label">YOUR ROADMAP</span>
+        <h2>{{ user_profile.get_goal_display }} path</h2>
+        {% for node in dashboard_data.roadmap %}
+        <div class="dashboard-list-row">
+            <span>{% if node.done %}✓{% elif node.next %}→{% else %}○{% endif %} {{ node.name }}</span>
+            {% if node.next %}<small>Next</small>{% endif %}
+        </div>
+        {% endfor %}
+    </article>
+
+    <article class="dashboard-extra-card">
+        <div class="dashboard-extra-head">
+            <div>
+                <span class="goal-label">LAST 12 WEEKS</span>
+                <h2>Learning activity</h2>
+            </div>
+        </div>
+        <div class="heatmap-layout">
+            <div class="heatmap-weekdays" aria-hidden="true"><span>Mon</span><span>Wed</span><span>Fri</span></div>
+            <div class="heatmap-content">
+        <div class="heatmap-months" aria-hidden="true">
+            {% for week in dashboard_data.heatmap_weeks %}<span>{{ week.month }}</span>{% endfor %}
+        </div>
+        <div class="dashboard-heatmap" role="img" aria-label="12-week learning activity">
+            {% for day in dashboard_data.heatmap %}
+            <span class="heatmap-level-{{ day.level }}" title="{{ day.count }} task{% if day.count != 1 %}s{% endif %} on {{ day.date|date:'j M' }}"></span>
+            {% endfor %}
+        </div>
+        <div class="heatmap-legend"><span>Less</span><i class="heatmap-level-0"></i><i class="heatmap-level-1"></i><i class="heatmap-level-2"></i><i class="heatmap-level-3"></i><i class="heatmap-level-4"></i><span>More</span></div>
+            </div>
+        </div>
+        <p>Consistency adds up. Keep your streak going.</p>
+        {% if not dashboard_data.has_activity %}<a class="view-all" href="{% url 'blog:blogpage' %}">Start learning →</a>{% endif %}
+        <div class="dashboard-week-chart" aria-label="This week's activity">
+            {% for item in dashboard_data.weekly_activity %}
+            <div title="{{ item.day }}: {{ item.count }} activities">
+                <span style="height: {{ item.height }}%"></span>
+                <small>{{ item.day }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="dashboard-insights">
+            <strong>This week</strong><span>{{ dashboard_data.activity_summary.this_week.lessons|default:0 }} lessons · {{ dashboard_data.activity_summary.this_week.problems|default:0 }} problems · {{ dashboard_data.activity_summary.this_week.minutes|default:0 }} min</span>
+            <strong>Last week</strong><span>{{ dashboard_data.activity_summary.last_week.lessons|default:0 }} lessons · {{ dashboard_data.activity_summary.last_week.problems|default:0 }} problems · {{ dashboard_data.activity_summary.last_week.minutes|default:0 }} min</span>
+            <strong>Best study day</strong><span>{{ dashboard_data.best_study_day|default:"No activity yet" }}</span>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-extra-grid">
+    <article class="dashboard-extra-card" id="setup-checklist">
+        <div class="dashboard-extra-head">
+            <div>
+                <span class="goal-label">GET STARTED</span>
+                <h2>Your setup checklist</h2>
+            </div>
+            <button type="button" class="dashboard-dismiss" data-dismiss-checklist aria-label="Dismiss setup checklist">×</button>
+        </div>
+        <ul class="dashboard-checklist">
+            <li>{% if dashboard_data.checklist.goal %}✓{% else %}○{% endif %} <a href="{% url 'blog:choose_goal' %}">Choose a learning goal</a></li>
+            <li>{% if dashboard_data.checklist.course %}✓{% else %}○{% endif %} <a href="{% url 'blog:blogpage' %}">Enroll in a course</a></li>
+            <li>{% if dashboard_data.checklist.problem %}✓{% else %}○{% endif %} <a href="{% url 'blog:practice_all' %}">Solve your first problem</a></li>
+            <li>{% if dashboard_data.checklist.profile %}✓{% else %}○{% endif %} <a href="{% url 'blog:profile' %}">Complete your profile</a></li>
+        </ul>
+    </article>
+    <article class="dashboard-extra-card">
+        <div class="dashboard-extra-head">
+            <div>
+                <span class="goal-label">DAILY GOAL</span>
+                <h2>Today's mission</h2>
+            </div>
+            <span>{{ dashboard_data.daily_tasks_done|default:0 }} / {{ dashboard_data.daily_task_goal|default:3 }} tasks</span>
+        </div>
+        <div class="mission-progress-head"><div class="dashboard-goal-ring" style="--goal-progress: {{ dashboard_data.daily_goal_percent|default:0 }}%" role="progressbar" aria-label="Daily goal progress" aria-valuenow="{{ dashboard_data.daily_goal_percent|default:0 }}" aria-valuemin="0" aria-valuemax="100"><span>{{ dashboard_data.daily_goal_percent|default:0 }}%</span></div><span class="mission-xp-chip">+25 XP</span></div>
+        <label class="mission-check-row"><input type="checkbox" disabled {% if dashboard_data.lesson_done_today %}checked{% endif %}><span>One lesson{% if dashboard_data.mission_lesson %}: <a href="{% url 'blog:start_lesson' dashboard_data.mission_lesson.course.slug dashboard_data.mission_lesson.slug %}">{{ dashboard_data.mission_lesson.title }}</a>{% else %}: <a href="{% url 'blog:my_learning' %}">Continue learning</a>{% endif %}</span></label>
+        <label class="mission-check-row"><input type="checkbox" disabled {% if dashboard_data.problem_done_today %}checked{% endif %}><span>One practice problem{% if dashboard_data.mission_problem %}: <a href="{% url 'blog:practice_problem_detail' dashboard_data.mission_problem.slug %}">{{ dashboard_data.mission_problem.title }}</a>{% else %}: <a href="{% url 'blog:practice_all' %}">Practice problems</a>{% endif %}</span></label>
+        <p>Complete both tasks to finish today's goal.</p>
+    </article>
+</section>
 
 <!-- =====================================================
      CONTINUE LEARNING
@@ -270,6 +422,14 @@ Dashboard | {{ SITE_NAME }}
 
     </div>
 
+    {% if dashboard_data.resume_lesson %}
+    <a class="dashboard-resume-card" href="{% url 'blog:start_lesson' dashboard_data.resume_lesson.course.slug dashboard_data.resume_lesson.slug %}">
+        <span>RESUME LEARNING</span>
+        <strong>{{ dashboard_data.resume_lesson.title }}</strong>
+        <small>{{ dashboard_data.resume_lesson.course.title }} · {{ dashboard_data.resume_progress|default:0 }}% course progress</small>
+        <b>Resume →</b>
+    </a>
+    {% endif %}
 
     <div class="course-grid">
 
@@ -391,6 +551,72 @@ Dashboard | {{ SITE_NAME }}
     </div>
 
 </section>
+<section class="dashboard-extra-grid">
+    <article class="dashboard-extra-card">
+        <span class="goal-label">COMING UP</span>
+        <h2>Upcoming assignments</h2>
+        <div class="dashboard-calendar-strip">
+            {% for day in dashboard_data.calendar_strip %}
+            <span class="{% if day.count %}has-deadline{% endif %}" title="{{ day.date|date:'M j' }}{% if day.count %}: {{ day.count }} deadline(s){% else %}: no deadlines{% endif %}">
+                <small>{{ day.date|date:"D" }}</small><strong>{{ day.date|date:"j" }}</strong>
+            </span>
+            {% endfor %}
+        </div>
+        {% for assignment in dashboard_data.upcoming_assignments %}
+        <div class="dashboard-list-row">
+            <a href="{% url 'blog:assignment_attempt' assignment.pk %}">{{ assignment.title }}</a>
+            <span class="dashboard-status-chip">{{ assignment.display_status }}</span>
+            <small>Due {{ assignment.due_date|date:"M j, Y" }}</small>
+        </div>
+        {% empty %}
+        <p>No upcoming assignments right now.</p>
+        <a class="view-all" href="{% url 'blog:assignments' %}">Browse assignments →</a>
+        {% endfor %}
+    </article>
+    <article class="dashboard-extra-card">
+        <span class="goal-label">OPT-IN LEADERBOARD</span>
+        <h2>This week's XP leaders</h2>
+        {% for row in dashboard_data.weekly_leaderboard.rows %}
+        <div class="dashboard-list-row">
+            <span>{{ forloop.counter }}. {{ row.user__first_name|default:row.user__username }}</span>
+            <strong>{{ row.xp|default:0 }} XP</strong>
+        </div>
+        {% empty %}
+        <p>Join the weekly leaderboard to compare verified learning XP.</p>
+        <a class="view-all" href="{% url 'blog:settings' %}">Opt in from Settings →</a>
+        {% endfor %}
+        {% if dashboard_data.weekly_leaderboard.my_rank %}<p>Your rank: #{{ dashboard_data.weekly_leaderboard.my_rank }}</p>{% endif %}
+    </article>
+    <article class="dashboard-extra-card recent-activity-card">
+        <span class="goal-label">RECENTLY</span>
+        <h2>Recent activity</h2>
+        <div class="recent-activity-list">
+        {% for activity in dashboard_data.recent_activity %}
+        <div class="dashboard-list-row">
+            <span>{{ activity.title }}</span>
+            <small>{{ activity.created_at|timesince }} ago</small>
+        </div>
+        {% empty %}
+        <p>Your recent learning activity will appear here.</p>
+        <a class="view-all" href="{% url 'blog:blogpage' %}">Explore courses →</a>
+        {% endfor %}
+        </div>
+    </article>
+    <article class="dashboard-extra-card">
+        <span class="goal-label">FROM THE TEAM</span>
+        <h2>Announcements</h2>
+        {% for announcement in dashboard_data.announcements %}
+        <div class="dashboard-announcement" data-announcement-id="{{ announcement.pk }}">
+            <button type="button" class="dashboard-dismiss" data-dismiss-announcement="{{ announcement.pk }}" aria-label="Dismiss announcement">×</button>
+            <a href="{% url 'blog:post_detail' announcement.slug %}">{{ announcement.title }}</a>
+            <p>{{ announcement.description|truncatechars:120 }}</p>
+        </div>
+        {% empty %}
+        <p>No new announcements.</p>
+        <a class="view-all" href="{% url 'blog:blogpage' %}">Explore updates →</a>
+        {% endfor %}
+    </article>
+</section>
 
 
 <!-- =====================================================
@@ -425,7 +651,7 @@ Dashboard | {{ SITE_NAME }}
             </div>
 
 
-            {% if user_profile.goal == "job" %}
+            {% if user_profile.goal == "full_stack" %}
 
 
             <div class="mission">
@@ -503,7 +729,7 @@ Dashboard | {{ SITE_NAME }}
             </div>
 
 
-            {% elif user_profile.goal == "skill" %}
+            {% elif user_profile.goal == "web" %}
 
 
             <div class="mission">
@@ -581,7 +807,7 @@ Dashboard | {{ SITE_NAME }}
             </div>
 
 
-            {% elif user_profile.goal == "projects" %}
+            {% elif user_profile.goal == "data" %}
 
 
             <div class="mission">
@@ -749,17 +975,17 @@ Dashboard | {{ SITE_NAME }}
                 <div class="mission-info">
 
                     <h5>
-                        Choose your learning goal
+                        Continue your Django learning path
                     </h5>
 
                     <p>
-                        Personalize your {{ SITE_NAME }} journey.
+                        Build and practice your backend development skills.
                     </p>
 
                 </div>
 
-                <a href="{% url 'blog:choose_goal' %}" class="mission-btn">
-                    Choose
+                <a href="{% url 'blog:my_learning' %}" class="mission-btn">
+                Learn
                 </a>
 
             </div>
@@ -778,6 +1004,7 @@ Dashboard | {{ SITE_NAME }}
 
             <div class="ai-glow"></div>
 
+            <span class="goal-label">AI INSIGHTS</span>
 
             <div class="ai-header">
 
@@ -787,12 +1014,10 @@ Dashboard | {{ SITE_NAME }}
 
                 <div>
 
-                    <h4>
-                        Your AI Learning Assistant
-                    </h4>
+                    <h4>Your next best step</h4>
 
                     <p>
-                        Personalized guidance for your journey
+                        AI insights for your learning path
                     </p>
 
                 </div>
@@ -802,30 +1027,34 @@ Dashboard | {{ SITE_NAME }}
 
             <div class="ai-message">
 
-                {% if user_profile.goal == "job" %}
+                {% if user_profile.goal == "full_stack" %}
 
                 Your goal is to get a job.
                 Focus on learning,
                 coding practice,
                 projects and interview preparation.
 
-                {% elif user_profile.goal == "skill" %}
+                {% elif user_profile.goal == "web" %}
 
                 Your goal is to learn new skills.
                 Keep learning consistently
                 and practice every concept.
 
-                {% elif user_profile.goal == "projects" %}
+                {% elif user_profile.goal == "data" %}
 
-                Your goal is to build projects.
-                Focus on practical implementation,
-                quality and portfolio building.
+                Your goal is data analysis.
+                Practice Python, SQL and turning data into useful insights.
 
                 {% elif user_profile.goal == "interview" %}
 
                 Your goal is interview preparation.
                 Practice technical questions,
                 mock interviews and project explanations.
+
+                {% elif user_profile.goal == "django" %}
+
+                Your goal is Django development.
+                Learn backend fundamentals and build complete web applications.
 
                 {% else %}
 
@@ -844,6 +1073,11 @@ Dashboard | {{ SITE_NAME }}
                 <i class="bi bi-arrow-right"></i>
 
             </a>
+            <div class="dashboard-ai-prompts">
+                <a href="{% url 'blog:ai_tutor' %}?prompt=Make%20a%207-day%20{{ user_profile.get_goal_display|urlencode }}%20study%20plan">Make me a 7-day study plan</a>
+                <a href="{% url 'blog:ai_tutor' %}?prompt=Explain%20the%20next%20skill%20for%20my%20goal">Explain my next skill</a>
+                <a href="{% url 'blog:ai_tutor' %}?prompt=Give%20me%20a%20practice%20problem%20for%20my%20goal">Give me a practice problem</a>
+            </div>
 
         </div>
 
@@ -880,79 +1114,23 @@ Dashboard | {{ SITE_NAME }}
 
 
     <div class="recommend-grid">
-
-
-        <a href="{% url 'blog:blogpage' %}?search=Python" class="recommend">
-
-            <div class="recommend-icon">
-                🐍
-            </div>
-
-            <h5>
-                Python
-            </h5>
-
-            <p>
-                Build a strong programming foundation.
-            </p>
-
+        {% for course in dashboard_data.recommended_courses %}
+        <a href="{% url 'blog:post_detail' course.slug %}" class="recommend">
+            <div class="recommend-icon"><i class="bi bi-book"></i></div>
+            <h5>{{ course.title }}</h5>
+            <p>{{ course.category }} · Recommended for {{ user_profile.get_goal_display }}</p>
         </a>
-
-
-        <a href="{% url 'blog:blogpage' %}?search=Django" class="recommend">
-
-            <div class="recommend-icon">
-                ⚡
-            </div>
-
-            <h5>
-                Django
-            </h5>
-
-            <p>
-                Learn backend development with Python.
-            </p>
-
-        </a>
-
-
-        <a href="{% url 'blog:practice_all' %}" class="recommend">
-
-            <div class="recommend-icon">
-                🧠
-            </div>
-
-            <h5>
-                Data Structures
-            </h5>
-
-            <p>
-                Prepare for technical coding interviews.
-            </p>
-
-        </a>
-
-
-        <a href="{% url 'blog:practice_mock_tests' %}" class="recommend">
-
-            <div class="recommend-icon">
-                🎯
-            </div>
-
-            <h5>
-                Interview Prep
-            </h5>
-
-            <p>
-                Practice technical and HR interviews.
-            </p>
-
-        </a>
-
-
+        {% empty %}
+        <div class="recommend">
+            <h5>No course recommendations yet</h5>
+            <p>Choose a goal or explore all courses to find your next topic.</p>
+            <a class="view-all" href="{% url 'blog:blogpage' %}">Explore courses →</a>
+        </div>
+        {% endfor %}
     </div>
 
 </section>
 
 
+ </div>
 {% endblock %}

@@ -6,32 +6,34 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/practice.css' %}">
 <style>
-  .practice-subpage { max-width: 1200px; margin: 0 auto; padding: 28px 0 40px; }
+  .practice-subpage { max-width: 1200px; margin: 0 auto; padding: 28px 0 40px; color: var(--text); }
   .subpage-header { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 20px; }
-  .subpage-header h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.06em; }
-  .subpage-header p { margin: 10px 0 0; color: #94a3b8; }
-  .problem-list { display: grid; gap: 16px; }
-  .problem-card {
-    display: grid; grid-template-columns: 56px minmax(0, 1.6fr) minmax(220px, 0.8fr) auto; 
-    align-items: center; gap: 16px; padding: 18px 18px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 18px;
-  }
-  .problem-status { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; }
-  .status-solved { background: rgba(34, 197, 94, 0.14); color: #bbf7d0; }
-  .status-attempted { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; }
-  .status-open { background: rgba(148, 163, 184, 0.12); color: #e2e8f0; }
-  .problem-card h3 { margin: 0; font-size: 1.15rem; }
-  .problem-card p { margin: 8px 0 0; color: #cbd5e1; }
-  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .tag { background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.18); color: #ddd6fe; border-radius: 999px; padding: 6px 8px; font-size: 0.72rem; }
-  .difficulty-badge { display: inline-block; padding: 7px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
-  .difficulty-easy { background: rgba(34,197,94,.14); color: #bbf7d0; }
-  .difficulty-medium { background: rgba(245,158,11,.12); color: #fcd34d; }
-  .difficulty-hard { background: rgba(239,68,68,.12); color: #fca5a5; }
-  .tool-btn { text-decoration: none; }
-  .problem-filters { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:0 0 18px; padding:16px; background:rgba(15,23,42,.58); border:1px solid rgba(148,163,184,.14); border-radius:14px; }
-  .problem-filters label { display:grid; gap:6px; color:#94a3b8; font-size:.78rem; }
-  .problem-filters input,.problem-filters select { min-height:40px; padding:8px 10px; color:#e2e8f0; background:#0b1220; border:1px solid #334155; border-radius:8px; }
-  @media (max-width: 840px) { .problem-card { grid-template-columns: 1fr; } }
+  .subpage-header h1 { margin: 0; color: var(--text); font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.06em; }
+  .subpage-header p { margin: 10px 0 0; color: var(--muted); }
+  .problem-list { display: grid; gap: 10px; }
+  .practice-subpage .problem-card { display: grid; grid-template-columns: 40px minmax(0, 1.6fr) minmax(160px, .8fr) 84px; align-items: center; gap: 14px; min-height: 84px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .problem-status { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; }
+  .status-solved { background: var(--success-soft); color: var(--success-text); }
+  .status-attempted { background: var(--primary-soft); color: var(--primary); }
+  .status-open { background: var(--surface-2); color: var(--muted); }
+  .problem-card h3 { margin: 0; color: var(--text); font-size: 15px; }
+  .problem-card p { margin: 4px 0 0; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+  .tag-row { display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 6px; overflow: hidden; }
+  .tag { padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .difficulty-badge { display: inline-block; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+  .difficulty-easy { background: var(--success-soft); color: var(--success-text); }
+  .difficulty-medium { background: var(--warning-soft); color: var(--warning-text); }
+  .difficulty-hard { background: var(--danger-soft); color: var(--danger-text); }
+  .tool-btn { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; padding: 0 12px; border: 1px solid var(--primary); border-radius: 9px; color: var(--primary); background: var(--surface); text-decoration: none; white-space: nowrap; }
+  .practice-subpage .problem-card > .tool-btn { color: var(--surface); background: var(--primary); }
+  .practice-subpage .problem-card > .tool-btn:hover { background: var(--primary-hover); }
+  .problem-filters { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(130px, 150px)) auto; align-items: center; gap: 8px; margin: 0 0 18px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+  .problem-filters label { display: grid; gap: 6px; color: var(--text); font-size: 13px; }
+  .problem-filters input, .problem-filters select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); color-scheme: light; }
+  .filter-chip { display: inline-flex; gap: 8px; padding: 6px 10px; margin: 0 6px 12px 0; border-radius: 999px; background: var(--primary-soft); color: var(--primary-soft-text); }
+  @media (max-width: 1100px) { .problem-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } .problem-filters label:first-child { grid-column: span 2; } }
+  @media (max-width: 840px) { .practice-subpage .problem-card { grid-template-columns: 34px minmax(0, 1fr) 84px; } .practice-subpage .problem-card > div:nth-child(3) { grid-column: 2; } }
+  @media (max-width: 600px) { .practice-subpage .problem-card { grid-template-columns: minmax(0, 1fr) 84px; gap: 8px; } .practice-subpage .problem-card > .problem-status { display: none; } .practice-subpage .problem-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .problem-filters label:first-child { grid-column: 1 / -1; } .subpage-header { align-items: flex-start; flex-direction: column; } }
 </style>
 {% endblock %}
 
@@ -50,10 +52,21 @@
     <label>Search<input type="search" name="search" value="{{ search }}" placeholder="Search problems..."></label>
     <label>Category<select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {% if selected_category|lower == category|lower %}selected{% endif %}>{{ category|title }}</option>{% endfor %}</select></label>
     <label>Difficulty<select name="difficulty"><option value="">All difficulties</option><option value="EASY" {% if selected_difficulty == 'EASY' %}selected{% endif %}>Easy</option><option value="MEDIUM" {% if selected_difficulty == 'MEDIUM' %}selected{% endif %}>Medium</option><option value="HARD" {% if selected_difficulty == 'HARD' %}selected{% endif %}>Hard</option></select></label>
-    <label>Status<select name="status"><option value="">All statuses</option><option value="NOT_ATTEMPTED" {% if selected_status == 'NOT_ATTEMPTED' %}selected{% endif %}>Not Started</option><option value="ATTEMPTED" {% if selected_status == 'ATTEMPTED' %}selected{% endif %}>Attempted</option><option value="SOLVED" {% if selected_status == 'SOLVED' %}selected{% endif %}>Solved</option></select></label>
+    <label>Status<select name="status"><option value="">All statuses</option><option value="NOT_ATTEMPTED" {% if selected_status == 'NOT_ATTEMPTED' %}selected{% endif %}>Not attempted</option><option value="ATTEMPTED" {% if selected_status == 'ATTEMPTED' %}selected{% endif %}>Attempted</option><option value="SOLVED" {% if selected_status == 'SOLVED' %}selected{% endif %}>Solved</option></select></label>
+    <label>Sort<select name="sort"><option value="default" {% if sort == 'default' %}selected{% endif %}>Newest</option><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Popular</option><option value="difficulty" {% if sort == 'difficulty' %}selected{% endif %}>Difficulty</option><option value="title" {% if sort == 'title' %}selected{% endif %}>Title</option></select></label>
+    <label><span>Saved only</span><input type="checkbox" name="saved" value="1" {% if saved_only %}checked{% endif %}></label>
     <button class="tool-btn" type="submit">Filter</button>
     <a class="tool-btn" href="{% url 'blog:practice_all' %}">Clear</a>
   </form>
+
+  <p aria-live="polite">Showing {{ filtered_count|default:0 }} of {{ all_count|default:0 }} problems</p>
+  <div aria-label="Active filters">
+    {% if search %}<a class="filter-chip" href="?category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&sort={{ sort }}">Search: {{ search }} ×</a>{% endif %}
+    {% if selected_category %}<a class="filter-chip" href="?search={{ search|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&sort={{ sort }}">Topic: {{ selected_category|title }} ×</a>{% endif %}
+    {% if selected_difficulty %}<a class="filter-chip" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&status={{ selected_status }}&sort={{ sort }}">Level: {{ selected_difficulty|title }} ×</a>{% endif %}
+    {% if selected_status %}<a class="filter-chip" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&sort={{ sort }}">Status: {% if selected_status == 'NOT_ATTEMPTED' %}Not attempted{% else %}{{ selected_status|title }}{% endif %} ×</a>{% endif %}
+    {% if saved_only %}<a class="filter-chip" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&sort={{ sort }}">Saved only ×</a>{% endif %}
+  </div>
 
   <div class="problem-list">
     {% for item in problems %}
@@ -72,7 +85,8 @@
           </div>
         </div>
         <div>
-          <span class="difficulty-badge difficulty-{{ problem.difficulty|lower }}">{{ problem.difficulty }}</span>
+          <span class="difficulty-badge difficulty-{{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
+          <p>{{ problem.acceptance_rate|default:0 }}% acceptance</p>
         </div>
         <a href="{% url 'blog:practice' %}?problem={{ problem.slug }}" class="tool-btn">{% if status == 'SOLVED' %}Review{% elif status == 'ATTEMPTED' %}Continue{% else %}Solve{% endif %}</a>
       </div>
@@ -89,7 +103,7 @@
       </div>
     {% endfor %}
   </div>
-  {% if problems.has_previous %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&page={{ problems.previous_page_number }}">Previous</a>{% endif %}
-  {% if problems.has_next %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&page={{ problems.next_page_number }}">Next</a>{% endif %}
+  {% if problems.has_previous %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&sort={{ sort }}&saved={% if saved_only %}1{% endif %}&page={{ problems.previous_page_number }}">Previous</a>{% endif %}
+  {% if problems.has_next %}<a class="tool-btn" href="?search={{ search|urlencode }}&category={{ selected_category|urlencode }}&difficulty={{ selected_difficulty }}&status={{ selected_status }}&sort={{ sort }}&saved={% if saved_only %}1{% endif %}&page={{ problems.next_page_number }}">Next</a>{% endif %}
 </div>
 {% endblock %}

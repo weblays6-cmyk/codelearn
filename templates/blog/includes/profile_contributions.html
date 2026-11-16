@@ -17,14 +17,14 @@
         <a href="{% url 'blog:profile' %}?tab=community"
            class="contribution-tab {% if active_tab == 'community' %}is-active{% endif %}"
            role="tab" aria-selected="{% if active_tab == 'community' %}true{% else %}false{% endif %}"
-           data-profile-tab="community" data-profile-url="{% url 'blog:profile' %}?tab=community">
+           data-profile-tab="community">
             Community {% if community_count %}<span>({{ community_count }})</span>{% endif %}
         </a>
 
         <a href="{% url 'blog:profile' %}?tab=projects"
            class="contribution-tab {% if active_tab == 'projects' %}is-active{% endif %}"
            role="tab" aria-selected="{% if active_tab == 'projects' %}true{% else %}false{% endif %}"
-           data-profile-tab="projects" data-profile-url="{% url 'blog:profile' %}?tab=projects">
+           data-profile-tab="projects">
             Projects {% if project_count %}<span>({{ project_count }})</span>{% endif %}
         </a>
     </div>

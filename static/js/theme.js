@@ -1,60 +1,55 @@
-// =========================
-// CODELEARN HUB THEME
-// =========================
-
-function applyTheme(theme) {
-
-    const body = document.body;
-    const icon = document.getElementById("themeIcon");
-
-    if (theme === "light") {
-
-        body.classList.add("light-theme");
-
-        if (icon) {
-            icon.className = "bi bi-sun-fill";
-        }
-
-    } else {
-
-        body.classList.remove("light-theme");
-
-        if (icon) {
-            icon.className = "bi bi-moon-fill";
-        }
-    }
-
-    localStorage.setItem("codelearn-theme", theme);
-}
-
-
-// =========================
-// TOGGLE THEME
-// =========================
-
-function toggleTheme() {
-
-    const isLight =
-        document.body.classList.contains("light-theme");
-
-    if (isLight) {
-        applyTheme("dark");
-    } else {
-        applyTheme("light");
-    }
-}
-
-
-// =========================
-// LOAD SAVED THEME
-// =========================
-
 document.addEventListener("DOMContentLoaded", function () {
+    const root = document.documentElement;
+    const themeChoiceInput = document.querySelector("[data-theme-choice]");
+    let systemThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 
-    const savedTheme =
-        localStorage.getItem("codelearn-theme") || "light";
+    function applyChoice(choice) {
+        if (root.dataset.themeEnabled !== "true") {
+            root.dataset.theme = "light";
+            root.style.colorScheme = "light";
+            document.body.classList.add("light-theme");
+            return;
+        }
+        const normalized = ["light", "dark", "system"].includes(choice) ? choice : "light";
+        const theme = normalized === "system"
+            ? (systemThemeMedia.matches ? "dark" : "light")
+            : normalized;
+        root.dataset.theme = theme;
+        root.dataset.themeChoice = normalized;
+        root.style.colorScheme = theme;
+        document.body.classList.toggle("light-theme", theme === "light");
+        if (themeChoiceInput && themeChoiceInput.value !== normalized) {
+            themeChoiceInput.value = normalized;
+        }
+    }
 
-    applyTheme(savedTheme);
+    window.applySiteThemeChoice = function (choice) {
+        if (root.dataset.themeEnabled !== "true") return;
+        applyChoice(choice);
+        try {
+            localStorage.setItem("vgrowhub-theme", choice);
+        } catch (error) {
+            window.console.warn("Theme preference could not be stored locally.", error);
+        }
+    };
+    window.toggleTheme = function () {
+        if (root.dataset.themeEnabled !== "true") return;
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        window.applySiteThemeChoice(next);
+    };
+
+    applyChoice(root.dataset.themeChoice);
+    if (themeChoiceInput) {
+        themeChoiceInput.addEventListener("change", function () {
+            window.applySiteThemeChoice(themeChoiceInput.value);
+        });
+    }
+    window.addEventListener("storage", function (event) {
+        if (event.key === "vgrowhub-theme") applyChoice(event.newValue || "light");
+    });
+    systemThemeMedia.addEventListener("change", function () {
+        if (root.dataset.themeChoice === "system") applyChoice("system");
+    });
 
     const drawer = document.getElementById("sidebar");
     const menuToggle = document.getElementById("mobileMenuToggle");
@@ -63,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!drawer || !menuToggle || !drawerClose || !drawerOverlay) return;
 
-    const mobileViewport = window.matchMedia("(max-width: 760px)");
+    const mobileViewport = window.matchMedia("(max-width: 767px)");
     let previousOverflow = "";
     let touchStart = null;
 
@@ -211,6 +206,86 @@ document.addEventListener("DOMContentLoaded", function () {
     if (searchShell && searchForm && searchInput && searchResults) {
         let debounceTimer = null;
         let selectedIndex = -1;
+        const RECENT_SEARCHES_KEY = 'vgrowhub-recent-searches';
+
+        function getRecentSearches() {
+            try {
+                const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+                return Array.isArray(searches)
+                    ? searches.filter((value) => typeof value === 'string').slice(0, 5)
+                    : [];
+            } catch (error) {
+                console.warn('Recent searches could not be loaded.', error);
+                return [];
+            }
+        }
+
+        function rememberSearch(query) {
+            const normalized = query.trim();
+            if (!normalized) return;
+            const recentSearches = [
+                normalized,
+                ...getRecentSearches().filter((item) => item.toLowerCase() !== normalized.toLowerCase()),
+            ].slice(0, 5);
+            try {
+                localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches));
+            } catch (error) {
+                console.warn('Recent searches could not be saved.', error);
+            }
+        }
+
+        function renderRecentSearches() {
+            const recentSearches = getRecentSearches();
+            if (!recentSearches.length) {
+                searchResults.innerHTML = '<div class="global-search-empty">Search pages, courses, problems, and people</div>';
+                selectedIndex = -1;
+                setSearchResultsVisible(true);
+                return;
+            }
+
+            const rows = recentSearches.map((query) => `
+                <button type="button" class="global-search-item global-search-recent" data-recent-query="${escapeHtml(query)}">
+                    <span class="global-search-item-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+                    <span class="global-search-item-copy">
+                        <span class="global-search-item-title">${escapeHtml(query)}</span>
+                        <span class="global-search-item-description">Recent search</span>
+                    </span>
+                </button>
+            `).join('');
+            searchResults.innerHTML = `<div class="global-search-group"><div class="global-search-group-title">Recent searches</div>${rows}</div>`;
+            selectedIndex = -1;
+            setSearchResultsVisible(true);
+            searchResults.querySelectorAll('[data-recent-query]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    searchInput.value = button.dataset.recentQuery || '';
+                    fetchSearchResults();
+                    searchInput.focus();
+                });
+            });
+        }
+
+        function closeCommandPalette() {
+            document.body.classList.remove('command-palette-open');
+            searchShell.classList.remove('is-command-palette');
+            searchShell.removeAttribute('role');
+            searchShell.removeAttribute('aria-modal');
+            setSearchResultsVisible(false);
+        }
+
+        function openCommandPalette() {
+            document.body.classList.add('command-palette-open');
+            searchShell.classList.add('is-command-palette');
+            searchShell.setAttribute('role', 'dialog');
+            searchShell.setAttribute('aria-modal', 'true');
+            searchShell.setAttribute('aria-label', 'Command palette');
+            searchInput.focus();
+            searchInput.select();
+            if (!searchInput.value.trim()) {
+                renderRecentSearches();
+            } else {
+                fetchSearchResults();
+            }
+        }
 
         function setSearchResultsVisible(visible) {
             if (!searchResults) return;
@@ -289,6 +364,7 @@ document.addEventListener("DOMContentLoaded", function () {
             items.forEach((item) => {
                 item.addEventListener('click', () => {
                     if (item.dataset.url) {
+                        rememberSearch(searchInput.value);
                         window.location.href = item.dataset.url;
                     }
                 });
@@ -306,6 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function navigateSelectedResult() {
             const activeItem = searchResults.querySelector('.global-search-item.is-active');
             if (activeItem && activeItem.dataset.url) {
+                rememberSearch(searchInput.value);
                 window.location.href = activeItem.dataset.url;
                 return true;
             }
@@ -328,7 +405,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function fetchSearchResults() {
             const query = searchInput.value.trim();
             if (!query) {
-                clearSearchState();
+                renderRecentSearches();
                 return;
             }
 
@@ -363,6 +440,7 @@ document.addEventListener("DOMContentLoaded", function () {
         searchInput.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 clearSearchState();
+                closeCommandPalette();
                 searchInput.blur();
                 return;
             }
@@ -399,16 +477,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const activeItem = searchResults.querySelector('.global-search-item.is-active');
             if (activeItem && activeItem.dataset.url) {
+                rememberSearch(query);
                 window.location.href = activeItem.dataset.url;
                 return;
             }
 
+            rememberSearch(query);
             window.location.href = `/courses/?search=${encodeURIComponent(query)}`;
         });
 
         document.addEventListener('click', function (event) {
             if (!searchShell.contains(event.target)) {
                 clearSearchState();
+                closeCommandPalette();
             }
         });
 
@@ -461,8 +542,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isMeta && event.key.toLowerCase() === 'k') {
             if (searchInput) {
                 event.preventDefault();
-                searchInput.focus();
-                searchInput.select();
+                openCommandPalette();
             }
         }
     });

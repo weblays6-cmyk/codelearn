@@ -154,6 +154,46 @@
     tab-size: 4;
 }
 
+.editor-loading-code {
+    visibility: hidden;
+}
+
+.playground-editor.editor-loading [data-runtime-status]::after {
+    content: "";
+    display: inline-block;
+    width: 42px;
+    height: 8px;
+    margin-left: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e9e5fb 25%, #f7f5ff 50%, #e9e5fb 75%);
+    background-size: 200% 100%;
+    animation: editor-skeleton 1.2s ease-in-out infinite;
+}
+
+.playground-editor:not(.editor-loading) .editor-loading-code {
+    visibility: visible;
+}
+
+.editor-fade-in {
+    animation: editor-fade-in 180ms ease-out both;
+}
+
+@keyframes editor-skeleton {
+    to { background-position: -200% 0; }
+}
+
+@keyframes editor-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .playground-editor [data-runtime-status]::after,
+    .editor-fade-in {
+        animation: none;
+    }
+}
+
 .playground-console {
     flex: 0 0 225px;
     min-height: 210px;
@@ -187,6 +227,28 @@
 .playground-empty {
     color: #78849a;
     font-size: 13px;
+}
+
+.playground-page .playground-title input {
+    color: var(--text);
+}
+
+.playground-page .desc-tabs {
+    color: var(--text);
+}
+
+.playground-page .desc-tabs button {
+    color: var(--muted);
+}
+
+.playground-page .desc-tabs button.active,
+.playground-page .desc-tabs button[aria-selected="true"] {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.playground-page .playground-description h2 {
+    color: var(--text);
 }
 
 [data-playground-pane][hidden] {

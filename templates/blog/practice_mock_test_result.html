@@ -76,8 +76,7 @@
     {% if row.selected_option %}<p>Your answer: {{ row.selected_option.text }}</p>{% else %}<p>Your answer: Unanswered
     </p>{% endif %}
     {% if row.correct_option %}<p>Correct answer: {{ row.correct_option.text }}</p>{% endif %}
-    <span class="answer-state {% if not row.correct %}incorrect{% endif %}">{% if row.correct %}Correct{% else
-      %}Incorrect{% endif %}</span>
+    <span class="answer-state {% if not row.correct %}incorrect{% endif %}">{% if row.correct %}Correct{% else %}Incorrect{% endif %}</span>
     {% if row.question.explanation %}<p>{{ row.question.explanation }}</p>{% endif %}
   </article>
   {% endfor %}

@@ -1,0 +1,53 @@
+.practice-leaderboard-page { width: min(1200px, 100%); margin: 0 auto; padding: 24px clamp(16px, 3vw, 36px) 44px; color: var(--text); }
+.practice-leaderboard-page .subpage-header { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.practice-leaderboard-page .subpage-header h1 { margin: 0; color: var(--text); font-size: 32px; }
+.practice-leaderboard-page .subpage-header p { color: var(--muted); }
+.practice-leaderboard-page .tool-btn { display: inline-flex; min-height: 40px; align-items: center; padding: 0 13px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface); }
+.leaderboard-period { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 18px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
+.leaderboard-period a { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 999px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.leaderboard-period a.active { color: var(--primary-soft-text); background: var(--primary-soft); }
+.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; }
+.podium-item { display: grid; justify-items: center; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); text-align: center; }
+.podium-item strong { color: var(--text); }
+.podium-item > span:last-child { color: var(--muted); font-size: 12px; }
+.podium-rank { padding: 4px 8px; border-radius: 999px; color: var(--warning-text); background: var(--warning-soft); font-size: 11px; font-weight: 800; }
+.podium-2 .podium-rank { color: var(--muted); background: var(--surface-2); }
+.podium-3 .podium-rank { color: var(--warning-text); background: color-mix(in srgb, var(--warning-soft) 55%, var(--surface)); }
+.leader-avatar { display: block; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 50%; object-fit: cover; }
+.leader-avatar-fallback { display: grid; place-items: center; color: var(--primary-soft-text); background: var(--primary-soft); font-weight: 800; }
+.leaderboard { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface); }
+.leader-row { display: grid; grid-template-columns: 64px minmax(180px, 1fr) 90px 90px 150px; align-items: center; gap: 12px; min-height: 62px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.leader-row:last-child { border-bottom: 0; }
+.leader-row.header { min-height: 44px; color: var(--muted); background: var(--surface-2); font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.leader-row.is-you { background: var(--primary-soft); }
+.leader-row.is-you > div { color: var(--primary-soft-text); }
+.rank { color: var(--text); font-weight: 800; }
+.leader-student { display: flex; min-width: 0; align-items: center; gap: 10px; color: var(--text); font-weight: 700; }
+.leader-student > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leader-student small { display: block; color: var(--muted); font-weight: 500; }
+.leaderboard-empty { display: grid; justify-items: center; gap: 8px; padding: 38px 20px; color: var(--muted); }
+.leaderboard-empty > i { color: var(--warning); font-size: 25px; }
+.leaderboard-empty strong { color: var(--text); }
+.leaderboard-empty a { color: var(--primary); font-weight: 700; }
+.practice-leaderboard-page .practice-pagination { margin-top: 18px; }
+.current-rank { margin-top: 12px; color: var(--muted); }
+.practice-leaderboard-page { color: var(--text); background: var(--bg); }
+.practice-leaderboard-page .eyebrow,
+.practice-leaderboard-page .podium-item strong,
+.practice-leaderboard-page .leaderboard-empty a { color: var(--primary); }
+.practice-leaderboard-page .leaderboard-period a.active { color: var(--primary); background: var(--primary-soft); }
+.practice-leaderboard-page .leader-row.is-you { background: var(--primary-soft); }
+.practice-leaderboard-page .leader-row.is-you > div { color: var(--primary-soft-text); }
+.practice-leaderboard-page .practice-pagination a.active { color: var(--surface); background: var(--primary); }
+
+@media (max-width: 700px) {
+    .practice-leaderboard-page .subpage-header { align-items: flex-start; flex-direction: column; }
+    .practice-leaderboard-page .subpage-header h1 { font-size: 25px; }
+    .leader-row { grid-template-columns: 42px minmax(110px, 1fr) 48px 48px 92px; gap: 5px; padding: 9px 7px; font-size: 11px; }
+    .leader-row.header { font-size: 9px; }
+    .leader-student { gap: 5px; }
+    .leader-student .leader-avatar { width: 28px; height: 28px; flex-basis: 28px; }
+    .leader-student small { font-size: 9px; }
+    .podium { gap: 6px; }
+    .podium-item { padding: 10px 5px; font-size: 11px; }
+}

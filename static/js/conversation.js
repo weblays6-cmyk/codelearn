@@ -67,6 +67,32 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusUrl =
         messagesBox.dataset.statusUrl;
 
+    const typingUrl =
+        messagesBox.dataset.typingUrl;
+
+    const loadOlderButton =
+        document.getElementById("loadOlderMessages");
+
+    const typingIndicator =
+        document.getElementById("chatTypingIndicator");
+
+    const scrollBottomButton =
+        document.getElementById("chatScrollBottom");
+
+    const messageSearch =
+        document.getElementById("chatMessageSearch");
+
+    let hasOlderMessages =
+        messagesBox.dataset.hasOlder === "true";
+
+    let olderMessageCursor =
+        messagesBox.querySelector(".chat-message-row")?.dataset.messageId || "";
+
+    const draftKey =
+        `vgrowhub-chat-draft:${page.dataset.conversationId}`;
+
+    let typingDebounce = null;
+    let searchDebounce = null;
 
     /* =====================================================
        STATE
@@ -79,6 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let selectedFiles = [];
 
     let statusTimer = null;
+    let initialReadSyncCompleted = false;
 
 
     /* =====================================================
@@ -272,9 +299,37 @@ showLatestMessageImmediately();
 
     textarea.addEventListener(
         "input",
-        resizeTextarea
+        function () {
+            resizeTextarea();
+            try {
+                localStorage.setItem(draftKey, textarea.value);
+            } catch (error) {
+                console.warn("Could not save the chat draft.", error);
+            }
+            window.clearTimeout(typingDebounce);
+            if (typingUrl && textarea.value.trim()) {
+                typingDebounce = window.setTimeout(async function () {
+                    try {
+                        await fetch(typingUrl, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrfToken,
+                                "X-Requested-With": "XMLHttpRequest",
+                            },
+                        });
+                    } catch (error) {
+                        console.warn("Could not update typing status.", error);
+                    }
+                }, 250);
+            }
+        }
     );
 
+    try {
+        textarea.value = localStorage.getItem(draftKey) || "";
+    } catch (error) {
+        console.warn("Could not restore the chat draft.", error);
+    }
 
     resizeTextarea();
 
@@ -904,6 +959,30 @@ showLatestMessageImmediately();
 
     }
 
+    function renderMessageReactions(row, reactions) {
+        let container = row.querySelector(".message-reactions");
+        if (!container) {
+            container = document.createElement("div");
+            container.className = "message-reactions";
+            const content = row.querySelector(".message-content");
+            if (content) content.appendChild(container);
+        }
+        if (!container) return;
+        container.replaceChildren();
+        (reactions || []).forEach((reaction) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "message-reaction";
+            button.dataset.messageId = row.dataset.messageId;
+            button.dataset.emoji = reaction.emoji;
+            button.dataset.reactionUrl = row.dataset.reactionUrl || "";
+            button.textContent = `${reaction.emoji} ${reaction.count}`;
+            if (reaction.mine) button.classList.add("is-active");
+            container.appendChild(button);
+        });
+        if (!container.children.length) container.remove();
+    }
+
 
     /* =====================================================
        CREATE NEW MESSAGE
@@ -912,6 +991,21 @@ showLatestMessageImmediately();
        Clone existing outgoing message so new messages
        use exactly the same CSS/layout.
     ===================================================== */
+
+    function applyMessageEndpoints(row, data) {
+        row.dataset.editUrl = data.edit_url || "";
+        row.dataset.reactionUrl = data.reaction_url || "";
+        row.querySelectorAll('[data-message-id]').forEach((button) => {
+            button.dataset.messageId = data.id;
+        });
+        const editButton = row.querySelector('.message-edit-btn');
+        if (editButton) {
+            editButton.dataset.content = data.content || "";
+            editButton.dataset.editUrl = data.edit_url || "";
+        }
+        const reactionButton = row.querySelector('.message-reaction-trigger');
+        if (reactionButton) reactionButton.dataset.reactionUrl = data.reaction_url || "";
+    }
 
     function createMessageElement(data) {
 
@@ -1056,7 +1150,8 @@ showLatestMessageImmediately();
                 row,
                 data.attachments
             );
-
+            applyMessageEndpoints(row, data);
+            renderMessageReactions(row, data.reactions);
 
             return row;
 
@@ -1257,6 +1352,22 @@ showLatestMessageImmediately();
             deleteButton
         );
 
+        const reactButton = document.createElement("button");
+        reactButton.type = "button";
+        reactButton.className = "message-action-btn message-reaction-trigger";
+        reactButton.dataset.messageId = data.id;
+        reactButton.textContent = "👍";
+        reactButton.title = "React with a thumbs-up";
+        actions.appendChild(reactButton);
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "message-action-btn message-edit-btn";
+        editButton.dataset.messageId = data.id;
+        editButton.dataset.content = data.content || "";
+        editButton.innerHTML = '<i class="bi bi-pencil"></i>';
+        editButton.title = "Edit";
+        actions.appendChild(editButton);
 
         content.appendChild(
             actions
@@ -1273,28 +1384,20 @@ showLatestMessageImmediately();
             data.attachments
         );
 
+        applyMessageEndpoints(row, data);
+        renderMessageReactions(row, data.reactions);
 
         return row;
 
     }
 
 
-    function appendIncomingMessage(data) {
-        if (messagesBox.querySelector(
-            `[data-message-id="${data.id}"]`
-        )) {
-            return;
-        }
-
-        const shouldScroll = isNearBottom();
-        const emptyState = document.getElementById("chatEmpty");
-        if (emptyState) {
-            emptyState.remove();
-        }
-
+    function createIncomingMessageElement(data) {
         const row = document.createElement("div");
         row.className = "chat-message-row message-row-other";
         row.dataset.messageId = data.id;
+        row.dataset.editUrl = data.edit_url || "";
+        row.dataset.reactionUrl = data.reaction_url || "";
 
         const avatar = data.sender_profile_picture
             ? document.createElement("img")
@@ -1373,14 +1476,34 @@ showLatestMessageImmediately();
         remove.setAttribute("aria-label", "Delete");
         remove.innerHTML = '<i class="bi bi-trash3"></i>';
         actions.appendChild(remove);
+        const reaction = document.createElement("button");
+        reaction.type = "button";
+        reaction.className = "message-action-btn message-reaction-trigger";
+        reaction.dataset.messageId = data.id;
+        reaction.dataset.reactionUrl = data.reaction_url || "";
+        reaction.textContent = "👍";
+        reaction.title = "React with a thumbs-up";
+        actions.appendChild(reaction);
 
         content.appendChild(actions);
         row.appendChild(content);
         if (!data.deleted_for_everyone) {
             addAttachmentsToMessage(row, data.attachments);
         }
-        messagesBox.appendChild(row);
+        renderMessageReactions(row, data.reactions);
+        return row;
+    }
 
+    function appendIncomingMessage(data, insertBeforeRow) {
+        if (messagesBox.querySelector(
+            `.chat-message-row[data-message-id="${data.id}"]`
+        )) return;
+        const shouldScroll = isNearBottom();
+        const emptyState = document.getElementById("chatEmpty");
+        if (emptyState) emptyState.remove();
+        const row = createIncomingMessageElement(data);
+        if (insertBeforeRow) messagesBox.insertBefore(row, insertBeforeRow);
+        else messagesBox.appendChild(row);
         if (shouldScroll) {
             scrollToBottom();
         }
@@ -1559,6 +1682,11 @@ showLatestMessageImmediately();
             textarea.value =
                 "";
 
+            try {
+                localStorage.removeItem(draftKey);
+            } catch (error) {
+                console.warn("Could not clear the chat draft.", error);
+            }
 
             resizeTextarea();
 
@@ -1745,6 +1873,76 @@ textarea.addEventListener(
 
         }
     );
+
+    document.addEventListener("click", async function (event) {
+        const button = event.target.closest(".message-edit-btn");
+        if (!button) return;
+        const row = button.closest(".chat-message-row");
+        const editUrl = button.dataset.editUrl || row?.dataset.editUrl;
+        if (!editUrl) return;
+        const text = row?.querySelector(".message-text");
+        const current = button.dataset.content || text?.textContent || "";
+        const updated = window.prompt("Edit message", current);
+        if (updated === null || updated.trim() === current.trim()) return;
+        const body = new FormData();
+        body.append("csrfmiddlewaretoken", csrfToken);
+        body.append("content", updated);
+        button.disabled = true;
+        try {
+            const response = await fetch(editUrl, {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                body,
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Unable to edit message.");
+            }
+            if (text) text.innerHTML = escapeHtml(data.content).replace(/\n/g, "<br>");
+            button.dataset.content = data.content;
+            const copy = row.querySelector(".message-copy-btn");
+            if (copy) copy.dataset.copyText = data.content;
+            let edited = row.querySelector(".message-edited");
+            if (!edited) {
+                edited = document.createElement("span");
+                edited.className = "message-edited";
+                edited.textContent = "Edited";
+                row.querySelector(".message-meta")?.appendChild(edited);
+            }
+        } catch (error) {
+            window.alert(error.message || "Unable to edit message.");
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    document.addEventListener("click", async function (event) {
+        const button = event.target.closest(".message-reaction-trigger, .message-reaction");
+        if (!button) return;
+        const row = button.closest(".chat-message-row");
+        const reactionUrl = button.dataset.reactionUrl || row?.dataset.reactionUrl;
+        if (!reactionUrl) return;
+        const body = new FormData();
+        body.append("csrfmiddlewaretoken", csrfToken);
+        body.append("emoji", button.dataset.emoji || "👍");
+        button.disabled = true;
+        try {
+            const response = await fetch(reactionUrl, {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                body,
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Unable to update reaction.");
+            }
+            renderMessageReactions(row, data.reactions);
+        } catch (error) {
+            window.alert(error.message || "Unable to update reaction.");
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     /* =====================================================
    DELETE MESSAGE
@@ -2127,7 +2325,7 @@ function markMessageAsDeleted(row) {
 
     async function pollStatus() {
 
-        if (!statusUrl) {
+        if (!statusUrl || document.visibilityState !== "visible") {
             return;
         }
 
@@ -2151,6 +2349,7 @@ function markMessageAsDeleted(row) {
 
 
             if (!response.ok) {
+                console.warn("Chat status refresh failed.", response.status);
                 return;
             }
 
@@ -2158,24 +2357,35 @@ function markMessageAsDeleted(row) {
             const data =
                 await response.json();
 
+            if (!initialReadSyncCompleted) {
+                initialReadSyncCompleted = true;
+                document.dispatchEvent(new Event("vgrowhub:refresh-counts"));
+            }
 
             if (!data.success) {
                 return;
             }
 
+            if (typingIndicator) {
+                typingIndicator.hidden = !data.typing;
+            }
 
             (data.messages || []).forEach(
                 function (message) {
-                    if (
-                        Number(message.sender_id) !==
-                            Number(page.dataset.currentUserId) &&
-                        !messagesBox.querySelector(
-                            `[data-message-id="${message.id}"]`
-                        )
-                    ) {
+                    const row = messagesBox.querySelector(
+                        `.chat-message-row[data-message-id="${message.id}"]`
+                    );
+                    if (!row && Number(message.sender_id) !== Number(page.dataset.currentUserId)) {
                         appendIncomingMessage(message);
                     }
 
+                    if (row && message.edited_at) {
+                        const text = row.querySelector(".message-text");
+                        if (text && text.textContent !== message.content) {
+                            text.innerHTML = escapeHtml(message.content).replace(/\n/g, "<br>");
+                        }
+                    }
+                    if (row) renderMessageReactions(row, message.reactions);
                     updateMessageStatus(
                         message.id,
                         message.is_delivered,
@@ -2188,74 +2398,118 @@ function markMessageAsDeleted(row) {
 
         } catch (error) {
 
-            /*
-               Silent.
-               Chat should never show an error
-               every 2 seconds because polling failed.
-            */
+            console.warn("Chat status refresh failed.", error);
 
         }
 
     }
 
 
-    statusTimer =
-        window.setInterval(
-            pollStatus,
-            2000
-        );
+    function startChatPolling() {
+        if (statusTimer) return;
+        statusTimer = window.setInterval(pollStatus, 3000);
+    }
+
+    function stopChatPolling() {
+        if (statusTimer) window.clearInterval(statusTimer);
+        statusTimer = null;
+    }
+
+    startChatPolling();
 
 
     pollStatus();
 
 
-    let websocket = null;
-    let reconnectTimer = null;
-    let reconnectDelay = 1000;
-    let shouldReconnect = true;
-
-    function connectWebSocket() {
-        if (!window.WebSocket || !shouldReconnect) {
-            return;
-        }
-
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const url = `${protocol}//${window.location.host}/ws/messages/${page.dataset.conversationId}/`;
-        websocket = new WebSocket(url);
-
-        websocket.addEventListener("open", function () {
-            reconnectDelay = 1000;
-            if (statusTimer) {
-                clearInterval(statusTimer);
-                statusTimer = null;
-            }
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+            startChatPolling();
             pollStatus();
-        });
-        websocket.addEventListener("message", function (event) {
+        } else {
+            stopChatPolling();
+        }
+    });
+
+    if (loadOlderButton) {
+        loadOlderButton.hidden = !hasOlderMessages;
+        loadOlderButton.addEventListener("click", async function () {
+            if (!hasOlderMessages || !olderMessageCursor) return;
+            loadOlderButton.disabled = true;
             try {
-                const data = JSON.parse(event.data);
-                if (data.type === "message_created") {
-                    pollStatus();
+                const params = new URLSearchParams({ before_id: olderMessageCursor });
+                const response = await fetch(`${statusUrl}?${params}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    cache: "no-store",
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || "Unable to load older messages.");
                 }
+                const currentFirst = messagesBox.querySelector(".chat-message-row");
+                const fragment = document.createDocumentFragment();
+                (data.messages || []).forEach((message) => {
+                    if (messagesBox.querySelector(`.chat-message-row[data-message-id="${message.id}"]`)) return;
+                    const row = Number(message.sender_id) === Number(page.dataset.currentUserId)
+                        ? createMessageElement(message)
+                        : createIncomingMessageElement(message);
+                    fragment.appendChild(row);
+                });
+                messagesBox.insertBefore(fragment, currentFirst || loadOlderButton.nextSibling);
+                olderMessageCursor = data.before_id || olderMessageCursor;
+                hasOlderMessages = Boolean(data.has_older);
+                loadOlderButton.hidden = !hasOlderMessages;
             } catch (error) {
-                console.error("Invalid chat update received.", error);
+                window.alert(error.message || "Unable to load older messages.");
+            } finally {
+                loadOlderButton.disabled = false;
             }
-        });
-        websocket.addEventListener("close", function (event) {
-            if (!shouldReconnect || event.code === 4401 || event.code === 4403) {
-                return;
-            }
-            if (!statusTimer) {
-                statusTimer = window.setInterval(pollStatus, 2000);
-            }
-            reconnectTimer = window.setTimeout(function () {
-                reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-                connectWebSocket();
-            }, reconnectDelay);
         });
     }
 
-    connectWebSocket();
+    if (messageSearch) {
+        messageSearch.addEventListener("input", function () {
+            window.clearTimeout(searchDebounce);
+            searchDebounce = window.setTimeout(async function () {
+                const query = messageSearch.value.trim();
+                if (!query) {
+                    messagesBox.querySelectorAll(".chat-message-row").forEach((row) => { row.hidden = false; });
+                    return;
+                }
+                try {
+                    const params = new URLSearchParams({ q: query });
+                    const response = await fetch(`${statusUrl}?${params}`, {
+                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                        cache: "no-store",
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.error || "Search failed.");
+                    const matched = new Set((data.messages || []).map((message) => String(message.id)));
+                    data.messages.forEach((message) => {
+                        if (messagesBox.querySelector(`.chat-message-row[data-message-id="${message.id}"]`)) return;
+                        const row = Number(message.sender_id) === Number(page.dataset.currentUserId)
+                            ? createMessageElement(message)
+                            : createIncomingMessageElement(message);
+                        row.hidden = true;
+                        messagesBox.appendChild(row);
+                    });
+                    messagesBox.querySelectorAll(".chat-message-row").forEach((row) => {
+                        row.hidden = !matched.has(row.dataset.messageId);
+                    });
+                } catch (error) {
+                    window.console.warn(error.message || "Search failed.");
+                }
+            }, 250);
+        });
+    }
+
+    if (scrollBottomButton) {
+        const updateScrollButton = function () {
+            scrollBottomButton.hidden = isNearBottom();
+        };
+        messagesBox.addEventListener("scroll", updateScrollButton, { passive: true });
+        scrollBottomButton.addEventListener("click", scrollToBottom);
+        updateScrollButton();
+    }
 
 
     /* =====================================================
@@ -2323,14 +2577,6 @@ function markMessageAsDeleted(row) {
                 );
 
             }
-            shouldReconnect = false;
-            if (reconnectTimer) {
-                clearTimeout(reconnectTimer);
-            }
-            if (websocket) {
-                websocket.close(1000);
-            }
-
         }
     );
 

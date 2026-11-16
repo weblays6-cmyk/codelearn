@@ -2,13 +2,16 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.signals import user_logged_in
 from django.core.management import call_command
-from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.contrib.auth.models import AnonymousUser, User
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
-from django.urls import reverse
+from django.test import Client, RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.urls import resolve, reverse
 from django.utils import timezone
+from allauth.account.models import EmailAddress
+from types import SimpleNamespace
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from channels.testing import WebsocketCommunicator
@@ -16,11 +19,16 @@ from unittest.mock import patch
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from datetime import timedelta
+import os
+import uuid
 
 from PIL import Image
+from ai.services import ai_configuration
 
 from .forms import EmailSignupForm
 from .gmail_service import send_gmail
+from myblog.adapters import VGrowHubSocialAccountAdapter
+from .services.markdown import render_lesson_markdown
 from .models import (
 	Assignment,
 	AssignmentAudience,
@@ -29,6 +37,8 @@ from .models import (
 	AssignmentQuestion,
 	AssignmentSubmission,
 	FollowRequest,
+	LoginHistory,
+	Message,
 	Notification,
 	UserBlock,
 	AITutorConversation,
@@ -41,9 +51,20 @@ from .models import (
 	Lesson,
 	Post,
 	PracticeProgress,
+	PracticeProblem,
+	PracticeProblemSet,
+	PlaygroundSession,
 	PracticeSubmission,
+	MockTest,
+	MockTestAttempt,
+	MockTestQuestion,
+	XPEvent,
 	UserProfile,
+	UserSession,
+	UserAssignmentProgress,
+	SiteSettings,
 )
+from . import views
 from .admin import AssignmentSubmissionAdmin
 from .consumers import ConversationConsumer
 
@@ -84,26 +105,29 @@ class HomeRedirectTests(TestCase):
 
 		goal_page = self.client.get(reverse('blog:choose_goal'))
 		self.assertEqual(goal_page.status_code, 200)
-		self.assertContains(goal_page, 'Learn Python')
-		self.assertContains(goal_page, 'Become a Full Stack Developer')
-		self.assertContains(goal_page, 'Other')
+		self.assertContains(goal_page, 'Python Full Stack Developer')
+		self.assertContains(goal_page, 'Django Developer')
+		self.assertContains(goal_page, 'Data Analyst')
+		self.assertContains(goal_page, 'Interview Prep')
+		self.assertContains(goal_page, 'Web Basics')
+		self.assertNotContains(goal_page, 'Other')
 
 		response = self.client.post(
 			reverse('blog:choose_goal'),
-			{'goal': 'python'},
+			{'goal': 'full_stack'},
 		)
 		self.assertRedirects(response, reverse('blog:dashboard'))
 		user.profile_data.refresh_from_db()
-		self.assertEqual(user.profile_data.goal, 'python')
+		self.assertEqual(user.profile_data.goal, 'full_stack')
 		self.assertTrue(user.profile_data.onboarding_completed)
 		self.assertTemplateUsed(
 			self.client.get(reverse('blog:dashboard')),
 			'blog/dashboard.html',
 		)
 
-		self.client.post(reverse('blog:choose_goal'), {'goal': 'projects'})
+		self.client.post(reverse('blog:choose_goal'), {'goal': 'web'})
 		user.profile_data.refresh_from_db()
-		self.assertEqual(user.profile_data.goal, 'projects')
+		self.assertEqual(user.profile_data.goal, 'web')
 
 	@patch('blog.signals.send_gmail')
 	def test_email_login_still_redirects_to_dashboard(self, send_gmail):
@@ -165,6 +189,24 @@ class HomeRedirectTests(TestCase):
 		self.assertIn('Login method: Google', send_gmail.call_args.args[2])
 
 
+class SocialAccountAdapterTests(TestCase):
+	def test_google_username_uses_available_email_prefix(self):
+		User.objects.create_user('weblays6', password='pass')
+		sociallogin = SimpleNamespace(
+			user=User(),
+			account=SimpleNamespace(extra_data={}),
+		)
+
+		user = VGrowHubSocialAccountAdapter().populate_user(
+			None,
+			sociallogin,
+			{'email': 'weblays6@gmail.com'},
+		)
+
+		self.assertEqual(user.username, 'weblays62')
+		self.assertEqual(user.email, 'weblays6@gmail.com')
+
+
 class EmailServiceTests(TestCase):
 	@override_settings(
 		EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
@@ -222,6 +264,25 @@ class EmailServiceTests(TestCase):
 		send_gmail.assert_called_once()
 		self.assertEqual(send_gmail.call_args.args[1], 'vGrowHub Password Reset OTP')
 		self.assertNotIn('127.0.0.1', send_gmail.call_args.args[2])
+
+	@patch('blog.views.send_gmail', side_effect=RuntimeError('SMTP auth failed'))
+	def test_forgot_password_email_failure_is_logged_and_reported(self, send_gmail):
+		user = User.objects.create_user(
+			'otp-failure-user',
+			email='otp-failure@example.com',
+			password='StrongPassword!123',
+		)
+
+		with self.assertLogs('blog.views', level='ERROR') as logs:
+			response = self.client.post(
+				reverse('blog:forgot_password'),
+				{'email': user.email},
+			)
+
+		self.assertContains(response, "We couldn&#x27;t send the password reset email.")
+		self.assertIn('SMTP auth failed', '\n'.join(logs.output))
+		self.assertNotIn('reset_otp', self.client.session)
+		send_gmail.assert_called_once()
 
 
 class PasswordChangeTests(TestCase):
@@ -404,12 +465,12 @@ class PeopleDiscoveryTests(TestCase):
 		)
 		self.client.force_login(self.viewer)
 
-	def test_people_page_waits_for_search_query(self):
+	def test_people_page_shows_suggestions_without_a_search_query(self):
 		response = self.client.get(reverse('blog:discover_users'))
 
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.context['users'], [])
-		self.assertContains(response, 'Enter a name or username to discover people.')
+		self.assertContains(response, 'Suggested for you')
 
 	def test_people_search_matches_display_name_and_at_username(self):
 		for query in ('victor', '@VICTORPAUL'):
@@ -497,7 +558,7 @@ class UsernameIdentityTests(TestCase):
 
 		send_welcome_email.assert_called_once()
 		email_args = send_welcome_email.call_args.args
-		self.assertEqual(email_args[1], 'Welcome to vGrowHub 🎉')
+		self.assertEqual(email_args[1], 'Welcome to vGrowHub — Your account is ready 🎉')
 		self.assertIn('@picture_user', email_args[2])
 		send_login_email.assert_called_once()
 		self.assertEqual(
@@ -779,7 +840,9 @@ class AccountPrivacyTests(TestCase):
 		)
 		self.assertEqual(detail_response.status_code, 403)
 
-	def test_all_follow_requests_wait_for_receiver_approval(self):
+	def test_private_follow_requests_wait_for_receiver_approval(self):
+		self.owner.profile_data.is_private = True
+		self.owner.profile_data.save(update_fields=['is_private'])
 		self.client.force_login(self.viewer)
 		response = self.client.post(
 			reverse('blog:send_follow_request', args=[self.owner.username])
@@ -800,6 +863,34 @@ class AccountPrivacyTests(TestCase):
 			receiver=self.owner,
 			status='ACCEPTED',
 		).exists())
+
+	def test_public_follow_is_immediate_and_duplicate_requests_are_prevented(self):
+		self.client.force_login(self.viewer)
+		first = self.client.post(
+			reverse('blog:send_follow_request', args=[self.owner.username]),
+		)
+		self.assertEqual(first.status_code, 200)
+		self.assertEqual(first.json()['status'], 'ACCEPTED')
+		self.assertEqual(FollowRequest.objects.filter(
+			sender=self.viewer,
+			receiver=self.owner,
+			status='ACCEPTED',
+		).count(), 1)
+		self.assertTrue(Notification.objects.filter(
+			recipient=self.owner,
+			sender=self.viewer,
+			notification_type='NEW_FOLLOWER',
+		).exists())
+		duplicate = self.client.post(
+			reverse('blog:send_follow_request', args=[self.owner.username]),
+		)
+		self.assertEqual(duplicate.status_code, 409)
+		self.assertEqual(
+			self.client.post(
+				reverse('blog:send_follow_request', args=[self.viewer.username]),
+			).status_code,
+			400,
+		)
 
 	def test_cancel_after_accept_reports_stale_state_without_alert_response(self):
 		request = FollowRequest.objects.create(
@@ -843,7 +934,7 @@ class AccountPrivacyTests(TestCase):
 		self.assertContains(response, 'Follow Request')
 		self.assertContains(
 			response,
-			reverse('blog:user_profile', args=[self.viewer.username]),
+			reverse('blog:follow_requests'),
 		)
 		self.assertEqual(
 			response.context['notifications'][0].pending_follow_request,
@@ -977,46 +1068,169 @@ class AccountPrivacyTests(TestCase):
 
 		self.assertEqual(response.status_code, 404)
 
-	def test_personal_chat_and_new_message_require_mutual_follow(self):
+	def test_unconnected_chat_creates_message_request_and_connected_chat_is_direct(self):
 		self.client.force_login(self.viewer)
 
 		response = self.client.get(reverse('blog:messages'))
 		self.assertNotContains(response, 'privacy-owner')
-		self.assertEqual(
-			self.client.post(
-				reverse('blog:start_personal_chat', args=[self.owner.username])
-			).status_code,
-			403,
+		conversation_response = self.client.post(
+			reverse('blog:start_personal_chat', args=[self.owner.username])
 		)
-		conversation = Conversation.objects.create(
-			project_owner=self.viewer,
-			participant=self.owner,
-		)
-		self.assertEqual(
-			self.client.get(
-				reverse('blog:conversation_detail', args=[conversation.pk])
-			).status_code,
-			403,
-		)
+		self.assertEqual(conversation_response.status_code, 403)
 
 		FollowRequest.objects.create(
 			sender=self.viewer,
 			receiver=self.owner,
 			status='ACCEPTED',
 		)
+		response = self.client.get(reverse('blog:messages'))
+		self.assertEqual(response.status_code, 200)
+		direct_chat = self.client.post(
+			reverse('blog:start_personal_chat', args=[self.owner.username]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(direct_chat.status_code, 200)
+		self.assertFalse(direct_chat.json()['is_request'])
+
+	def test_allowed_non_follower_starts_one_message_request_and_can_be_accepted(self):
+		self.owner.profile_data.who_can_message = 'everyone'
+		self.owner.profile_data.save(update_fields=['who_can_message'])
+		self.client.force_login(self.viewer)
+		started = self.client.post(
+			reverse('blog:start_personal_chat', args=[self.owner.username]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(started.status_code, 200)
+		self.assertTrue(started.json()['is_request'])
+		conversation = Conversation.objects.get(pk=started.json()['conversation_id'])
+		response = self.client.post(
+			started.json()['redirect_url'],
+			{'content': 'Hello there'},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(conversation.messages.count(), 1)
+		self.assertTrue(Notification.objects.filter(
+			recipient=self.owner,
+			sender=self.viewer,
+			notification_type='MESSAGE_REQUEST',
+		).exists())
+		another = self.client.post(
+			started.json()['redirect_url'],
+			{'content': 'One more'},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(another.status_code, 409)
+		recipient = Client()
+		recipient.force_login(self.owner)
+		accepted = recipient.post(
+			reverse('blog:accept_message_request', args=[conversation.pk]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(accepted.status_code, 200)
+		conversation.refresh_from_db()
+		self.assertEqual(conversation.status, 'ACCEPTED')
+
+	def test_blocked_user_cannot_start_message_request_when_everyone_is_allowed(self):
+		self.owner.profile_data.who_can_message = 'everyone'
+		self.owner.profile_data.save(update_fields=['who_can_message'])
+		UserBlock.objects.create(blocker=self.owner, blocked=self.viewer)
+		self.client.force_login(self.viewer)
+
+		response = self.client.post(
+			reverse('blog:start_personal_chat', args=[self.owner.username]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(response.status_code, 403)
+		self.assertFalse(
+			Conversation.objects.filter(
+				project_owner=self.viewer,
+				participant=self.owner,
+			).exists()
+			or Conversation.objects.filter(
+				project_owner=self.owner,
+				participant=self.viewer,
+			).exists()
+		)
+
+	def test_new_message_search_includes_message_requests_and_one_way_connections(self):
+		self.owner.profile_data.who_can_message = 'everyone'
+		self.owner.profile_data.save(update_fields=['who_can_message'])
+		self.client.force_login(self.viewer)
+
+		response = self.client.get(reverse('blog:messages'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertIn(self.owner, response.context['available_users'])
+
+		self.owner.profile_data.who_can_message = 'nobody'
+		self.owner.profile_data.save(update_fields=['who_can_message'])
 		FollowRequest.objects.create(
-			sender=self.owner,
-			receiver=self.viewer,
+			sender=self.viewer,
+			receiver=self.owner,
 			status='ACCEPTED',
 		)
 		response = self.client.get(reverse('blog:messages'))
-		self.assertContains(response, 'privacy-owner')
-		self.assertEqual(
-			self.client.post(
-				reverse('blog:start_personal_chat', args=[self.owner.username])
-			).status_code,
-			200,
+		self.assertIn(self.owner, response.context['available_users'])
+
+	def test_private_follow_lists_require_approval_and_json_paginates(self):
+		self.owner.profile_data.is_private = True
+		self.owner.profile_data.save(update_fields=['is_private'])
+		FollowRequest.objects.create(
+			sender=self.viewer,
+			receiver=self.owner,
+			status='ACCEPTED',
 		)
+		self.client.force_login(self.viewer)
+
+		following = self.client.get(
+			reverse('blog:following_list', args=[self.viewer.username]),
+			{'format': 'json', 'page': '1'},
+		)
+		self.assertEqual(following.status_code, 200)
+		self.assertEqual(following.json()['count'], 1)
+		self.assertEqual(following.json()['items'][0]['username'], self.owner.username)
+
+		outsider = User.objects.create_user('private-list-outsider', password='pass')
+		outsider_client = Client()
+		outsider_client.force_login(outsider)
+		self.assertEqual(
+			outsider_client.get(
+				reverse('blog:followers_list', args=[self.owner.username]),
+			).status_code,
+			404,
+		)
+
+	def test_rejecting_message_request_marks_its_notification_read(self):
+		conversation = Conversation.objects.create(
+			project_owner=self.viewer,
+			participant=self.owner,
+			status='REQUEST',
+			request_sender=self.viewer,
+		)
+		Message.objects.create(
+			conversation=conversation,
+			sender=self.viewer,
+			content='Please connect.',
+		)
+		notification = Notification.objects.create(
+			recipient=self.owner,
+			sender=self.viewer,
+			notification_type='MESSAGE_REQUEST',
+			message='A message request.',
+		)
+		self.client.force_login(self.owner)
+
+		response = self.client.post(
+			reverse('blog:reject_message_request', args=[conversation.pk]),
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Conversation.objects.filter(pk=conversation.pk).exists())
+		notification.refresh_from_db()
+		self.assertTrue(notification.is_read)
 
 	def test_people_search_links_to_profiles_and_excludes_blocked_users(self):
 		self.owner.profile_data.display_name = 'Searchable Owner'
@@ -1055,6 +1269,261 @@ class AccountPrivacyTests(TestCase):
 		)
 		self.owner.profile_data.refresh_from_db()
 		self.assertTrue(self.owner.profile_data.is_private)
+
+
+class PlatformFeatureTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user('platform-user', password='pass')
+		self.other_user = User.objects.create_user('platform-other', password='pass')
+		self.outsider = User.objects.create_user('platform-outsider', password='pass')
+
+	def test_live_counts_require_login_and_only_count_the_current_user(self):
+		Notification.objects.create(
+			recipient=self.user,
+			sender=self.other_user,
+			notification_type='FOLLOW_REQUEST',
+			message='A request for you.',
+		)
+		Notification.objects.create(
+			recipient=self.other_user,
+			sender=self.user,
+			notification_type='FOLLOW_REQUEST',
+			message='A request for someone else.',
+		)
+		FollowRequest.objects.create(
+			sender=self.other_user,
+			receiver=self.user,
+			status='PENDING',
+		)
+		FollowRequest.objects.create(
+			sender=self.user,
+			receiver=self.other_user,
+			status='PENDING',
+		)
+		user_conversation = Conversation.objects.create(
+			project_owner=self.user,
+			participant=self.other_user,
+		)
+		other_conversation = Conversation.objects.create(
+			project_owner=self.other_user,
+			participant=self.outsider,
+		)
+		Message.objects.create(
+			conversation=user_conversation,
+			sender=self.other_user,
+			content='Unread for the current user.',
+		)
+		Message.objects.create(
+			conversation=other_conversation,
+			sender=self.outsider,
+			content='Unread for the other user.',
+		)
+
+		url = reverse('blog:live_counts')
+		self.assertEqual(self.client.get(url).status_code, 302)
+
+		self.client.force_login(self.user)
+		response = self.client.get(url)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.json(), {
+			'notifications_unread': 1,
+			'messages_unread': 1,
+			'follow_requests_pending': 1,
+		})
+
+	def test_free_and_premium_device_limits_and_oldest_session_revocation(self):
+		first_client = Client()
+		first_client.force_login(self.user)
+		first_session_key = first_client.cookies[settings.SESSION_COOKIE_NAME].value
+
+		second_client = Client()
+		second_client.force_login(self.user)
+		first_device = UserSession.objects.get(session_key=first_session_key)
+		self.assertFalse(first_device.is_active)
+		self.assertEqual(
+			UserSession.objects.filter(user=self.user, is_active=True).count(),
+			1,
+		)
+
+		profile = self.user.profile_data
+		profile.plan = 'premium'
+		profile.save(update_fields=['plan'])
+		clients = [second_client]
+		for _ in range(2):
+			client = Client()
+			client.force_login(self.user)
+			clients.append(client)
+		self.assertEqual(
+			UserSession.objects.filter(user=self.user, is_active=True).count(),
+			3,
+		)
+
+		newest_client = Client()
+		newest_client.force_login(self.user)
+		self.assertEqual(
+			UserSession.objects.filter(user=self.user, is_active=True).count(),
+			3,
+		)
+		first_device.refresh_from_db()
+		self.assertFalse(first_device.is_active)
+		self.assertFalse(
+			UserSession.objects.filter(
+				session_key=clients[0].cookies[settings.SESSION_COOKIE_NAME].value,
+				is_active=True,
+			).exists()
+		)
+
+	def test_revoked_session_is_rejected_on_its_next_request(self):
+		old_client = Client()
+		old_client.force_login(self.user)
+		new_client = Client()
+		new_client.force_login(self.user)
+
+		response = old_client.get(reverse('blog:live_counts'))
+		self.assertEqual(response.status_code, 401)
+		self.assertEqual(response.json(), {'error': 'session_revoked'})
+
+		html_old_client = Client()
+		html_user = User.objects.create_user('revoked-html-user', password='pass')
+		html_old_client.force_login(html_user)
+		new_html_client = Client()
+		new_html_client.force_login(html_user)
+		response = html_old_client.get(reverse('blog:dashboard'))
+		self.assertRedirects(
+			response,
+			f"{reverse('blog:login')}?device_signed_out=1",
+			fetch_redirect_response=False,
+		)
+		response = html_old_client.get(response.url)
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(
+			response,
+			'You were signed out because your account was used on another device.',
+		)
+
+	def test_sound_preferences_are_saved_and_login_history_is_limited(self):
+		self.client.force_login(self.user)
+		for _ in range(12):
+			self.client.force_login(self.user)
+		self.assertEqual(LoginHistory.objects.filter(user=self.user).count(), 10)
+
+		response = self.client.post(
+			reverse('blog:settings'),
+			{
+				'notification_sound': 'true',
+				'message_sound': 'false',
+			},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(response.status_code, 200)
+		self.user.profile_data.refresh_from_db()
+		self.assertTrue(self.user.profile_data.notification_sound)
+		self.assertFalse(self.user.profile_data.message_sound)
+		self.assertEqual(response.json(), {
+			'notification_sound': True,
+			'message_sound': False,
+		})
+
+	def test_follow_request_navigation_and_notification_deep_links(self):
+		types = (
+			'FOLLOW_REQUEST',
+			'FOLLOW_ACCEPTED',
+			'FOLLOW_REJECTED',
+			'FOLLOW_BACK',
+			'COMMUNITY_REPLY',
+			'NEW_FOLLOWER',
+			'MESSAGE_REQUEST',
+			'MESSAGE',
+			'COURSE',
+		)
+		for notification_type in types:
+			Notification.objects.create(
+				recipient=self.user,
+				sender=self.other_user,
+				notification_type=notification_type,
+				message=f'{notification_type} notification.',
+			)
+
+		self.client.force_login(self.user)
+		follow_page = self.client.get(reverse('blog:follow_requests'))
+		self.assertEqual(follow_page.status_code, 200)
+		self.assertContains(follow_page, 'Follow Requests')
+		self.assertContains(follow_page, reverse('blog:follow_requests'))
+		self.assertContains(follow_page, 'class="nav-link active"')
+
+		response = self.client.get(
+			reverse('blog:notifications'),
+			{'format': 'json', 'after': 0},
+		)
+		self.assertEqual(response.status_code, 200)
+		items = response.json()['items']
+		self.assertEqual(len(items), len(types))
+		for item in items:
+			with self.subTest(notification_type=item['notification_type']):
+				self.assertEqual(self.client.get(item['url']).status_code, 200)
+		follow_item = next(
+			item for item in items
+			if item['notification_type'] == 'FOLLOW_REQUEST'
+		)
+		self.assertEqual(
+			follow_item['url'],
+			reverse('blog:follow_requests'),
+		)
+		marked = self.client.post(
+			f"{reverse('blog:notifications')}?format=json",
+			{'notification_id': follow_item['id']},
+			HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+		)
+		self.assertEqual(marked.status_code, 200)
+		self.assertTrue(
+			Notification.objects.get(pk=follow_item['id']).is_read
+		)
+
+	def test_user_cannot_revoke_another_users_device(self):
+		other_client = Client()
+		other_client.force_login(self.other_user)
+		other_session_key = other_client.cookies[
+			settings.SESSION_COOKIE_NAME
+		].value
+		other_device = UserSession.objects.get(session_key=other_session_key)
+		self.client.force_login(self.user)
+
+		response = self.client.post(
+			reverse('blog:revoke_device_session', args=[other_device.id]),
+		)
+
+		self.assertEqual(response.status_code, 404)
+		other_device.refresh_from_db()
+		self.assertTrue(other_device.is_active)
+
+	@override_settings(DEBUG=False)
+	def test_custom_not_found_page_uses_the_shared_base_template(self):
+		response = self.client.get('/missing-platform-page/')
+
+		self.assertEqual(response.status_code, 404)
+		self.assertTemplateUsed(response, 'blog/404.html')
+		self.assertContains(response, 'Page not found', status_code=404)
+
+	def test_custom_server_error_page_uses_the_shared_base_template(self):
+		request = RequestFactory().get('/failure/')
+		request.user = AnonymousUser()
+		request.resolver_match = resolve(reverse('blog:login'))
+		response = views.custom_500(request)
+
+		self.assertEqual(response.status_code, 500)
+		self.assertIn(b'Something went wrong', response.content)
+
+	def test_service_worker_is_root_scoped_and_limits_caching_to_static_assets(self):
+		response = self.client.get(reverse('blog:service_worker'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response['Service-Worker-Allowed'], '/')
+		self.assertIn('application/javascript', response['Content-Type'])
+		worker = response.content.decode()
+		self.assertIn("url.pathname.startsWith('/static/')", worker)
+		self.assertIn("request.method !== 'GET'", worker)
+		self.assertNotIn("caches.put(request, response)", worker)
 
 
 class ConversationWebSocketTests(TransactionTestCase):
@@ -1154,6 +1623,69 @@ class LogoutRedirectTests(TestCase):
 
 
 class PasswordResetFlowTests(TestCase):
+	@override_settings(
+		EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+		EMAIL_HOST_USER='sender@example.com',
+		EMAIL_HOST_PASSWORD='test-password',
+		DEFAULT_FROM_EMAIL='vGrowHub <sender@example.com>',
+	)
+	def test_allauth_password_reset_uses_configured_django_mail_backend(self):
+		user = User.objects.create_user(
+			'allauth-reset-user',
+			email='allauth-reset@example.com',
+			password='StrongPassword!123',
+		)
+		EmailAddress.objects.create(
+			user=user,
+			email=user.email,
+			primary=True,
+			verified=True,
+		)
+
+		response = self.client.post(
+			reverse('account_reset_password'),
+			{'email': user.email},
+		)
+
+		self.assertRedirects(response, reverse('account_reset_password_done'))
+		self.assertEqual(len(mail.outbox), 1)
+		self.assertEqual(mail.outbox[0].from_email, 'vGrowHub <sender@example.com>')
+		self.assertEqual(mail.outbox[0].to, [user.email])
+
+	@override_settings(
+		EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+		EMAIL_HOST_USER='sender@example.com',
+		EMAIL_HOST_PASSWORD='test-password',
+		DEFAULT_FROM_EMAIL='vGrowHub <sender@example.com>',
+	)
+	@patch(
+		'django.core.mail.backends.locmem.EmailBackend.send_messages',
+		side_effect=RuntimeError('SMTP auth failed'),
+	)
+	def test_allauth_password_reset_failure_is_logged_and_reported(self, send_messages):
+		user = User.objects.create_user(
+			'allauth-reset-failure-user',
+			email='allauth-reset-failure@example.com',
+			password='StrongPassword!123',
+		)
+		EmailAddress.objects.create(
+			user=user,
+			email=user.email,
+			primary=True,
+			verified=True,
+		)
+
+		with self.assertLogs('myblog.adapters', level='ERROR') as logs:
+			response = self.client.post(
+				reverse('account_reset_password'),
+				{'email': user.email},
+				follow=True,
+			)
+
+		self.assertContains(response, "We couldn&#x27;t send the email. Please try again later.")
+		self.assertIn('SMTP auth failed', '\n'.join(logs.output))
+		send_messages.assert_called_once()
+
 	@override_settings(
 		EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
 		EMAIL_HOST_USER='sender@example.com',
@@ -1285,6 +1817,12 @@ class CoursePageTests(TestCase):
 		self.assertContains(response, course.title)
 		self.assertEqual(reverse('blog:post_detail', args=[course.slug]),
 			f'/course/{course.slug}/')
+		self.assertEqual(reverse('blog:course_detail', args=[course.slug]),
+			f'/courses/{course.slug}/')
+		self.assertEqual(
+			self.client.get(reverse('blog:course_detail', args=[course.slug])).status_code,
+			200,
+		)
 		self.assertRedirects(
 			self.client.get(f'/course/{course.pk}/'),
 			reverse('blog:post_detail', args=[course.slug]),
@@ -1347,6 +1885,7 @@ class CoursePageTests(TestCase):
 			title='Functions in Python',
 			content='Lesson body',
 		)
+		Enrollment.objects.create(student=student, course=course)
 		self.client.force_login(student)
 
 		canonical_url = reverse('blog:lesson_detail', args=[lesson.slug])
@@ -1392,11 +1931,11 @@ class AssignmentAccessTests(TestCase):
 		)
 
 		self.client.force_login(self.student)
-		response = self.client.get(reverse('blog:assignments'))
+		response = self.client.get(reverse('blog:assignments'), {'tab': 'extra'})
 		self.assertContains(response, 'Logic Test')
 
 		self.client.force_login(self.other_student)
-		response = self.client.get(reverse('blog:assignments'))
+		response = self.client.get(reverse('blog:assignments'), {'tab': 'extra'})
 		self.assertNotContains(response, 'Logic Test')
 		self.assertEqual(
 			self.client.get(reverse('blog:assignment_attempt', args=[assignment.pk])).status_code,
@@ -1424,6 +1963,58 @@ class AssignmentAccessTests(TestCase):
 			self.client.get(reverse('blog:assignment_attempt', args=[assignment.pk])).status_code,
 			200,
 		)
+
+	def test_default_assignment_tab_only_shows_enrolled_course_assignments(self):
+		course_assignment = Assignment.objects.create(
+			title='Enrolled Course Work',
+			description='Course assignment',
+			assignment_source='COURSE',
+			course=self.course,
+			status='PUBLISHED',
+			created_by=self.admin,
+		)
+		extra_assignment = Assignment.objects.create(
+			title='Optional Standalone Work',
+			description='Extra practice',
+			assignment_source='STANDALONE',
+			status='PUBLISHED',
+			created_by=self.admin,
+		)
+		AssignmentAudience.objects.create(assignment=extra_assignment, audience_type='ALL_USERS')
+		Enrollment.objects.create(student=self.student, course=self.course)
+		self.client.force_login(self.student)
+
+		response = self.client.get(reverse('blog:assignments'))
+		self.assertContains(response, course_assignment.title)
+		self.assertNotContains(response, extra_assignment.title)
+		self.assertEqual(response.context['active_tab'], 'courses')
+
+		response = self.client.get(reverse('blog:assignments'), {'tab': 'extra'})
+		self.assertContains(response, extra_assignment.title)
+		self.assertNotContains(response, course_assignment.title)
+
+	def test_assignment_list_paginates_eight_items_and_preserves_tab(self):
+		Enrollment.objects.create(student=self.student, course=self.course)
+		for index in range(10):
+			Assignment.objects.create(
+				title=f'Course Task {index}',
+				description='Course assignment',
+				assignment_source='COURSE',
+				course=self.course,
+				status='PUBLISHED',
+				created_by=self.admin,
+			)
+		self.client.force_login(self.student)
+
+		first_page = self.client.get(reverse('blog:assignments'))
+		self.assertEqual(first_page.context['page_obj'].paginator.count, 10)
+		self.assertEqual(len(first_page.context['assignments']), 8)
+		self.assertContains(first_page, 'Page 1 of 2')
+		self.assertContains(first_page, 'tab=courses')
+		self.assertContains(first_page, 'page=2')
+
+		second_page = self.client.get(reverse('blog:assignments'), {'tab': 'courses', 'page': 2})
+		self.assertEqual(len(second_page.context['assignments']), 2)
 
 	def test_quiz_score_is_calculated_server_side(self):
 		Enrollment.objects.create(student=self.student, course=self.course)
@@ -1530,6 +2121,167 @@ class AssignmentAccessTests(TestCase):
 		self.assertEqual(attempt.feedback, 'Good work.')
 		self.assertEqual(progress.status, 'PASSED')
 
+	def test_invalid_upload_type_is_rejected(self):
+		Enrollment.objects.create(student=self.student, course=self.course)
+		assignment = Assignment.objects.create(
+			title='Upload Work',
+			description='Upload a file.',
+			assignment_type='FILE_UPLOAD',
+			course=self.course,
+			status='PUBLISHED',
+			created_by=self.admin,
+		)
+		self.client.force_login(self.student)
+		self.client.get(reverse('blog:assignment_attempt', args=[assignment.pk]))
+		response = self.client.post(
+			reverse('blog:assignment_attempt', args=[assignment.pk]),
+			{
+				'answer_data': '{"response": "completed"}',
+				'file': SimpleUploadedFile('malware.exe', b'not executable'),
+			},
+		)
+		self.assertEqual(response.status_code, 400)
+		self.assertFalse(AssignmentSubmission.objects.filter(assignment=assignment, student=self.student).exists())
+
+	def test_submission_can_be_resubmitted_before_deadline(self):
+		Enrollment.objects.create(student=self.student, course=self.course)
+		assignment = Assignment.objects.create(
+			title='Resubmittable Work',
+			description='Submit, then improve your answer.',
+			assignment_type='TEXT',
+			course=self.course,
+			status='PUBLISHED',
+			due_date=timezone.now() + timedelta(days=1),
+			max_attempts=1,
+			created_by=self.admin,
+		)
+		self.client.force_login(self.student)
+		url = reverse('blog:assignment_attempt', args=[assignment.pk])
+		self.client.get(url)
+		self.client.post(url, {'answer_data': '{"response": "first version"}'})
+		self.client.get(url + '?new=1')
+		response = self.client.post(url, {'answer_data': '{"response": "improved version"}'})
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(AssignmentSubmission.objects.filter(assignment=assignment, student=self.student).count(), 2)
+
+
+class AssignmentWorkflowEnhancementTests(TestCase):
+
+	def setUp(self):
+		self.staff = User.objects.create_user('assignment-staff', password='pass', is_staff=True)
+		self.student = User.objects.create_user('assignment-student', password='pass')
+		self.assignment = Assignment.objects.create(
+			title='Late rubric assignment',
+			description='Test the grading flow.',
+			assignment_source='STANDALONE',
+			assignment_type='TEXT',
+			status='PUBLISHED',
+			created_by=self.staff,
+			due_date=timezone.now() - timedelta(days=1),
+			late_submission_allowed=True,
+			late_penalty_percent=20,
+			max_score=100,
+			rubric=[{'name': 'Completeness', 'points': 80}, {'name': 'Clarity', 'points': 20}],
+		)
+		AssignmentAudience.objects.create(
+			assignment=self.assignment,
+			audience_type='SELECTED_USER',
+			user=self.student,
+		)
+		self.submission = AssignmentSubmission.objects.create(
+			assignment=self.assignment,
+			student=self.student,
+			answer='My work.',
+		)
+
+	def test_staff_only_evaluation_applies_late_penalty_and_notifies_once(self):
+		url = reverse('blog:assignment_evaluate', args=[self.assignment.pk])
+		self.client.force_login(self.student)
+		self.assertEqual(self.client.get(url).status_code, 403)
+
+		self.client.force_login(self.staff)
+		response = self.client.post(url, {
+			'action': 'publish',
+			'submission_ids': [self.submission.pk],
+			f'score_{self.submission.pk}': '80',
+			f'rubric_{self.submission.pk}': '{"Completeness": 70, "Clarity": 10}',
+			f'feedback_{self.submission.pk}': 'Good work.',
+		})
+		self.assertEqual(response.status_code, 302)
+		self.submission.refresh_from_db()
+		self.assertEqual(self.submission.score, 64)
+		self.assertTrue(self.submission.is_late)
+		self.assertEqual(self.submission.rubric_feedback, {'Completeness': 70, 'Clarity': 10})
+		self.assertEqual(Notification.objects.filter(
+			recipient=self.student,
+			notification_type='ASSIGNMENT_EVALUATED',
+			dedupe_key=f'assignment-evaluated:{self.submission.pk}',
+		).count(), 1)
+		self.client.post(url, {
+			'action': 'publish',
+			'submission_ids': [self.submission.pk],
+			f'rubric_{self.submission.pk}': '{"Completeness": 70, "Clarity": 10}',
+		})
+		self.assertEqual(Notification.objects.filter(
+			recipient=self.student,
+			notification_type='ASSIGNMENT_EVALUATED',
+			dedupe_key=f'assignment-evaluated:{self.submission.pk}',
+		).count(), 1)
+
+	def test_score_math_and_past_due_filter(self):
+		UserAssignmentProgress.objects.create(
+			user=self.student,
+			assignment=self.assignment,
+			status='NOT_STARTED',
+			best_score=64,
+		)
+		self.client.force_login(self.student)
+		scores = self.client.get(reverse('blog:assignment_scores'))
+		self.assertEqual(scores.status_code, 200)
+		self.assertContains(scores, '64')
+		past_due = self.client.get(reverse('blog:assignments'), {'tab': 'extra', 'status': 'past_due'})
+		self.assertEqual(past_due.status_code, 200)
+		self.assertContains(past_due, 'Past Due')
+		self.assertContains(past_due, 'Late rubric assignment')
+
+	def test_assignment_seed_command_is_idempotent(self):
+		call_command('seed_assignments')
+		first_count = Assignment.objects.filter(title__in=[
+			'Build a Personal Portfolio',
+			'Python Data Cleanup',
+			'SQL Reporting Queries',
+			'Django Notes App',
+			'JavaScript Interactive Form',
+		]).count()
+		call_command('seed_assignments')
+		second_count = Assignment.objects.filter(title__in=[
+			'Build a Personal Portfolio',
+			'Python Data Cleanup',
+			'SQL Reporting Queries',
+			'Django Notes App',
+			'JavaScript Interactive Form',
+		]).count()
+		self.assertEqual(first_count, 5)
+		self.assertEqual(second_count, 5)
+
+	def test_due_reminder_command_is_idempotent(self):
+		assignment = Assignment.objects.create(
+			title='Due soon assignment',
+			description='Reminder test.',
+			assignment_source='STANDALONE',
+			status='PUBLISHED',
+			created_by=self.staff,
+			due_date=timezone.now() + timedelta(hours=2),
+		)
+		AssignmentAudience.objects.create(assignment=assignment, audience_type='ALL_USERS')
+		call_command('send_due_reminders')
+		call_command('send_due_reminders')
+		self.assertEqual(Notification.objects.filter(
+			recipient=self.student,
+			notification_type='ASSIGNMENT_DUE',
+			dedupe_key=f'assignment-due:{assignment.pk}:{self.student.pk}',
+		).count(), 1)
+
 
 class PracticeIntegrationTests(TestCase):
 
@@ -1558,6 +2310,7 @@ class PracticeIntegrationTests(TestCase):
 				self.assertEqual(response.status_code, 200)
 
 	def test_practice_draft_and_submission_are_persisted(self):
+		self.create_problem('two-sum')
 		draft_response = self.client.post(
 			reverse('blog:practice_save_draft'),
 			data={
@@ -1589,21 +2342,187 @@ class PracticeIntegrationTests(TestCase):
 		self.assertEqual(progress.status, 'SOLVED')
 		self.assertEqual(PracticeSubmission.objects.filter(user=self.user).count(), 1)
 
+	def create_problem(self, slug='practice-test-problem'):
+		return PracticeProblem.objects.create(
+			slug=slug,
+			title='Practice test problem',
+			description='A test exercise.',
+			difficulty='EASY',
+			category='python',
+			function_name='solve',
+			starter_code={'python': 'def solve(value): return value'},
+			public_tests=[{'input': [1], 'expected': 1}],
+			hidden_tests=[{'input': [2], 'expected': 2}],
+			hints=['First hint', 'Second hint'],
+			editorial='Private solution details',
+		)
+
+	def test_submission_awards_xp_only_on_first_client_verified_solve(self):
+		problem = self.create_problem()
+		payload = {
+			'kind': 'submit',
+			'problemId': problem.slug,
+			'language': 'python',
+			'sourceCode': 'def solve(value): return value',
+			'status': 'ACCEPTED',
+			'passed': 2,
+			'total': 2,
+		}
+		for _ in range(2):
+			response = self.client.post(
+				reverse('blog:practice_record'),
+				data=payload,
+				content_type='application/json',
+			)
+			self.assertEqual(response.status_code, 200)
+		self.assertEqual(
+			PracticeSubmission.objects.filter(user=self.user, client_verified=True).count(),
+			2,
+		)
+		self.assertEqual(
+			XPEvent.objects.filter(
+				user=self.user,
+				event_type='FIRST_PROBLEM_SOLVE',
+				source_type='practice_problem',
+				source_id=str(problem.pk),
+			).count(),
+			1,
+		)
+
+	def test_problem_editorial_unlocks_after_three_attempts_and_notes_are_private(self):
+		problem = self.create_problem()
+		url = reverse('blog:practice_problem_detail', kwargs={'slug': problem.slug})
+		response = self.client.get(url)
+		self.assertContains(response, 'Solution unlocks after three attempts')
+		self.assertNotContains(response, 'Private solution details')
+		PracticeProgress.objects.create(user=self.user, problem=problem, attempt_count=3, notes='My private note')
+		response = self.client.get(url)
+		self.assertContains(response, 'Private solution details')
+		self.assertContains(response, 'My private note')
+		other = User.objects.create_user('practice-other-user', password='pass')
+		self.client.force_login(other)
+		response = self.client.get(url)
+		self.assertNotContains(response, 'My private note')
+
+	def test_playground_sessions_are_owner_scoped_and_share_links_are_revocable(self):
+		owner = PlaygroundSession.objects.create(
+			user=self.user,
+			title='Owner workspace',
+			language='python',
+			source_code='print(1)',
+		)
+		other = User.objects.create_user('practice-session-owner', password='pass')
+		self.client.force_login(other)
+		action_url = reverse('blog:playground_session_action', args=(owner.pk,))
+		response = self.client.post(
+			action_url,
+			data={'action': 'share'},
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 404)
+		self.client.force_login(self.user)
+		response = self.client.post(
+			action_url,
+			data={'action': 'share'},
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 200)
+		owner.refresh_from_db()
+		self.assertEqual(
+			self.client.get(reverse('blog:playground_share', args=(owner.share_token,))).status_code,
+			200,
+		)
+		self.client.post(
+			action_url,
+			data={'action': 'revoke'},
+			content_type='application/json',
+		)
+		owner.refresh_from_db()
+		self.assertIsNone(owner.share_token)
+		self.assertEqual(
+			self.client.get(reverse('blog:playground_share', args=(owner.share_token or '00000000-0000-0000-0000-000000000000',))).status_code,
+			404,
+		)
+
+	def test_mock_test_scoring_and_server_expiry(self):
+		test = MockTest.objects.create(
+			title='Timed test',
+			slug='timed-test',
+			description='Test server timing.',
+			duration_minutes=1,
+			active=True,
+		)
+		question = MockTestQuestion.objects.create(
+			test=test,
+			prompt='Choose the correct answer.',
+			options=[{'id': 'a', 'text': 'Correct'}, {'id': 'b', 'text': 'Incorrect'}],
+			correct_answer='a',
+			points=5,
+			order=1,
+		)
+		start = self.client.post(reverse('blog:practice_mock_test_start', args=(test.pk,)))
+		self.assertEqual(start.status_code, 302)
+		attempt = MockTestAttempt.objects.get(user=self.user, test=test)
+		answer_url = reverse('blog:practice_mock_test_answer', args=(attempt.pk,))
+		answer = self.client.post(
+			answer_url,
+			data={'questionId': question.pk, 'answer': 'a'},
+			content_type='application/json',
+		)
+		self.assertEqual(answer.status_code, 200)
+		attempt.expires_at = timezone.now() - timedelta(seconds=1)
+		attempt.save(update_fields=['expires_at'])
+		response = self.client.post(reverse('blog:practice_mock_test_submit', args=(attempt.pk,)))
+		self.assertEqual(response.status_code, 302)
+		attempt.refresh_from_db()
+		self.assertEqual(attempt.status, 'EXPIRED')
+		self.assertEqual(attempt.score, 5)
+		self.assertEqual(attempt.total_score, 5)
+
+	def test_problem_seed_command_is_idempotent(self):
+		call_command('seed_problems', verbosity=0)
+		call_command('seed_problems', verbosity=0)
+		self.assertEqual(PracticeProblem.objects.count(), 30)
+		self.assertEqual(PracticeProblemSet.objects.count(), 3)
+		for problem in PracticeProblem.objects.all():
+			self.assertEqual(len(problem.public_tests), 3)
+			self.assertEqual(len(problem.hidden_tests), 3)
+			expected_language = {
+				'python': 'python',
+				'javascript': 'javascript',
+				'sql': 'sql',
+				'html-css': 'html',
+				'django': 'python',
+			}[problem.category]
+			self.assertIn(expected_language, problem.starter_code)
+		self.assertEqual(
+			PracticeProblemSet.objects.get(slug='interview-50').problems.count(),
+			30,
+		)
+
 
 class AITutorPersistenceTests(TestCase):
 
 	def setUp(self):
 		self.user = User.objects.create_user('ai-tutor-user', password='pass')
 		self.client.force_login(self.user)
+		cache.delete('blog.site_settings')
+		cache.delete(f'ai-tutor-minute:{self.user.pk}')
+		environment_patch = patch.dict(os.environ, {
+			'AI_PROVIDER': 'gemini',
+			'AI_API_KEY': 'test-key',
+			'AI_MODEL_FAST': 'test-model-fast',
+			'AI_MODEL_BALANCED': 'test-model-balanced',
+			'AI_MODEL_DEEP': 'test-model-deep',
+		})
+		environment_patch.start()
+		self.addCleanup(environment_patch.stop)
 
 	def mock_provider(self, answers):
-		provider_patch = patch('blog.views.genai.Client')
+		provider_patch = patch('blog.views.stream_chat')
 		provider = provider_patch.start()
 		self.addCleanup(provider_patch.stop)
-		provider.return_value.models.generate_content.side_effect = [
-			type('ProviderResponse', (), {'text': answer})()
-			for answer in answers
-		]
+		provider.side_effect = [iter([answer]) for answer in answers]
 		return provider
 
 	def send_question(self, question, conversation_id=''):
@@ -1622,10 +2541,10 @@ class AITutorPersistenceTests(TestCase):
 		self.assertEqual(second.status_code, 200)
 		self.assertEqual(second.json()['conversation_id'], conversation_id)
 
-		second_prompt = provider.return_value.models.generate_content.call_args_list[1].kwargs['contents']
-		self.assertIn('First question', second_prompt)
-		self.assertIn('First answer', second_prompt)
-		self.assertIn('Follow-up question', second_prompt)
+		second_prompt = provider.call_args_list[1].args[0]
+		self.assertIn('First question', [message['content'] for message in second_prompt])
+		self.assertIn('First answer', [message['content'] for message in second_prompt])
+		self.assertIn('Follow-up question', [message['content'] for message in second_prompt])
 		self.assertEqual(AITutorMessage.objects.filter(conversation_id=conversation_id).count(), 4)
 
 	def test_inactive_conversation_over_30_minutes_starts_a_new_chat(self):
@@ -1694,7 +2613,17 @@ class AITutorPersistenceTests(TestCase):
 
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, "static/js/ai_tutor.js")
+		self.assertContains(response, "static/css/ai_tutor_workspace.css")
 		self.assertContains(response, "Your conversations are saved to your account")
+		self.assertContains(response, "ai-empty-state")
+		self.assertContains(response, "ai-slash-menu")
+		self.assertContains(response, "ai-sidebar-search")
+		self.assertContains(response, 'id="sidebarToggle"')
+		self.assertContains(response, 'id="aiSidebarClose"')
+		self.assertContains(response, 'id="aiSidebarBackdrop"')
+		self.assertContains(response, "<span>Back to vGrowHub</span>")
+		self.assertContains(response, 'href="{}"'.format(reverse('blog:dashboard')))
+		self.assertContains(response, "ai-char-count")
 
 	def test_clear_history_deletes_only_the_signed_in_users_chats(self):
 		conversation = AITutorConversation.objects.create(
@@ -1717,13 +2646,155 @@ class AITutorPersistenceTests(TestCase):
 
 	def test_provider_failure_is_reported_without_saving_a_conversation(self):
 		provider = self.mock_provider([])
-		provider.return_value.models.generate_content.side_effect = RuntimeError('provider unavailable')
+		provider.side_effect = RuntimeError('provider unavailable')
 
 		response = self.send_question('Question that fails')
 
 		self.assertEqual(response.status_code, 502)
 		self.assertIn('error', response.json())
 		self.assertFalse(AITutorConversation.objects.filter(user=self.user).exists())
+
+	def test_streaming_response_persists_the_assistant_reply(self):
+		self.mock_provider(['A streamed answer.'])
+		response = self.client.post(reverse('blog:ai_tutor'), {
+			'question': 'Explain streaming.',
+			'stream': '1',
+		})
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response['Content-Type'], 'text/event-stream')
+		stream = b''.join(response.streaming_content).decode()
+		self.assertIn('event: token', stream)
+		self.assertIn('event: done', stream)
+		conversation = AITutorConversation.objects.get(user=self.user)
+		self.assertEqual(list(conversation.messages.values_list('content', flat=True)), ['Explain streaming.', 'A streamed answer.'])
+
+	def test_attachment_extension_and_size_are_validated(self):
+		response = self.client.post(reverse('blog:ai_tutor'), {
+			'question': 'Review this attachment.',
+			'attachment': SimpleUploadedFile('payload.exe', b'not text'),
+		})
+		self.assertEqual(response.status_code, 400)
+		response = self.client.post(reverse('blog:ai_tutor'), {
+			'question': 'Review this attachment.',
+			'attachment': SimpleUploadedFile('large.py', b'x' * (200 * 1024 + 1)),
+		})
+		self.assertEqual(response.status_code, 400)
+
+	def test_share_link_can_be_revoked(self):
+		conversation = AITutorConversation.objects.create(
+			user=self.user,
+			title='Shareable chat',
+			last_active_at=timezone.now(),
+		)
+		token = uuid.uuid4()
+		conversation.share_token = token
+		conversation.save(update_fields=['share_token'])
+		response = self.client.post(
+			reverse('blog:ai_tutor_conversation_action', args=[conversation.pk]),
+			{'action': 'revoke'},
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(self.client.get(reverse('blog:ai_tutor_share', args=[token])).status_code, 404)
+
+	def test_editing_last_message_replaces_the_previous_reply(self):
+		self.mock_provider(['Original answer.', 'Revised answer.'])
+		first = self.send_question('Original question')
+		conversation_id = first.json()['conversation_id']
+		user_message = AITutorMessage.objects.get(conversation_id=conversation_id, role='user')
+		response = self.client.post(reverse('blog:ai_tutor'), {
+			'question': 'Edited question',
+			'conversation_id': conversation_id,
+			'edit_message_id': user_message.pk,
+		})
+		self.assertEqual(response.status_code, 200)
+		messages = list(AITutorMessage.objects.filter(conversation_id=conversation_id).order_by('id'))
+		self.assertEqual([message.content for message in messages], ['Edited question', 'Revised answer.'])
+
+	def test_daily_message_limit_is_enforced(self):
+		settings_row = SiteSettings.get_cached()
+		settings_row.ai_daily_limit_free = 1
+		settings_row.save()
+		self.mock_provider(['One reply.'])
+		self.assertEqual(self.send_question('First').status_code, 200)
+		response = self.send_question('Second')
+		self.assertEqual(response.status_code, 429)
+
+	def test_missing_model_configuration_returns_a_friendly_error(self):
+		with patch.dict(os.environ, {'AI_MODEL_BALANCED': ''}):
+			response = self.send_question('Hello')
+		self.assertEqual(response.status_code, 503)
+		self.assertIn('not configured', response.json()['error'])
+
+	def test_ai_environment_configuration_supports_primary_and_legacy_keys(self):
+		with patch.dict(os.environ, {'AI_PROVIDER': 'google', 'AI_API_KEY': 'primary-key'}):
+			configuration = ai_configuration()
+		self.assertTrue(configuration['configured'])
+		self.assertEqual(configuration['api_key'], 'primary-key')
+		self.assertEqual(configuration['provider'], 'google')
+
+		with patch.dict(os.environ, {'AI_API_KEY': '', 'GEMINI_API_KEY': 'legacy-key'}):
+			configuration = ai_configuration()
+		self.assertTrue(configuration['configured'])
+		self.assertEqual(configuration['api_key'], 'legacy-key')
+
+	def test_missing_configuration_shows_calm_user_notice_and_admin_setup_card(self):
+		missing = {
+			'AI_API_KEY': '',
+			'GEMINI_API_KEY': '',
+			'AI_MODEL_BALANCED': '',
+		}
+		with patch.dict(os.environ, missing):
+			user_response = self.client.get(reverse('blog:ai_tutor'))
+			self.assertContains(user_response, 'AI is offline right now')
+			self.assertNotContains(user_response, 'AI Tutor setup needed')
+
+			admin_user = User.objects.create_user('ai-tutor-admin', password='pass', is_staff=True)
+			self.client.force_login(admin_user)
+			admin_response = self.client.get(reverse('blog:ai_tutor'))
+			self.assertContains(admin_response, 'AI Tutor setup needed')
+			self.assertContains(admin_response, 'AI_API_KEY')
+
+	def test_slash_commands_select_server_side_mode(self):
+		provider = self.mock_provider(['Debugging explanation.'])
+		response = self.send_question('/debug The app returns a 500.')
+
+		self.assertEqual(response.status_code, 200)
+		self.assertIn('Help debug', provider.call_args.kwargs['system_prompt'])
+		self.assertEqual(provider.call_args.args[0][-1]['content'], 'The app returns a 500.')
+
+	def test_lesson_context_can_be_cleared_without_deleting_chat(self):
+		conversation = AITutorConversation.objects.create(
+			user=self.user,
+			title='Keep this chat',
+			last_active_at=timezone.now(),
+		)
+		session = self.client.session
+		session['ai_tutor_lesson_context'] = {'slug': 'functions', 'title': 'Functions', 'content': 'Lesson'}
+		session['ai_tutor_external_context'] = 'private context'
+		session.save()
+
+		response = self.client.post(reverse('blog:ai_tutor_clear_context'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(AITutorConversation.objects.filter(pk=conversation.pk).exists())
+		self.assertNotIn('ai_tutor_lesson_context', self.client.session)
+		self.assertNotIn('ai_tutor_external_context', self.client.session)
+
+	def test_per_minute_limit_and_streaming_authentication(self):
+		key = f'ai-tutor-minute:{self.user.pk}'
+		cache.delete(key)
+		for _ in range(11):
+			views._ai_rate_limited(self.user)
+		response = self.send_question('Rate-limited')
+		self.assertEqual(response.status_code, 429)
+		anonymous = Client()
+		response = anonymous.post(reverse('blog:ai_tutor'), {'question': 'Unauthenticated', 'stream': '1'})
+		self.assertIn(response.status_code, (302, 401))
+
+	def test_markdown_renderer_escapes_script_markup(self):
+		rendered = str(render_lesson_markdown('<script>alert("x")</script>'))
+		self.assertNotIn('<script>', rendered)
+		self.assertIn('&lt;script&gt;', rendered)
 
 
 class CommunityWorkflowTests(TestCase):
@@ -1900,3 +2971,7 @@ class CommunityWorkflowTests(TestCase):
 			reverse('blog:community'),
 		)
 		self.assertFalse(CommunityPost.objects.filter(pk=self.post.pk).exists())
+
+
+from tests.test_smoke import ScopedPageSmokeTests
+from tests.test_dashboard_gamification import XPAwardTests

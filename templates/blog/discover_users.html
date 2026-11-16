@@ -344,8 +344,30 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="people-empty">Enter a name or username to discover people.</p>
-        {% endif %}
+            <h2 class="people-results-heading">Suggested for you</h2>
+            {% if suggested_users %}
+            <div class="people-results">
+                {% for person in suggested_users %}
+                <article class="person-result">
+                    <a class="person-profile-link" href="{% url 'blog:user_profile' person.username %}">
+                        {% if person.profile_data.profile_picture %}<img class="person-avatar" src="{{ person.profile_data.profile_picture.url }}" alt="">{% else %}<span class="person-avatar" aria-hidden="true">{{ person.profile_data.display_name|default:person.username|first|upper }}</span>{% endif %}
+                        <span class="person-details"><strong>{{ person.profile_data.display_name|default:person.username }}</strong><small>@{{ person.username|lower }}</small>
+                            {% if person.profile_data.goal == request.user.profile_data.goal %}<span class="person-bio">Same learning goal</span>{% elif person.shared_course_count %}<span class="person-bio">Learning a course with you</span>{% elif person.mutual_follow_count %}<span class="person-bio">Followed by {{ person.mutual_follow_count }} people you follow</span>{% endif %}
+                        </span>
+                    </a>
+                    <div class="person-actions">
+                        {% if person.can_message %}<form class="person-action-form" method="post" action="{% url 'blog:start_personal_chat' person.username %}" data-social-action="message">{% csrf_token %}<button class="people-action" type="submit">Message</button></form>{% endif %}
+                        {% if person.relationship_status == 'following' %}<button class="people-action secondary" type="button" disabled>Following</button>
+                        {% elif person.relationship_status == 'requested' %}<form class="person-action-form" method="post" action="{% url 'blog:cancel_follow_request' person.username %}" data-social-action="cancel">{% csrf_token %}<button class="people-action secondary" type="submit">Requested</button></form>
+                        {% else %}<form class="person-action-form" method="post" action="{% url 'blog:send_follow_request' person.username %}" data-cancel-url="{% url 'blog:cancel_follow_request' person.username %}" data-social-action="follow">{% csrf_token %}<button class="people-action" type="submit">{% if person.relationship_status == 'follow_back' %}Follow Back{% else %}Follow{% endif %}</button></form>{% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="people-empty">Follow people with similar goals and courses to discover more suggestions.</p>
+            {% endif %}
+            {% endif %}
         <p class="people-feedback" id="peopleFeedback" role="status" aria-live="polite"></p>
     </div>
 </section>

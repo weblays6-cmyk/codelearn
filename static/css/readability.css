@@ -33,7 +33,7 @@ body {
 
 .sidebar .nav-label,
 .sidebar .nav-title {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 /* Navbar */
@@ -91,7 +91,7 @@ body {
 .main-content .chip,
 .main-content .eyebrow,
 .main-content .new-badge {
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.25 !important;
 }
 
@@ -124,7 +124,7 @@ body {
 }
 
 .hero .eyebrow {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 .hero .primary-btn,
@@ -161,7 +161,7 @@ body {
 }
 
 .login-card .divider {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 .signup-text {
@@ -182,7 +182,7 @@ body {
 }
 
 .section-label {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 .feature-card p {

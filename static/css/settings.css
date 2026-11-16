@@ -239,6 +239,52 @@ input:checked + .slider:before {
     padding: 25px;
 }
 
+.device-session-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 25px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.device-session-row:last-child {
+    border-bottom: 0;
+}
+
+.device-session-details {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.device-session-details strong {
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.current-device-badge {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #edf3ff;
+    color: #315fe8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .device-session-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 .account-item {
     display: flex;
     justify-content: space-between;
@@ -261,6 +307,739 @@ input:checked + .slider:before {
 
 .danger-trigger {
     flex-shrink: 0;
+}
+
+.settings-card {
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.settings-card .section-title {
+    padding: 16px;
+}
+
+.account-box {
+    padding: 16px;
+}
+
+.settings-card .setting-row,
+.settings-card .device-session-row,
+.settings-card .danger-action-row {
+    padding: 16px;
+}
+
+.privacy-settings-form .setting-row,
+.appearance-settings-form .setting-row {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    color: var(--text);
+    cursor: default;
+}
+
+.privacy-settings-form .setting-row > .setting-info,
+.appearance-settings-form .setting-row > .setting-info {
+    min-width: 0;
+}
+
+.privacy-settings-form .setting-row > input[type="checkbox"],
+.appearance-settings-form .setting-row > input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0 4px 0 16px;
+}
+
+.privacy-settings-form .select-box,
+.appearance-settings-form .select-box {
+    flex: 0 0 180px;
+    width: min(180px, 42%);
+    margin-left: 16px;
+}
+
+.privacy-settings-form .privacy-save-row,
+.appearance-settings-form .setting-row:last-child {
+    justify-content: flex-end;
+}
+
+.privacy-settings-form .privacy-save-row > span {
+    display: none;
+}
+
+.appearance-settings-form .font-size-row {
+    gap: 20px;
+}
+
+.device-security-summary {
+    margin: 12px 16px 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+}
+
+.device-session-row {
+    margin: 0 16px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+}
+
+.device-session-row:last-child {
+    border-bottom: 1px solid var(--border);
+}
+
+.login-history {
+    margin: 18px 16px 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+}
+
+.login-history h3 {
+    margin: 0 0 12px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.login-history-heading,
+.login-history-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1.1fr) minmax(100px, .8fr) minmax(120px, 1fr) minmax(150px, 1.2fr);
+    gap: 12px;
+    align-items: center;
+}
+
+.login-history-heading {
+    padding: 0 10px 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.login-history-row {
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.security-action-card .setting-row {
+    border: 0;
+}
+
+@media (max-width: 700px) {
+    .privacy-settings-form .setting-row,
+    .appearance-settings-form .setting-row {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .login-history-heading {
+        display: none;
+    }
+
+    .login-history-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.settings-page {
+    width: 100%;
+}
+
+.settings-page .container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.settings-page .header {
+    margin-bottom: 16px;
+}
+
+.settings-page .header-left h1,
+.settings-page .section-title h2 {
+    color: var(--text);
+}
+
+.settings-page .header-left p,
+.settings-page .section-title p {
+    color: var(--muted);
+}
+
+.settings-tabs {
+    position: sticky;
+    top: 72px;
+    z-index: 20;
+    display: flex;
+    float: left;
+    width: 172px;
+    height: calc(100vh - 104px);
+    max-height: 740px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    overflow-y: auto;
+    margin: 0 0 16px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    scrollbar-width: thin;
+}
+
+.settings-tabs a {
+    display: inline-flex;
+    min-height: 40px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.settings-tabs a:hover,
+.settings-tabs a:focus-visible {
+    background: var(--primary-soft);
+    color: var(--primary-soft-text);
+}
+
+.settings-page [id^="settings-"] {
+    scroll-margin-top: 132px;
+}
+
+.settings-page .settings-card {
+    margin-left: 208px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.settings-page .settings-card .section-title {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+}
+
+.settings-page .settings-card .section-title h2 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.settings-page .settings-card .section-title p {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.settings-page .settings-card .setting-row,
+.settings-page .settings-card .danger-action-row {
+    min-height: 56px;
+    padding: 12px 20px;
+    border-bottom-color: var(--border);
+}
+
+.settings-page .setting-info,
+.settings-page .setting-text {
+    min-width: 0;
+}
+
+.settings-page .setting-text strong,
+.settings-page .setting-text h3 {
+    color: var(--text);
+}
+
+.settings-page .setting-text span,
+.settings-page .setting-text p,
+.settings-page .device-session-details {
+    color: var(--muted);
+}
+
+.settings-page .setting-icon {
+    flex: 0 0 42px;
+    border: 1px solid var(--border);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.settings-page .settings-card .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 26px;
+    flex: 0 0 44px;
+    margin-left: 16px;
+}
+
+.settings-page .switch input {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 44px;
+    height: 26px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.settings-page .switch .slider {
+    background: var(--border);
+}
+
+.settings-page .switch .slider::before {
+    width: 20px;
+    height: 20px;
+}
+
+.settings-page .switch input:checked + .slider {
+    background: var(--primary);
+}
+
+.settings-page .switch input:checked + .slider::before {
+    transform: translateX(18px);
+}
+
+.settings-page .switch input:focus-visible + .slider {
+    outline: 3px solid var(--primary-soft);
+    outline-offset: 2px;
+}
+
+.settings-page .select-box,
+.settings-page input[type="time"] {
+    box-sizing: border-box;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    background: var(--surface);
+    color-scheme: light;
+}
+
+.settings-page .select-box:focus-visible,
+.settings-page input[type="time"]:focus-visible,
+.settings-page button:focus-visible,
+.settings-page a:focus-visible {
+    outline: 3px solid var(--primary-soft);
+    outline-offset: 2px;
+}
+
+.settings-page .action-btn,
+.settings-page .primary-btn {
+    min-height: 40px;
+    border-radius: 10px;
+}
+
+.settings-page .primary-btn {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--surface);
+}
+
+.settings-page .primary-btn:hover {
+    border-color: var(--primary-hover);
+    background: var(--primary-hover);
+    color: var(--surface);
+}
+
+.settings-page .privacy-settings-form .setting-row,
+.settings-page .appearance-settings-form .setting-row {
+    min-height: 56px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.settings-page .privacy-settings-form .select-box,
+.settings-page .appearance-settings-form .select-box {
+    width: min(180px, 42%);
+    margin-left: 16px;
+}
+
+.settings-page .privacy-save-row,
+.settings-page .settings-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 20px;
+}
+
+.settings-page .privacy-save-row > span {
+    display: none;
+}
+
+.settings-page .privacy-save-row .action-btn,
+.settings-page .settings-form-footer .action-btn {
+    min-width: 120px;
+}
+
+.quiet-hours-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.quiet-hours-row label {
+    display: grid;
+    gap: 7px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.quiet-hours-row input {
+    width: 100%;
+    padding: 0 10px;
+}
+
+.settings-page .device-security-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 18px 20px 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.settings-page .device-security-summary strong {
+    color: var(--text);
+    font-size: 16px;
+}
+
+.device-limit-chip,
+.installed-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.settings-page .device-session-list {
+    display: grid;
+    gap: 10px;
+    padding: 0 20px;
+}
+
+.settings-page .device-session-row {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+.device-icon-chip {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.settings-page .device-session-details {
+    flex: 1 1 auto;
+}
+
+.settings-page .device-session-details strong {
+    color: var(--text);
+}
+
+.settings-page .current-device-badge {
+    border: 1px solid var(--success-soft);
+    background: var(--success-soft);
+    color: var(--success-text);
+}
+
+.settings-page .device-session-revoke {
+    margin: 12px 20px 0;
+}
+
+.danger-outline-btn {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border: 1px solid var(--danger);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--danger);
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.danger-outline-btn:hover {
+    background: var(--danger-soft);
+}
+
+.settings-page .login-history {
+    margin: 18px 20px 20px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+.settings-page .login-history h3 {
+    margin: 0;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 15px;
+}
+
+.settings-page .login-history-heading,
+.settings-page .login-history-row {
+    grid-template-columns: minmax(100px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr) minmax(140px, 1.2fr);
+    gap: 12px;
+}
+
+.settings-page .login-history-heading {
+    padding: 12px 16px;
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.settings-page .login-history-row {
+    padding: 12px 16px;
+    background: var(--surface);
+}
+
+.settings-page .login-history-row:nth-of-type(even) {
+    background: var(--surface-2);
+}
+
+.settings-page .security-action-card .setting-row {
+    padding: 16px 20px;
+}
+
+.install-app-content {
+    padding: 16px 20px;
+}
+
+.install-app-state:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.install-app-state .setting-info {
+    flex: 1 1 250px;
+}
+
+.installed-chip {
+    width: fit-content;
+    margin-top: 4px;
+    background: var(--success-soft);
+    color: var(--success-text);
+}
+
+.install-help,
+.uninstall-help {
+    flex: 1 0 100%;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.uninstall-help summary {
+    width: fit-content;
+    margin-top: 6px;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 650;
+}
+
+.uninstall-help ul {
+    margin: 10px 0 0;
+    padding-left: 20px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.settings-page .danger-zone {
+    border-color: var(--danger-soft);
+    background: var(--surface);
+}
+
+.settings-page .danger-zone .section-title {
+    background: var(--danger-soft);
+}
+
+.settings-page .danger-zone .section-title h2,
+.settings-page .danger-zone .setting-text strong {
+    color: var(--danger-text);
+}
+
+.settings-page .danger-zone .section-title p,
+.settings-page .danger-zone .setting-text span {
+    color: var(--muted);
+}
+
+@media (max-width: 768px) {
+    .settings-page {
+        padding: 10px 0 24px;
+    }
+
+    .settings-page .container {
+        padding: 0;
+    }
+
+    .settings-tabs {
+        top: 64px;
+        float: none;
+        width: auto;
+        height: auto;
+        max-height: none;
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .settings-page .settings-card .section-title {
+        padding: 16px;
+    }
+
+    .settings-page .settings-card {
+        margin-left: 0;
+    }
+
+    .settings-page .settings-card .setting-row,
+    .settings-page .settings-card .danger-action-row {
+        padding: 12px 16px;
+    }
+
+    .settings-page .privacy-settings-form .select-box,
+    .settings-page .appearance-settings-form .select-box {
+        width: min(160px, 42%);
+        flex: 0 0 auto;
+    }
+
+    .settings-page .privacy-save-row,
+    .settings-page .settings-form-footer {
+        padding: 12px 16px;
+    }
+
+    .settings-page .privacy-save-row .action-btn,
+    .settings-page .settings-form-footer .action-btn {
+        width: 100%;
+    }
+
+    .settings-page .device-session-list {
+        padding: 0 16px;
+    }
+
+    .settings-page .device-session-row {
+        flex-wrap: wrap;
+    }
+
+    .settings-page .device-session-row form {
+        width: 100%;
+        margin-left: 52px;
+    }
+
+    .settings-page .device-session-row form button {
+        min-height: 44px;
+    }
+
+    .settings-page .device-session-revoke {
+        margin: 12px 16px 0;
+    }
+
+    .settings-page .device-session-revoke form,
+    .settings-page .device-session-revoke form button {
+        width: 100%;
+    }
+
+    .settings-page .login-history {
+        margin: 16px;
+    }
+
+    .settings-page .login-history-heading {
+        display: none;
+    }
+
+    .settings-page .login-history-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 14px 16px;
+    }
+
+    .settings-page .login-history-row > * {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .settings-page .login-history-row > *::before {
+        content: attr(data-label);
+        flex: 0 0 110px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .settings-page .security-action-card .setting-row {
+        flex-wrap: wrap;
+    }
+
+    .settings-page .security-action-card form,
+    .settings-page .security-action-card form button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .settings-page .privacy-settings-form .setting-row,
+    .settings-page .appearance-settings-form .setting-row {
+        gap: 10px;
+    }
+
+    .settings-page .privacy-settings-form .select-box,
+    .settings-page .appearance-settings-form .select-box {
+        width: 120px;
+        margin-left: 0;
+    }
+
+    .settings-page .settings-card .switch {
+        margin-left: 8px;
+    }
+
+    .quiet-hours-row {
+        gap: 10px;
+        padding: 14px 16px;
+    }
 }
 
 .danger-modal-backdrop {
@@ -298,7 +1077,7 @@ input:checked + .slider:before {
 .danger-modal-kicker {
     display: inline-block;
     color: #6d7d96;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -447,7 +1226,8 @@ input:checked + .slider:before {
 }
 
 /* Danger Zone controls use the shared dark-first theme without changing other settings. */
-.settings-card.danger-zone {
+
+ .settings-card.danger-zone {
     color: var(--text, #f8fafc);
     border-color: rgba(220, 38, 38, 0.24);
     border-radius: 18px;

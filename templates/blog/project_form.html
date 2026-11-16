@@ -21,7 +21,7 @@ Share Project | {{ SITE_NAME }}
                 BUILD & SHARE
             </div>
 
-            <h1>Share Your Project</h1>
+            <h1>{% if is_edit %}Edit Project{% else %}Share Your Project{% endif %}</h1>
 
             <p>
                 Showcase your project, share your ideas,
@@ -53,6 +53,17 @@ Share Project | {{ SITE_NAME }}
         <div class="project-form-error">
             {{ form.non_field_errors }}
         </div>
+        {% endif %}
+
+        {% if existing_images %}
+        <section class="project-form-section">
+            <h2>Existing images</h2>
+            <div class="project-image-preview">
+                {% for image in existing_images %}
+                <label><img src="{{ image.image.url }}" alt="{{ image.alt_text|default:project.title }}" width="160" height="90" loading="lazy"><input type="checkbox" name="remove_image_ids" value="{{ image.pk }}"> Remove</label>
+                {% endfor %}
+            </div>
+        </section>
         {% endif %}
 
 
@@ -390,9 +401,10 @@ Share Project | {{ SITE_NAME }}
                     type="file"
                     name="images"
                     id="project-images"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/webp"
                     multiple
                 >
+                <small>PNG, JPG or WEBP · 2 MB each · up to five total</small>
 
                 <label
                     for="project-images"
@@ -512,6 +524,8 @@ Share Project | {{ SITE_NAME }}
         ========================================== -->
 
         <div class="project-form-actions">
+            <label>Visibility {{ form.is_public }}</label>
+            <label>Publication {{ form.publication_status }}</label>
 
             <a
                 href="{% url 'blog:projects' %}"
@@ -526,7 +540,7 @@ Share Project | {{ SITE_NAME }}
                 class="project-submit-btn"
             >
                 <i class="bi bi-rocket-takeoff"></i>
-                Publish Project
+                {% if is_edit %}Save Changes{% else %}Save Project{% endif %}
             </button>
 
         </div>

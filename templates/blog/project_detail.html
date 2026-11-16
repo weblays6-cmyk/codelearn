@@ -32,11 +32,18 @@
             </div>
 
             <h1>{{ project.title }}</h1>
+            {% if project.edited_at %}<span class="project-edited-label">Edited {{ project.edited_at|timesince }} ago</span>{% endif %}
 
             <p class="project-detail-short">
                 {{ project.short_description }}
             </p>
         </div>
+        {% if is_owner %}
+        <div class="project-owner-controls">
+            <a class="primary-action" href="{% url 'blog:edit_project' project.pk %}">Edit project</a>
+            <form method="post" action="{% url 'blog:delete_project' project.pk %}" data-confirm-delete>{% csrf_token %}<button type="submit">Delete project</button></form>
+        </div>
+        {% endif %}
 
         <div class="project-detail-status status-{{ project.status }}">
             {% if project.status == "idea" %}
@@ -60,7 +67,7 @@
 
         {% for image in project.images.all %}
         <div class="project-detail-image">
-            <img src="{{ image.image.url }}" alt="{{ project.title }}">
+            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:project.title }}" width="960" height="540" loading="lazy">
         </div>
         {% endfor %}
 
@@ -148,6 +155,7 @@
 
             <!-- ACTIONS -->
             <section class="project-actions" id="project-actions">
+                {% if is_owner %}<a href="{% url 'blog:edit_project' project.pk %}">Edit project</a>{% endif %}
 
                 <form method="POST" action="{% url 'blog:project_like' project.pk %}">
                     {% csrf_token %}
@@ -189,6 +197,23 @@
                 </form>
 
             </section>
+            {% if not is_owner %}<a href="{% url 'blog:start_personal_chat' project.owner.username %}" class="project-contact-link">Contact creator</a>{% endif %}
+
+            <form method="post" action="{% url 'blog:project_report' project.pk %}" class="project-report-form">
+                {% csrf_token %}
+                <label>Report this project <select name="reason" required><option value="">Choose a reason</option><option value="spam">Spam</option><option value="abuse">Abusive content</option><option value="misleading">Misleading content</option></select></label>
+                <button type="submit">Report</button>
+            </form>
+
+            {% if is_owner and collaborator_requests %}
+            <section class="detail-card"><h2>Collaboration requests</h2>
+                {% for collaborator in collaborator_requests %}
+                <article><strong>{{ collaborator.user.profile_data.display_name|default:collaborator.user.username }}</strong><p>{{ collaborator.request_message }}</p>
+                    <form method="post" action="{% url 'blog:project_collaborator_decision' project.pk collaborator.pk %}">{% csrf_token %}<button name="decision" value="accept">Accept</button><button name="decision" value="reject">Reject</button></form>
+                </article>
+                {% endfor %}
+            </section>
+            {% endif %}
 
 
             <!-- COMMENTS -->
@@ -491,7 +516,7 @@
 
                 <div class="project-info-row">
                     <span>Views</span>
-                    <strong>{{ project.views.count }}</strong>
+                    <strong>{{ view_count|default:0 }}</strong>
                 </div>
 
                 <div class="project-info-row">

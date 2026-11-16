@@ -3,27 +3,20 @@
 {% get_providers as socialaccount_providers %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light" data-theme-enabled="{{ DARK_THEME_ENABLED|yesno:'true,false' }}" data-theme-choice="{% if DARK_THEME_ENABLED %}{{ USER_THEME_PREFERENCE }}{% else %}light{% endif %}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script>
-        (function () {
-            let theme = "light";
-            try {
-                const savedTheme = localStorage.getItem("codelearn-theme");
-                if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
-            } catch (error) {
-                // Keep the current light-theme default when storage is unavailable.
-            }
-            document.documentElement.classList.toggle("light-theme", theme === "light");
-        })();
-    </script>
+    {% include "blog/includes/theme_bootstrap.html" %}
 
     <title>{{ SITE_NAME }} | Learn. Practice. Build.</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -31,29 +24,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #050713;
-            --card: rgba(255, 255, 255, .045);
-            --border: rgba(255, 255, 255, .08);
-            --text: #f8fafc;
-            --muted: #94a3b8;
-            --dim: #64748b;
-            --purple: #8b5cf6;
-            --blue: #3b82f6;
-            --cyan: #22d3ee;
-            --green: #22c55e;
-            --orange: #f59e0b;
-        }
-
-        body.light-theme {
-            --bg: #f5f7fb;
-            --card: rgba(255, 255, 255, .85);
-            --border: rgba(15, 23, 42, .10);
-            --text: #111827;
-            --muted: #475569;
-            --dim: #64748b;
         }
 
         html {
@@ -1024,16 +994,13 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="{% static 'css/auth_theme.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/auth_theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
 </head>
 
 <body>
     <script>
-        document.body.classList.toggle(
-            "light-theme",
-            document.documentElement.classList.contains("light-theme")
-        );
-        document.documentElement.classList.remove("light-theme");
+        document.body.classList.toggle("light-theme", document.documentElement.dataset.theme === "light");
     </script>
 
     <!-- ================= NAVBAR ================= -->
@@ -1058,10 +1025,10 @@
                 How It Works
             </a>
 
-            <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
+            {% if DARK_THEME_ENABLED %}<button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
                 aria-label="Toggle theme">
                 <i class="bi bi-moon-fill" id="themeIcon"></i>
-            </button>
+            </button>{% endif %}
 
             <a href="#login" class="nav-login">
                 Login
@@ -1150,6 +1117,14 @@
                 <div class="login-icon">
                     <i class="bi bi-person-lock"></i>
                 </div>
+
+                {% if request.GET.device_signed_out == "1" %}
+                <div class="auth-messages" aria-live="polite">
+                    <div class="auth-message auth-message--error">
+                        You were signed out because your account was used on another device.
+                    </div>
+                </div>
+                {% endif %}
 
                 {% if messages %}
                 <div class="auth-messages" aria-live="polite">
@@ -1848,51 +1823,7 @@
     </footer>
 
 
-    <script>
-
-        /* =====================================================
-           THEME
-        ===================================================== */
-
-        function toggleTheme() {
-
-            document.body.classList.toggle("light-theme");
-
-            const icon =
-                document.getElementById("themeIcon");
-
-            if (
-                document.body.classList.contains("light-theme")
-            ) {
-
-                icon.className = "bi bi-sun-fill";
-
-                localStorage.setItem(
-                    "codelearn-theme",
-                    "light"
-                );
-
-            } else {
-
-                icon.className = "bi bi-moon-fill";
-
-                localStorage.setItem(
-                    "codelearn-theme",
-                    "dark"
-                );
-            }
-        }
-
-
-        /* =====================================================
-           RESTORE THEME
-        ===================================================== */
-
-        document.getElementById("themeIcon").className =
-            document.body.classList.contains("light-theme") ? "bi bi-sun-fill" : "bi bi-moon-fill";
-
-
-    </script>
+    <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/password_toggle.js' %}"></script>
 
 </body>

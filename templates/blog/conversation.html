@@ -103,6 +103,10 @@
 
 
             <div class="chat-header-actions">
+                <label class="chat-message-search">
+                    <span class="visually-hidden">Search this conversation</span>
+                    <input type="search" id="chatMessageSearch" placeholder="Search chat">
+                </label>
 
 
                 <!-- PROFILE -->
@@ -145,18 +149,41 @@
              CHAT MESSAGES
         ================================================== -->
 
+        {% if message_request %}
+        <div class="message-request-banner" role="status">
+            {% if is_message_request_recipient %}
+            <strong>Message request</strong>
+            <p>Accept this request to continue chatting.</p>
+            <div class="message-request-actions">
+                <form method="post" action="{% url 'blog:accept_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Accept</button></form>
+                <form method="post" action="{% url 'blog:reject_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Reject</button></form>
+                <form method="post" action="{% url 'blog:block_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Block</button></form>
+                <form method="post" action="{% url 'blog:report_message_request' conversation.id %}">{% csrf_token %}<button type="submit">Report</button></form>
+            </div>
+            {% else %}
+            <strong>Message request sent</strong>
+            <p>You can send one message. More messages are available after the request is accepted.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <main
             class="chat-messages"
             id="chatMessages"
             data-status-url="{% url 'blog:conversation_status' conversation.id %}"
+            data-typing-url="{% url 'blog:conversation_typing' conversation.id %}"
+            data-has-older="{{ has_older_messages|yesno:'true,false' }}"
         >
 
+            <button type="button" class="chat-load-older" id="loadOlderMessages" {% if not has_older_messages %}hidden{% endif %}>Load older messages</button>
 
             {% if messages %}
 
 
                 {% for message in messages %}
 
+                    {% ifchanged message.created_at|date:"F j, Y" %}<div class="message-date-separator"><span>{{ message.created_at|date:"F j, Y" }}</span></div>{% endifchanged %}
+                    {% if new_messages_after_id == message.id %}<div class="new-messages-divider"><span>New messages</span></div>{% endif %}
 
                     <div
                         class="
@@ -168,6 +195,8 @@
                             {% endif %}
                         "
                         data-message-id="{{ message.id }}"
+                        data-edit-url="{% url 'blog:edit_message' message.id %}"
+                        data-reaction-url="{% url 'blog:toggle_message_reaction' message.id %}"
                     >
 
 
@@ -195,8 +224,9 @@
                                 message-content
                                 {% if message.sender == request.user %}
                                     message-content-me
-                                {% endif %}
-                            "
+                                    {% endif %}
+                                "
+                            data-message-id="{{ message.id }}"
                         >
 
 
@@ -235,13 +265,13 @@
                     {% if ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".webp" in filename or ".bmp" in filename %}
 
                         <a
-                            href="{{ attachment.file.url }}"
+                            href="{% url 'blog:message_attachment' attachment.id %}"
                             target="_blank"
                             class="message-image-link"
                         >
 
                             <img
-                                src="{{ attachment.file.url }}"
+                                src="{% url 'blog:message_attachment' attachment.id %}"
                                 alt="{{ attachment.original_name }}"
                                 class="message-image"
                             >
@@ -251,7 +281,7 @@
                     {% else %}
 
                         <a
-                            href="{{ attachment.file.url }}"
+                            href="{% url 'blog:message_attachment' attachment.id %}"
                             target="_blank"
                             download
                             class="message-file"
@@ -304,6 +334,7 @@
                                     {{ message.created_at|date:"d M Y, h:i A" }}
 
                                 </span>
+                                {% if message.edited_at %}<span class="message-edited">Edited</span>{% endif %}
 
 
                                 {% if message.sender == request.user %}
@@ -350,6 +381,8 @@
 
                             </div>
 
+                            {% regroup message.reactions.all by emoji as reaction_groups %}
+                            {% if reaction_groups %}<div class="message-reactions">{% for group in reaction_groups %}<button type="button" class="message-reaction" data-message-id="{{ message.id }}" data-emoji="{{ group.grouper }}" data-reaction-url="{% url 'blog:toggle_message_reaction' message.id %}">{{ group.grouper }} {{ group.list|length }}</button>{% endfor %}</div>{% endif %}
 
 
                             <!-- MESSAGE ACTIONS -->
@@ -410,6 +443,8 @@
                                     >
                                         <i class="bi bi-trash3"></i>
                                     </button>
+                                    <button type="button" class="message-action-btn message-reaction-trigger" data-message-id="{{ message.id }}" title="React with a thumbs-up" aria-label="React with a thumbs-up">👍</button>
+                                    {% if message.sender == request.user %}<button type="button" class="message-action-btn message-edit-btn" data-message-id="{{ message.id }}" data-content="{{ message.content|escape }}" title="Edit" aria-label="Edit message"><i class="bi bi-pencil"></i></button>{% endif %}
 
 
                             </div>
@@ -478,6 +513,8 @@
 
         </main>
 
+        <div class="chat-typing-indicator" id="chatTypingIndicator" aria-live="polite" hidden>Typing…</div>
+        <button class="chat-scroll-bottom" id="chatScrollBottom" type="button" aria-label="Scroll to latest messages" hidden><i class="bi bi-arrow-down"></i></button>
         <!-- =================================================
      DELETE MESSAGE MODAL
 ================================================= -->
@@ -836,19 +873,11 @@
                             multiple
                             hidden
                             accept="
-                                image/*,
-                                video/*,
-                                audio/*,
+                                .png,
+                                .jpg,
+                                .jpeg,
                                 .pdf,
-                                .doc,
-                                .docx,
-                                .xls,
-                                .xlsx,
-                                .ppt,
-                                .pptx,
-                                .txt,
-                                .zip,
-                                .rar
+                                .webp
                             "
                         >
 
@@ -860,6 +889,8 @@
                 rows="1"
                 placeholder="Write a message..."
                 autocomplete="off"
+                maxlength="2000"
+                {% if message_request and is_message_request_recipient %}disabled{% endif %}
             ></textarea>
 
 

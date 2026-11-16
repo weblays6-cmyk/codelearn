@@ -1,0 +1,17 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{{ conversation.title }} | Shared AI Tutor Chat{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/ai_tutor.css' %}">{% endblock %}
+{% block content %}
+<main class="ai-shared-conversation">
+    <p class="hero-badge">Read-only shared conversation</p>
+    <h1>{{ conversation.title }}</h1>
+    {% for message in messages %}
+    <article class="message {% if message.role == 'user' %}user-message{% else %}ai-message{% endif %}">
+        <span class="message-label">{% if message.role == 'user' %}Learner{% else %}AI Tutor{% endif %}</span>
+        <div class="message-content">{{ message.content }}</div>
+    </article>
+    {% empty %}<p>This conversation has no messages yet.</p>{% endfor %}
+</main>
+{% endblock %}

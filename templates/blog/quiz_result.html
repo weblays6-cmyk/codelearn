@@ -1,0 +1,5 @@
+{% extends "blog/base.html" %}
+{% block title %}Quiz result | {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<section class="panel course-quiz-page"><h1>{% if attempt.passed %}Quiz passed{% else %}Keep practicing{% endif %}</h1><p>Your score: {{ attempt.score|default:0 }}% · pass mark {{ quiz.passing_score }}%</p>{% for question in questions %}<article class="quiz-question"><h2>{{ forloop.counter }}. {{ question.prompt }}</h2>{% for option in question.options %}<p>{% if forloop.counter0 == question.correct_option %}<strong>Correct answer:</strong>{% endif %} {{ option }}{% if forloop.counter0 == question.selected_option %} <strong>Your answer</strong>{% endif %}</p>{% endfor %}<p>{{ question.explanation }}</p></article>{% endfor %}<a class="primary-btn" href="{% url 'blog:module_quiz' quiz.pk %}">Retake quiz</a><a class="course-secondary-btn" href="{% url 'blog:course_detail' quiz.module.course.slug %}">Back to course</a></section>
+{% endblock %}

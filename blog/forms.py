@@ -309,6 +309,40 @@ class ProfilePictureForm(forms.Form):
         )
 
 
+class ProfileDetailsForm(forms.ModelForm):
+    skills = forms.CharField(required=False, max_length=1000)
+
+    class Meta:
+        model = UserProfile
+        fields = (
+            'display_name', 'headline', 'location', 'bio', 'skills',
+            'github_url', 'linkedin_url', 'portfolio_url', 'profile_banner',
+        )
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4, 'maxlength': 2000}),
+            'profile_banner': forms.ClearableFileInput(attrs={'accept': 'image/jpeg,image/png,image/webp'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.initial['skills'] = ', '.join(self.instance.skills or [])
+
+    def clean_skills(self):
+        return [skill.strip()[:40] for skill in self.cleaned_data.get('skills', '').split(',') if skill.strip()][:20]
+
+    def clean_profile_banner(self):
+        image = self.cleaned_data.get('profile_banner')
+        if not image or not getattr(image, 'file', None):
+            return image
+        if image.size > 2 * 1024 * 1024:
+            raise ValidationError('Profile banners must be 2 MB or smaller.')
+        expected = PROFILE_PICTURE_FORMATS.get(Path(image.name).suffix.lower())
+        if not expected or getattr(image.image, 'format', None) != expected:
+            raise ValidationError('Choose a valid JPG, PNG, or WEBP banner.')
+        return image
+
+
 # =========================================================
 # PROJECT FORM
 # =========================================================
@@ -331,6 +365,8 @@ class ProjectForm(forms.ModelForm):
             'live_demo_url',
             'looking_for_collaborators',
             'collaborator_types',
+            'is_public',
+            'publication_status',
         ]
 
         widgets = {
@@ -394,5 +430,8 @@ class ProjectForm(forms.ModelForm):
             'collaborator_types': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g. Frontend, Backend, UI/UX'
+            }),
+            'is_public': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
             }),
         }

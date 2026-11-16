@@ -31,20 +31,17 @@
     <div class="top-navbar-right">
 
         {% if user.is_authenticated %}
-        {% with unread_count=UNREAD_MESSAGE_COUNT|default:0 %}
         <a href="{% url 'blog:notifications' %}" class="navbar-action-button navbar-notifications" aria-label="Notifications"
             title="Notifications">
             <i class="bi bi-bell" aria-hidden="true"></i>
+            <span class="navbar-action-badge" data-live-count="notifications_unread" aria-label="0 unread notifications" hidden></span>
         </a>
         <a href="{% url 'blog:messages' %}" class="navbar-action-button navbar-messages" aria-label="Messages" title="Messages">
             <i class="bi bi-chat-dots" aria-hidden="true"></i>
-            {% if unread_count > 0 %}
-            <span class="navbar-action-badge" aria-label="{{ unread_count }} unread messages">
-                {% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}
-            </span>
-            {% endif %}
+            <span class="navbar-action-badge" data-live-count="messages_unread"
+                aria-label="{{ UNREAD_MESSAGE_COUNT|default:0 }} unread messages"
+                {% if not UNREAD_MESSAGE_COUNT %}hidden{% endif %}>{% if UNREAD_MESSAGE_COUNT > 9 %}9+{% elif UNREAD_MESSAGE_COUNT %}{{ UNREAD_MESSAGE_COUNT }}{% endif %}</span>
         </a>
-        {% endwith %}
         <div class="navbar-user-menu">
             <button type="button" class="navbar-user" id="userMenuToggle" aria-label="Open user menu" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdown">
                 {% if user.profile_data.profile_picture %}
@@ -72,9 +69,9 @@
         <a href="{% url 'blog:signup' %}" class="navbar-join-link">Get started</a>
         {% endif %}
 
-        <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        {% if DARK_THEME_ENABLED %}<button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
             <i class="bi bi-moon-fill" id="themeIcon"></i>
-        </button>
+        </button>{% endif %}
 
     </div>
 

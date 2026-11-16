@@ -25,12 +25,7 @@
                         Practice Arena
                     </div>
 
-                    <h1>
-                        Practice.
-                        <span class="gradient-text">
-                            Improve.
-                        </span>
-                    </h1>
+                    <h1 class="page-title">Practice. <span class="page-title-accent">Improve.</span></h1>
 
                     <p>
                         Solve problems, build coding skills,
@@ -41,7 +36,7 @@
                 <div class="motivation">
                     “Small progress every day
                     becomes a big skill tomorrow.”
-                    <strong>{{ practice_stats.streak }} day streak</strong>
+                    <strong>{{ practice_stats.streak|default:0 }} day streak</strong>
                 </div>
             </section>
 
@@ -55,7 +50,7 @@
                         </div>
                         <span class="stat-change">Current total</span>
                     </div>
-                    <div class="stat-value" id="statSolved">{{ practice_stats.solved }}</div>
+                    <div class="stat-value" id="statSolved">{{ practice_stats.solved|default:0 }}</div>
                     <div class="stat-label">Problems Solved</div>
                 </div>
 
@@ -66,7 +61,7 @@
                         </div>
                         <span class="stat-change">Active</span>
                     </div>
-                    <div class="stat-value" id="statProgress">{{ practice_stats.attempted }}</div>
+                    <div class="stat-value" id="statProgress">{{ practice_stats.attempted|default:0 }}</div>
                     <div class="stat-label">In Progress</div>
                 </div>
 
@@ -75,9 +70,9 @@
                         <div class="stat-icon orange">
                             <i class="bi bi-clock"></i>
                         </div>
-                        <span class="stat-change" id="pendingNote">{{ practice_stats.pending }} remaining</span>
+                        <span class="stat-change" id="pendingNote">{{ practice_stats.pending|default:0 }} remaining</span>
                     </div>
-                    <div class="stat-value" id="statPending">{{ practice_stats.pending }}</div>
+                    <div class="stat-value" id="statPending">{{ practice_stats.pending|default:0 }}</div>
                     <div class="stat-label">Pending Problems</div>
                 </div>
 
@@ -88,10 +83,37 @@
                         </div>
                         <span class="stat-change">From solved problems</span>
                     </div>
-                    <div class="stat-value" id="statAccuracy">{{ practice_stats.accuracy|floatformat:1 }}%</div>
+                    <div class="stat-value" id="statAccuracy">{{ practice_stats.accuracy|default:0|floatformat:1 }}%</div>
                     <div class="stat-label">Overall Accuracy</div>
                 </div>
 
+            </section>
+
+            <section class="panel daily-challenge-card" aria-label="Daily challenge">
+                <div class="daily-challenge-main">
+                    <div class="daily-challenge-feature">
+                        <span class="daily-challenge-label">Daily Challenge</span>
+                        {% if daily_challenge %}
+                        <h2>{{ daily_challenge.title }}</h2>
+                        <span class="difficulty {{ daily_challenge.difficulty|lower }}">{{ daily_challenge.get_difficulty_display }}</span>
+                        {% else %}
+                        <h2>Challenges are coming soon</h2>
+                        {% endif %}
+                    </div>
+                    <div class="daily-challenge-description">
+                        {% if daily_challenge %}<p>{{ daily_challenge.description|truncatewords:18 }}</p>{% endif %}
+                        <span class="daily-challenge-reset" data-challenge-countdown="{{ daily_challenge_reset_seconds|default:0 }}"><i class="bi bi-clock" aria-hidden="true"></i> Resets in <span data-countdown-value>0h 0m</span></span>
+                    </div>
+                    {% if daily_challenge %}
+                    <a class="daily-challenge-cta" href="{% url 'blog:practice_problem_detail' daily_challenge.slug %}"><i class="bi bi-play-fill" aria-hidden="true"></i> Try today’s challenge</a>
+                    {% endif %}
+                </div>
+                <nav class="daily-challenge-links" aria-label="Practice shortcuts">
+                    <a href="{% url 'blog:practice_random' %}"><i class="bi bi-shuffle" aria-hidden="true"></i> Random problem</a>
+                    <a href="{% url 'blog:practice_all' %}"><i class="bi bi-list-check" aria-hidden="true"></i> Browse all</a>
+                    <a href="{% url 'blog:practice_problem_sets' %}"><i class="bi bi-collection" aria-hidden="true"></i> Problem sets</a>
+                    <a href="{% url 'blog:practice_leaderboard' %}"><i class="bi bi-trophy" aria-hidden="true"></i> Leaderboard</a>
+                </nav>
             </section>
 
             <!-- CONTENT -->
@@ -105,44 +127,31 @@
                             <h2>Coding Challenges</h2>
                             <span>Improve your problem-solving skills</span>
                         </div>
-                        <span>{{ practice_stats.total_problems }} Problems</span>
+                        <span id="problemCountSummary" data-problem-summary>{% if problem_page.paginator.count %}Showing {{ problem_page.start_index }}-{{ problem_page.end_index }} of {{ problem_page.paginator.count }}{% else %}Showing 0 of 0{% endif %}</span>
                     </div>
 
-                    <div class="filters">
-                        <button class="filter-btn active" data-filter="all">All</button>
-                        <button class="filter-btn" data-filter="python">Python</button>
-                        <button class="filter-btn" data-filter="django">Django</button>
-                        <button class="filter-btn" data-filter="javascript">JavaScript</button>
-                        <button class="filter-btn" data-filter="sql">SQL</button>
-                        <button class="filter-btn" data-filter="html">HTML/CSS</button>
-
-                        <div class="problem-search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="problemSearch" placeholder="Search problems...">
-                        </div>
-                    </div>
-
-                    <div class="filters-row2">
-                        <select id="difficultyFilter" aria-label="Filter by difficulty">
+                    <form class="practice-filters" method="get">
+                        <label class="problem-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="problemSearch" name="search" value="{{ search }}" placeholder="Search problems..." aria-label="Search problems"></label>
+                        <select id="difficultyFilter" name="difficulty" aria-label="Filter by difficulty">
                             <option value="all">All Difficulties</option>
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
+                            <option value="easy" {% if difficulty_filter == 'easy' %}selected{% endif %}>Easy</option>
+                            <option value="medium" {% if difficulty_filter == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="hard" {% if difficulty_filter == 'hard' %}selected{% endif %}>Hard</option>
                         </select>
 
-                        <select id="topicFilter" aria-label="Filter by topic">
+                        <select id="topicFilter" data-selected="{{ topic_filter }}" aria-label="Filter by topic">
                             <option value="all">All Topics</option>
                         </select>
 
                         <select id="statusFilter" aria-label="Filter by status">
                             <option value="all">All Statuses</option>
-                            <option value="solved">Solved</option>
-                            <option value="attempted">Attempted</option>
-                            <option value="not_attempted">Not Attempted</option>
+                            <option value="solved" {% if status_filter == 'solved' %}selected{% endif %}>Solved</option>
+                            <option value="attempted" {% if status_filter == 'attempted' %}selected{% endif %}>Attempted</option>
+                            <option value="not_attempted" {% if status_filter == 'not_attempted' %}selected{% endif %}>Not Attempted</option>
                         </select>
-
-                        <button class="filters-clear" id="filtersClear" type="button">Clear filters</button>
-                    </div>
+                        <select id="sortFilter" name="sort" aria-label="Sort problems" onchange="this.form.requestSubmit()"><option value="order" {% if sort_filter == 'order' %}selected{% endif %}>Default order</option><option value="title" {% if sort_filter == 'title' %}selected{% endif %}>A-Z</option><option value="difficulty" {% if sort_filter == 'difficulty' %}selected{% endif %}>Difficulty</option></select>
+                        <a class="filters-clear" id="filtersClear" href="{% url 'blog:practice' %}">Clear</a>
+                    </form>
 
                     <div class="problems">
 
@@ -150,15 +159,15 @@
                         {% with problem=row.problem status=row.status %}
                         <div class="problem" data-id="{{ problem.slug }}" data-category="{{ problem.category|lower }}"
                             data-name="{{ problem.title|lower }}" data-difficulty="{{ problem.difficulty|lower }}"
+                            data-search-text="{{ problem.title|lower }} {{ problem.description|lower }}{% for tag in problem.tags %} {{ tag|lower }}{% endfor %}"
                             data-status="{{ row.status|lower }}"
                             data-tags="{% for tag in problem.tags %}{{ tag|lower }}|{% endfor %}">
                             <div
                                 class="problem-status {% if status == 'SOLVED' %}solved-status{% elif status == 'ATTEMPTED' %}progress-status{% else %}pending-status{% endif %}">
-                                {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>{% elif status == 'ATTEMPTED'
-                                %}<i class="bi bi-play-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                                {% if status == 'SOLVED' %}<i class="bi bi-check-lg"></i>{% elif status == 'ATTEMPTED' %}<i class="bi bi-play-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
                             </div>
                             <div class="problem-info">
-                                <h3>{{ forloop.counter }}. {{ problem.title }}</h3>
+                                <h3>{{ problem_page.start_index|add:forloop.counter0 }}. {{ problem.title }}</h3>
                                 <p>{{ problem.description|truncatewords:24 }}</p>
                                 <div class="tags">
                                     {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% empty %}<span
@@ -166,9 +175,8 @@
                                 </div>
                             </div>
                             <div class="problem-meta">
-                                <span class="difficulty {{ problem.difficulty|lower }}">{{
-                                    problem.get_difficulty_display|upper }}</span>
-                                <div class="solve-rate">{{ status|title|default:'Not started' }}</div>
+                                <span class="difficulty {{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
+                                <div class="solve-rate">{% if status == 'SOLVED' %}Solved{% elif status == 'ATTEMPTED' %}Attempted{% else %}Not attempted{% endif %}</div>
                             </div>
                             <a class="solve-btn" href="{% url 'blog:practice' %}?problem={{ problem.slug }}">
                                 {% if status == 'SOLVED' %}
@@ -363,6 +371,7 @@
                         {% endcomment %}
 
                     </div>
+                    {% if problem_page.paginator.num_pages > 1 %}<nav class="practice-pagination" aria-label="Problem pages">{% if problem_page.has_previous %}<a href="?{{ pagination_query }}&page={{ problem_page.previous_page_number }}">Prev</a>{% endif %}{% for link in page_links %}{% if link.ellipsis %}<span>…</span>{% else %}<a class="{% if link.current %}active{% endif %}" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.label }}</a>{% endif %}{% endfor %}{% if problem_page.has_next %}<a href="?{{ pagination_query }}&page={{ problem_page.next_page_number }}">Next</a>{% endif %}</nav><p class="practice-pagination-summary" data-problem-summary>Showing {{ problem_page.start_index }}-{{ problem_page.end_index }} of {{ problem_page.paginator.count }}</p>{% endif %}
                 </div>
 
                 <!-- RIGHT COLUMN -->
@@ -378,27 +387,27 @@
                         <div class="progress-body">
                             <div class="circle" id="progressCircle">
                                 <div class="circle-content">
-                                    <strong id="circlePct">{{ practice_stats.accuracy|floatformat:1 }}%</strong>
+                                    <strong id="circlePct">{{ practice_stats.accuracy|default:0|floatformat:1 }}%</strong>
                                     <span>Overall</span>
                                 </div>
                             </div>
 
                             <div class="legend">
                                 <div class="legend-item">
-                                    <span class="legend-dot" style="background:#22c55e"></span>
-                                    Solved <strong id="legendSolved">{{ practice_stats.solved }}</strong>
+                                    <span class="legend-dot solved"></span>
+                                    Solved <strong id="legendSolved">{{ practice_stats.solved|default:0 }}</strong>
                                 </div>
                                 <div class="legend-item">
-                                    <span class="legend-dot" style="background:#3b82f6"></span>
-                                    In Progress <strong id="legendProgress">{{ practice_stats.attempted }}</strong>
+                                    <span class="legend-dot in-progress"></span>
+                                    In Progress <strong id="legendProgress">{{ practice_stats.attempted|default:0 }}</strong>
                                 </div>
                                 <div class="legend-item">
-                                    <span class="legend-dot" style="background:#f59e0b"></span>
-                                    Pending <strong id="legendPending">{{ practice_stats.pending }}</strong>
+                                    <span class="legend-dot pending"></span>
+                                    Pending <strong id="legendPending">{{ practice_stats.pending|default:0 }}</strong>
                                 </div>
                                 <div class="legend-item">
-                                    <span class="legend-dot" style="background:#475569"></span>
-                                    Total <strong id="legendTotal">{{ practice_stats.total_problems }}</strong>
+                                    <span class="legend-dot total"></span>
+                                    Total <strong id="legendTotal">{{ practice_stats.total_problems|default:0 }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -408,7 +417,7 @@
                     <div class="panel streak-panel">
                         <div class="streak-header">
                             <h3>🔥 Practice Streak</h3>
-                            <span class="streak-count">{{ practice_stats.streak }} days</span>
+                            <span class="streak-count">{{ practice_stats.streak|default:0 }} days</span>
                         </div>
 
                         <p class="streak-message">Streak days are based on recorded submissions and completed tests.</p>
@@ -467,7 +476,7 @@
                 </div>
 
                 <div class="tool-card">
-                    <div class="tool-icon" style="background:rgba(236,72,153,.12);color:#f472b6;">
+                    <div class="tool-icon warning">
                         <i class="bi bi-trophy"></i>
                     </div>
                     <h3>Leaderboard</h3>
@@ -544,9 +553,10 @@
 
 {% block extra_js %}
 {{ database_problems|json_script:'practice-database-problems' }}
+{{ practice_state|json_script:'practice-state' }}
 <meta name="csrf-token" content="{{ csrf_token }}">
 <script>
-    window.PRACTICE_STATE = {{ practice_state | safe }};
+    window.PRACTICE_STATE = JSON.parse(document.getElementById('practice-state').textContent);
     window.PRACTICE_DATABASE_PROBLEMS = JSON.parse(document.getElementById('practice-database-problems').textContent);
     window.PRACTICE_ENDPOINTS = {
         saveDraft: "{% url 'blog:practice_save_draft' %}",

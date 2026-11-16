@@ -7,6 +7,7 @@ Assignments | {{ SITE_NAME }}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/assignments.css' %}">
+<link rel="stylesheet" href="{% static 'css/assignment_features.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -27,8 +28,8 @@ Assignments | {{ SITE_NAME }}
             </div>
 
 
-            <h1>
-                My <span>Assignments</span>
+            <h1 class="page-title">
+                My <span class="page-title-accent">Assignments</span>
             </h1>
 
 
@@ -47,10 +48,11 @@ Assignments | {{ SITE_NAME }}
                 Next Deadline
             </small>
 
-            <strong>
+            <strong data-next-deadline="{% if next_deadline %}{{ next_deadline.due_date|date:'c' }}{% endif %}">
                 {% if next_deadline %}{{ next_deadline.title }} — {{ next_deadline.due_date|date:"M j" }}{% else %}No
                 upcoming deadlines{% endif %}
             </strong>
+            {% if next_deadline %}<small data-deadline-countdown aria-live="polite"></small>{% endif %}
 
         </div>
 
@@ -134,42 +136,28 @@ Assignments | {{ SITE_NAME }}
 
     <!-- ================= TOOLBAR ================= -->
 
-    <div class="toolbar">
-
-
-        <button class="filter-btn active" data-filter="all">
-            All
-        </button>
-
-
-        <button class="filter-btn" data-filter="pending">
-            Pending
-        </button>
-
-
-        <button class="filter-btn" data-filter="submitted">
-            Submitted
-        </button>
-
-
-        <button class="filter-btn" data-filter="evaluated">
-            Evaluated
-        </button>
-
-
-        <button class="filter-btn" data-filter="overdue">
-            Overdue
-        </button>
-
-
-        <div class="toolbar-search">
-
-            <i class="bi bi-search"></i>
-
-            <input id="assignmentSearch" type="text" placeholder="Find assignment...">
-
-        </div>
-
+    <nav class="assignment-tabs" aria-label="Assignment categories">
+        <a class="{% if active_tab == 'courses' %}active{% endif %}" href="?tab=courses">My Courses</a>
+        <a class="{% if active_tab == 'extra' %}active{% endif %}" href="?tab=extra">Extra Practice <span>Optional</span></a>
+        <a class="{% if active_tab == 'mock_tests' %}active{% endif %}" href="?tab=mock_tests">Mock Tests</a>
+        <a class="{% if active_tab == 'projects' %}active{% endif %}" href="?tab=projects">My Projects</a>
+        <a class="{% if view_mode == 'calendar' %}active{% endif %}" href="?tab={{ active_tab }}&view=calendar">Calendar</a>
+    </nav>
+    <div class="assignment-toolbar">
+        <nav class="assignment-view-toggle" aria-label="Assignment view"><a class="{% if view_mode != 'calendar' %}active{% endif %}" href="?tab={{ active_tab }}&view=list&status={{ status_filter }}&sort={{ sort }}">List</a><a class="{% if view_mode == 'calendar' %}active{% endif %}" href="?tab={{ active_tab }}&view=calendar&status={{ status_filter }}&sort={{ sort }}">Calendar</a></nav>
+        <form method="get" class="assignment-filter-form">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            <input type="hidden" name="view" value="{{ view_mode }}">
+            <div class="assignment-search"><i class="bi bi-search" aria-hidden="true"></i><label class="visually-hidden" for="assignmentSearch">Search assignments</label><input id="assignmentSearch" name="search" type="search" value="{{ search }}" placeholder="Find assignment..."></div>
+            <nav class="assignment-status-chips" aria-label="Filter assignments">
+                <a class="{% if status_filter == 'all' %}active{% endif %}" href="?tab={{ active_tab }}&view={{ view_mode }}&search={{ search|urlencode }}">All <span>{{ status_counts.all|default:0 }}</span></a>
+                <a class="{% if status_filter == 'pending' %}active{% endif %}" href="?tab={{ active_tab }}&view={{ view_mode }}&status=pending&search={{ search|urlencode }}">Pending <span>{{ status_counts.pending|default:0 }}</span></a>
+                <a class="{% if status_filter == 'submitted' %}active{% endif %}" href="?tab={{ active_tab }}&view={{ view_mode }}&status=submitted&search={{ search|urlencode }}">Submitted <span>{{ status_counts.submitted|default:0 }}</span></a>
+                <a class="{% if status_filter == 'evaluated' %}active{% endif %}" href="?tab={{ active_tab }}&view={{ view_mode }}&status=evaluated&search={{ search|urlencode }}">Evaluated <span>{{ status_counts.evaluated|default:0 }}</span></a>
+                <a class="{% if status_filter == 'past_due' or status_filter == 'overdue' %}active{% endif %}" href="?tab={{ active_tab }}&view={{ view_mode }}&status=past_due&search={{ search|urlencode }}">Past Due <span>{{ status_counts.past_due|default:0 }}</span></a>
+            </nav>
+            <label>Sort <select name="sort" onchange="this.form.submit()"><option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option><option value="due" {% if sort == 'due' %}selected{% endif %}>Due date</option><option value="title" {% if sort == 'title' %}selected{% endif %}>Title</option></select></label>
+        </form>
     </div>
 
 
@@ -181,8 +169,32 @@ Assignments | {{ SITE_NAME }}
         <!-- ================= ASSIGNMENT LIST ================= -->
 
         <div class="assignments">
-
-            {% for assignment in assignments %}
+            {% if active_tab == 'mock_tests' %}
+                {% for test in mock_tests %}
+                <article class="assignment">
+                    <div class="assignment-top"><div><h3>{{ test.title }}</h3><p class="assignment-desc">{{ test.description|default:"Practice a timed set of questions." }}</p></div><span class="status">{{ test.get_difficulty_display }}</span></div>
+                    <div class="assignment-meta"><span><i class="bi bi-clock"></i>{{ test.duration_minutes }} min</span><span><i class="bi bi-question-circle"></i>{{ test.question_count }} questions</span><span><i class="bi bi-arrow-repeat"></i>{{ test.user_attempt_count }} attempts</span><span>Best: {% if test.user_best_score != None %}{{ test.user_best_score }}%{% else %}—{% endif %}</span></div>
+                    <div class="assignment-bottom"><span class="course-tag">Mock test</span><a class="assignment-btn" href="{% url 'blog:practice_mock_test_detail' test.pk %}">View test <i class="bi bi-arrow-right"></i></a></div>
+                </article>
+                {% empty %}<article class="assignment"><h3>No mock tests available</h3><p class="assignment-desc">New tests will appear here.</p></article>{% endfor %}
+            {% elif active_tab == 'projects' %}
+                {% for project in my_projects %}
+                <article class="assignment"><div class="assignment-top"><div><h3>{{ project.title }}</h3><p class="assignment-desc">{{ project.short_description }}</p></div><span class="status">{{ project.get_status_display }}</span></div><div class="assignment-bottom"><span class="course-tag">My project</span><a class="assignment-btn" href="{% url 'blog:project_detail' project.pk %}">View project <i class="bi bi-arrow-right"></i></a></div></article>
+                {% empty %}<article class="assignment"><h3>No projects yet</h3><p class="assignment-desc">Create a project to track your work here.</p><a class="assignment-btn" href="{% url 'blog:create_project' %}">Create a project</a></article>{% endfor %}
+            {% elif view_mode == 'calendar' and show_assignment_list %}
+            <section class="assignment-calendar" data-calendar data-month="{{ calendar_month }}">
+                <header><button type="button" data-month-shift="-1" aria-label="Previous month">‹</button><h2 data-calendar-title></h2><button type="button" data-month-shift="1" aria-label="Next month">›</button></header>
+                <div class="calendar-grid" data-calendar-grid></div>
+            </section>
+            {{ due_dates_json|json_script:'assignment-due-dates' }}
+            {% elif show_assignment_list %}
+            {% if active_tab == 'courses' and not has_enrollments %}
+                <article class="assignment"><h3>Enroll in a course to get assignments</h3><p class="assignment-desc">Course assignments and deadlines will appear here after you enroll.</p><a class="assignment-btn" href="{% url 'blog:home' %}">Browse Courses <i class="bi bi-arrow-right"></i></a><p class="assignment-desc">You can also try the Extra Practice tab.</p></article>
+            {% else %}
+            {% for group in course_groups %}
+            <details class="assignment-course-group" open>
+                <summary class="assignment-course-heading"><div><h2>{% if group.course %}{{ group.course.title }}{% else %}Optional practice{% endif %}</h2><p>{{ group.completed }} of {{ group.total }} assignments completed</p></div><span class="assignment-progress-ring" style="--progress:{{ group.progress_percent }}%" aria-label="{{ group.progress_percent }}% complete"><span>{{ group.progress_percent }}%</span></span></summary>
+                {% for assignment in group.assignments %}
             <article class="assignment" data-status="{{ assignment.display_status|lower }}"
                 data-name="{{ assignment.title|lower }}">
                 <div class="assignment-top">
@@ -193,7 +205,7 @@ Assignments | {{ SITE_NAME }}
                             <p class="assignment-desc">{{ assignment.description }}</p>
                         </div>
                     </div>
-                    <span class="status {{ assignment.display_status|lower }}">{{ assignment.display_status }}</span>
+                    <span class="status {{ assignment.display_status|lower }}">{% if assignment.display_status == 'OVERDUE' %}Past Due{% elif assignment.display_status == 'NOT_STARTED' %}Not started{% elif assignment.display_status == 'IN_PROGRESS' %}In progress{% elif assignment.display_status == 'EVALUATED' %}Evaluated{% elif assignment.display_status == 'PASSED' %}Passed{% elif assignment.display_status == 'FAILED' %}Failed{% elif assignment.display_status == 'SUBMITTED' %}Submitted{% else %}Pending{% endif %}</span>
                 </div>
                 <div class="assignment-meta">
                     <span>
@@ -206,12 +218,11 @@ Assignments | {{ SITE_NAME }}
                     </span>
                     <span><i class="bi bi-star"></i>{{ assignment.max_score }} Marks</span>
                     <span><i class="bi bi-clock"></i>~{{ assignment.estimated_duration }} min</span>
-                    {% if assignment.due_date %}<span><i class="bi bi-calendar-event"></i>Due {{
-                        assignment.due_date|date:"M j" }}</span>{% endif %}
+                    {% if assignment.due_date %}<span><i class="bi bi-calendar-event"></i>Due {{ assignment.due_date|date:"M j" }}</span>{% endif %}
                 </div>
                 <div class="assignment-bottom">
                     <span class="course-tag">
-                        {% if assignment.course %}
+                        {% if active_tab == 'extra' %}Optional{% elif assignment.course %}
                         {{ assignment.course.title }}
                         {% elif assignment.lesson %}
                         {{ assignment.lesson.course.title }}
@@ -229,12 +240,27 @@ Assignments | {{ SITE_NAME }}
                     </a>
                 </div>
             </article>
+                {% endfor %}
+            </details>
             {% empty %}
+            {% if active_tab == 'extra' %}
             <article class="assignment">
-                <h3>No assignments available</h3>
-                <p class="assignment-desc">Published assignments for your account will appear here.</p>
+                <h3>No extra practice assignments</h3>
+                <p class="assignment-desc">Optional assignments will appear here when available.</p>
             </article>
+            {% else %}
+            <article class="assignment"><h3>No assignments available</h3><p class="assignment-desc">There are no published assignments for your enrolled courses yet.</p></article>
+            {% endif %}
             {% endfor %}
+            {% endif %}
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="assignment-pagination" aria-label="Assignment pages">
+                {% if page_obj.has_previous %}<a href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}<a href="?{{ query_string }}&page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+            </nav>
+            {% endif %}
+            {% endif %}
 
             {% comment %}
 
@@ -565,7 +591,7 @@ Assignments | {{ SITE_NAME }}
 
 
                     <span class="status overdue">
-                        OVERDUE
+                        Past Due
                     </span>
 
                 </div>
@@ -639,12 +665,12 @@ Assignments | {{ SITE_NAME }}
 
 
                     <div class="progress-circle" role="img"
-                        aria-label="Completion rate: {{ completion_percent }}%"
-                        style="--completion: {{ completion_percent }}%;">
+                        aria-label="Completion rate: {{ completion_percent|default:0 }}%"
+                        style="--completion: {{ completion_percent|default:0 }}%;">
 
                         <div class="circle-text">
 
-                            <strong>{{ completion_percent }}%</strong>
+                            <strong>{{ completion_percent|default:0 }}%</strong>
 
                             <span>
                                 Completed
@@ -668,8 +694,8 @@ Assignments | {{ SITE_NAME }}
                         </p>
 
 
-                        <div class="mini-progress">
-                            <div style="width:{{ completion_percent }}%;"></div>
+                        <div class="mini-progress" role="progressbar" aria-label="Completion rate" aria-valuenow="{{ completion_percent|default:0 }}" aria-valuemin="0" aria-valuemax="100">
+                            <div style="width:{{ completion_percent|default:0 }}%;"></div>
                         </div>
 
                     </div>
@@ -690,9 +716,7 @@ Assignments | {{ SITE_NAME }}
                         Upcoming Deadlines
                     </h2>
 
-                    <span>
-                        VIEW ALL
-                    </span>
+                    <a href="{% url 'blog:assignments' %}?status=pending&sort=due">View All</a>
 
                 </div>
 
@@ -741,9 +765,7 @@ Assignments | {{ SITE_NAME }}
                         Assignment Score
                     </h2>
 
-                    <span>
-                        AVERAGE
-                    </span>
+                    <a href="{% url 'blog:assignment_scores' %}">Average</a>
 
                 </div>
 
@@ -751,7 +773,7 @@ Assignments | {{ SITE_NAME }}
                 <div class="score">
 
                     <strong>
-                        {{ average_score }}%
+                        {{ average_score|default:0 }}%
                     </strong>
 
                     <br>
@@ -779,12 +801,7 @@ Assignments | {{ SITE_NAME }}
                 </div>
 
 
-                <p style="
-                        margin-top:12px;
-                        color:#94a3b8;
-                        font-size:9px;
-                        line-height:1.7;
-                    ">
+                <p class="smart-tip-copy">
                     Finish your pending assignments before
                     starting new ones. Consistent completion
                     will improve your learning progress.
@@ -801,85 +818,5 @@ Assignments | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    /* =========================
-           FILTERS
-        ========================= */
-
-    const filterButtons =
-        document.querySelectorAll(".filter-btn");
-
-    const assignments =
-        document.querySelectorAll(".assignment");
-
-    filterButtons.forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            filterButtons.forEach(btn => {
-                btn.classList.remove("active");
-            });
-
-            button.classList.add("active");
-
-            const filter =
-                button.dataset.filter;
-
-            assignments.forEach(item => {
-
-                const status =
-                    item.dataset.status;
-
-                if (
-                    filter === "all" ||
-                    status === filter
-                ) {
-                    item.style.display = "block";
-                } else {
-                    item.style.display = "none";
-                }
-
-            });
-
-        });
-
-    });
-
-
-    /* =========================
-       SEARCH
-    ========================= */
-
-    const search =
-        document.getElementById(
-            "assignmentSearch"
-        );
-
-    search.addEventListener(
-        "input",
-        function () {
-
-            const value =
-                this.value
-                    .toLowerCase()
-                    .trim();
-
-            assignments.forEach(item => {
-
-                const name =
-                    item.dataset.name;
-
-                if (
-                    name.includes(value)
-                ) {
-                    item.style.display = "block";
-                } else {
-                    item.style.display = "none";
-                }
-
-            });
-
-        }
-    );
-</script>
+<script src="{% static 'js/assignments.js' %}" defer></script>
 {% endblock %}

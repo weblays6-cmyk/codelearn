@@ -1,0 +1,11 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Something went wrong · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="platform-error-state" role="status">
+    <h1>Something went wrong</h1>
+    <p>We couldn't complete your request. Please try again in a moment.</p>
+    <a class="action-btn" href="{% url 'blog:blogpage' %}">Browse courses</a>
+</section>
+{% endblock %}

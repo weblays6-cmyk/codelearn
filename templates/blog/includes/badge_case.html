@@ -1,0 +1,7 @@
+<div class="dashboard-badge-list">
+    {% for badge in badges %}
+    <span class="dashboard-badge{% if not badge.unlocked %} is-locked{% endif %}" title="{{ badge.hint }}">
+        {% if badge.unlocked %}✓{% else %}🔒{% endif %} {{ badge.name }}
+    </span>
+    {% endfor %}
+</div>

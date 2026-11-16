@@ -3,6 +3,17 @@ from django.shortcuts import redirect
 from .models import UserProfile
 
 
+class HtmlNoCacheMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if response.get('Content-Type', '').startswith('text/html'):
+            response['Cache-Control'] = 'no-cache'
+        return response
+
+
 class AccountLifecycleMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

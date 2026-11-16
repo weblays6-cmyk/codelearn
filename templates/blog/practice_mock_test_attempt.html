@@ -117,13 +117,11 @@
   {% for item in questions %}
   <section class="question-card" id="question-{{ item.question.id }}" data-question-card
     data-question-id="{{ item.question.id }}">
-    <div class="eyebrow">Question {{ forloop.counter }} of {{ questions|length }} · {{ item.question.points }} point{{
-      item.question.points|pluralize }}</div>
+    <div class="eyebrow">Question {{ forloop.counter }} of {{ questions|length }} · {{ item.question.points }} point{{ item.question.points|pluralize }}</div>
     <h2>{{ item.question.prompt }}</h2>
     {% for option in item.question.options %}
     <label class="answer-option">
-      <input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {% if
-        item.answer==option.id|stringformat:'s' %}checked{% endif %}>
+      <input type="radio" name="question-{{ item.question.id }}" value="{{ option.id }}" {% if item.answer == option.id|stringformat:'s' %}checked{% endif %}>
       <span>{{ option.text }}</span>
     </label>
     {% empty %}<p>This question has no configured answer options.</p>{% endfor %}

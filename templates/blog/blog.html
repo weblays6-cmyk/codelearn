@@ -6,6 +6,7 @@ Courses | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/course-enhancements.css' %}">
 <style>
     .courses-page {
         width: 100%;
@@ -51,7 +52,7 @@ Courses | {{ SITE_NAME }}
         border: 1px solid rgba(139, 92, 246, .35);
         border-radius: 20px;
         color: #a98cff;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         letter-spacing: 1.4px;
         text-transform: uppercase;
@@ -66,12 +67,19 @@ Courses | {{ SITE_NAME }}
     }
 
     .courses-hero h1 span {
+        color: #a78bfa;
         background: linear-gradient(90deg,
                 #ffffff,
                 #8b78ff,
                 #20d9e8);
         -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-text-fill-color: currentColor;
+    }
+
+    @supports (-webkit-background-clip: text) {
+        .courses-hero h1 span {
+            -webkit-text-fill-color: transparent;
+        }
     }
 
     .courses-hero p {
@@ -128,7 +136,7 @@ Courses | {{ SITE_NAME }}
         color: #f8fafc;
         background: transparent;
         font: inherit;
-        font-size: 11px;
+        font-size: 12px;
     }
 
     .course-search-field:focus-within,
@@ -154,7 +162,7 @@ Courses | {{ SITE_NAME }}
         border-radius: 8px;
         color: #071d1c;
         background: #53c6bb;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 750;
         text-decoration: none;
         cursor: pointer;
@@ -177,7 +185,7 @@ Courses | {{ SITE_NAME }}
 
     .course-count {
         color: #686f88;
-        font-size: 11px;
+        font-size: 12px;
         white-space: nowrap;
     }
 
@@ -245,7 +253,7 @@ Courses | {{ SITE_NAME }}
         border-radius: 7px;
         background: rgba(8, 9, 20, .85);
         backdrop-filter: blur(8px);
-        font-size: 9px;
+        font-size: 12px;
         font-weight: 700;
     }
 
@@ -342,7 +350,7 @@ Courses | {{ SITE_NAME }}
 
     .instructor {
         color: #777e97;
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .instructor strong {
@@ -428,7 +436,7 @@ Courses | {{ SITE_NAME }}
         border-radius: 9px;
         background: #101221;
         color: #858ba4;
-        font-size: 11px;
+        font-size: 12px;
         text-decoration: none;
     }
 
@@ -540,86 +548,131 @@ Courses | {{ SITE_NAME }}
 </style>
 {% endblock %}
 
+{% block extra_css_end %}
+<link rel="stylesheet" href="{% static 'css/course_catalog.css' %}?v=20261019">
+<link rel="stylesheet" href="{% static 'css/course_marketplace.css' %}?v=20261019">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/course_upgrades.js' %}" defer></script>
+<script src="{% static 'js/course_wishlist.js' %}" defer></script>
+<script src="{% static 'js/course_filters.js' %}" defer></script>
+{% endblock %}
+
 
 {% block content %}
 
 <div class="courses-page">
 
-    <!-- HERO -->
-    <section class="courses-hero">
-
+    <section class="courses-hero" aria-labelledby="catalog-title">
         <div class="courses-hero-content">
-
-            <div class="courses-eyebrow">
-                <i class="bi bi-stars"></i>
-                Explore & Learn
-            </div>
-
-            <h1>
-                Learn Skills.
-                <span>Build Your Future.</span>
-            </h1>
-
-            <p>
-                Explore programming, web development,
-                AI and technology courses designed to help
-                you learn practical skills and build
-                real-world projects.
-            </p>
-
+            <span class="courses-eyebrow"><i class="bi bi-stars" aria-hidden="true"></i> Explore &amp; Learn</span>
+            <h1 id="catalog-title">Find Your <span>Next Course</span></h1>
+            <p>Explore courses, improve your skills and achieve your goals.</p>
         </div>
-
+        <div class="catalog-hero-aside">
+            <a class="courses-wishlist-button" href="{% url 'blog:course_wishlist' %}" aria-label="Open wishlist, {{ wishlist_count }} saved courses">
+                <span class="wishlist-mark" aria-hidden="true">v</span>
+                <span>Wishlist</span>
+                <span class="wishlist-count" {% if not wishlist_count %}hidden{% endif %}>{{ wishlist_count }}</span>
+            </a>
+            <div class="catalog-stats" aria-label="Course catalog statistics">
+                <div><strong>{{ posts.paginator.count }}</strong><span>Courses</span></div>
+                <div><strong data-catalog-lesson-count>{{ posts.0.lesson_count|default:0 }}</strong><span>Lessons</span></div>
+                <div><strong>Free</strong><span>to start</span></div>
+            </div>
+        </div>
     </section>
 
-
-    <!-- SEARCH AND FILTER -->
-    <div class="courses-toolbar">
-        <form method="get" class="course-search-form" role="search">
-            <label class="course-search-field">
+    <section class="catalog-toolbar" aria-label="Search and filter courses">
+        <form method="get" class="catalog-filter-form" id="catalogSearchForm" role="search">
+            <label class="catalog-search-control">
                 <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="search" name="search" value="{{ search }}" aria-label="Search courses"
-                    placeholder="Search by course, skill, or topic">
+                <input type="search" id="catalogSearchInput" name="search" value="{{ search }}" list="course-suggestions" aria-label="Search courses" placeholder="Search courses, skills, topics...">
+                <datalist id="course-suggestions">{% for suggestion in suggestions %}<option value="{{ suggestion }}">{% endfor %}</datalist>
+                <kbd class="catalog-search-shortcut" aria-hidden="true">/</kbd>
+                <button type="button" class="catalog-search-clear" aria-label="Clear search" hidden><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </label>
-            <label class="course-category-field">
-                <select name="category" aria-label="Filter by course topic">
-                    <option value="">All topics</option>
-                    {% for course_category in categories %}
-                    <option value="{{ course_category }}" {% if category == course_category %}selected{% endif %}>
-                        {{ course_category }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <button type="submit" class="course-search-button">
-                <i class="bi bi-search" aria-hidden="true"></i> Search
-            </button>
-            {% if search or category %}
-            <a href="{% url 'blog:blogpage' %}" class="clear-filters">Clear</a>
-            {% endif %}
+            <button class="mobile-filter-trigger" type="button" aria-expanded="false" aria-controls="catalogFilterFields"><i class="bi bi-sliders" aria-hidden="true"></i> Filters</button>
+            <button class="course-filter-backdrop" type="button" aria-label="Close filters" hidden></button>
+            <div class="course-filter-fields" id="catalogFilterFields" aria-label="Course filters">
+                <div class="course-category-field">
+                    <i class="bi bi-book filter-icon" aria-hidden="true"></i>
+                    <div class="filter-control-copy"><label class="filter-caption" for="catalogCategory">Topic</label>
+                        <select id="catalogCategory" name="category" aria-label="Filter by topic">
+                            <option value="">All topics</option>
+                            {% for course_category in categories %}<option value="{{ course_category }}" {% if category == course_category %}selected{% endif %}>{{ course_category }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="course-category-field">
+                    <i class="bi bi-bar-chart-line filter-icon" aria-hidden="true"></i>
+                    <div class="filter-control-copy"><label class="filter-caption" for="catalogLevel">Level</label>
+                        <select id="catalogLevel" name="level" aria-label="Filter by level"><option value="">All levels</option>{% for value,label in levels %}<option value="{{ value }}" {% if level == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+                    </div>
+                </div>
+                <div class="course-category-field">
+                    <i class="bi bi-tag filter-icon" aria-hidden="true"></i>
+                    <div class="filter-control-copy"><label class="filter-caption" for="catalogPrice">Price</label>
+                        <select id="catalogPrice" name="price" aria-label="Filter by price"><option value="">Any price</option><option value="free" {% if price_filter == 'free' %}selected{% endif %}>Free</option><option value="paid" {% if price_filter == 'paid' %}selected{% endif %}>Paid</option></select>
+                    </div>
+                </div>
+                <div class="course-category-field">
+                    <i class="bi bi-clock filter-icon" aria-hidden="true"></i>
+                    <div class="filter-control-copy"><label class="filter-caption" for="catalogDuration">Duration</label>
+                        <select id="catalogDuration" name="duration" aria-label="Filter by duration"><option value="">Any duration</option><option value="short" {% if duration == 'short' %}selected{% endif %}>Under 2 hours</option><option value="medium" {% if duration == 'medium' %}selected{% endif %}>2–6 hours</option><option value="long" {% if duration == 'long' %}selected{% endif %}>Over 6 hours</option></select>
+                    </div>
+                </div>
+                <div class="course-category-field">
+                    <i class="bi bi-star filter-icon" aria-hidden="true"></i>
+                    <div class="filter-control-copy"><label class="filter-caption" for="catalogSort">Sort</label>
+                        <select id="catalogSort" name="sort" aria-label="Sort courses"><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Popular</option><option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option><option value="shortest" {% if sort == 'shortest' %}selected{% endif %}>Shortest</option><option value="top-rated" {% if sort == 'top-rated' %}selected{% endif %}>Top rated</option></select>
+                    </div>
+                </div>
+                <button class="mobile-filter-apply" type="submit">Apply filters</button>
+            </div>
+            <button type="submit" class="catalog-submit-proxy">Search courses</button>
         </form>
-
-        <div class="course-count">
-            {% if posts.paginator %}
-            {{ posts.paginator.count }}
-            {% else %}
-            {{ posts|length }}
-            {% endif %}
-            courses available
+        {% if active_filters %}
+        <div class="catalog-filter-footer">
+            <div class="active-filter-chips" aria-label="Active filters">
+                {% for filter in active_filters %}
+                <a href="{{ filter.url }}" class="filter-chip">
+                    {% if filter.label == category %}Topic: {{ filter.label }}
+                    {% elif filter.label == level %}Level: {{ filter.label }}
+                    {% elif filter.label == 'Free' or filter.label == 'Paid' %}Price: {{ filter.label }}
+                    {% elif filter.label == duration|title %}Duration: {{ filter.label }}
+                    {% else %}{{ filter.label }}{% endif %}
+                    <span aria-hidden="true">×</span>
+                </a>
+                {% endfor %}
+                <a href="{% url 'blog:blogpage' %}" class="clear-filters">Clear all</a>
+            </div>
         </div>
-
-    </div>
-
+        {% endif %}
+        <div class="catalog-results" aria-live="polite">
+            {% if posts.paginator %}Showing {{ posts.start_index }}-{{ posts.end_index }} of {{ posts.paginator.count }} courses{% else %}Showing 0 courses{% endif %}
+        </div>
+        <nav class="quick-category-pills" aria-label="Quick course topics">
+            <a class="quick-category-pill{% if not category %} is-active{% endif %}" href="{% url 'blog:blogpage' %}" data-category-value="">All <span data-quick-count="all">{{ posts.paginator.count }}</span></a>
+            {% for quick_category in categories %}
+            <a class="quick-category-pill{% if category == quick_category %} is-active{% endif %}" href="?category={{ quick_category|urlencode }}" data-category-value="{{ quick_category }}">{{ quick_category }} <span data-quick-count="{{ quick_category|slugify }}">0</span></a>
+            {% endfor %}
+        </nav>
+    </section>
 
     <!-- COURSES -->
+    <div id="catalog-list"></div>
     {% if posts %}
 
     <div class="courses-grid">
 
         {% for post in posts %}
 
-        <article class="course-card" data-category="{{ post.category }}">
+        <article class="course-card" data-category="{{ post.category|slugify }}" data-lesson-count="{{ post.lesson_count|default:0 }}">
 
             <!-- IMAGE -->
-            <div class="course-image">
+            <div class="course-image" data-category="{{ post.category|slugify }}">
 
                 {% if post.image %}
 
@@ -628,7 +681,13 @@ Courses | {{ SITE_NAME }}
                 {% else %}
 
                 <div class="no-image">
-                    <i class="bi bi-code-square"></i>
+                    <i class="bi bi-{% if 'python' in post.category|lower %}terminal{% elif 'django' in post.category|lower %}layers{% elif 'sql' in post.category|lower %}database{% elif 'javascript' in post.category|lower %}braces{% elif 'html' in post.category|lower %}filetype-html{% elif 'data' in post.category|lower or 'algorithm' in post.category|lower %}diagram-3{% else %}code-square{% endif %}"></i>
+                </div>
+
+                <div class="catalog-skeleton-grid" hidden aria-hidden="true">
+                    {% for _ in "123" %}
+                    <div class="catalog-skeleton-card"><div class="catalog-skeleton-cover"></div><div class="catalog-skeleton-line"></div><div class="catalog-skeleton-line catalog-skeleton-line-short"></div></div>
+                    {% endfor %}
                 </div>
 
                 {% endif %}
@@ -639,9 +698,9 @@ Courses | {{ SITE_NAME }}
                     {{ post.category }}
                 </div>
 
-                <div class="difficulty-badge">
-                    {{ post.difficulty }}
-                </div>
+                <div class="difficulty-badge">{{ post.get_difficulty_display }}</div>
+                <div class="course-price-chip{% if post.access == 'paid' %} is-premium{% else %} is-free{% endif %}">{% if post.access == 'paid' %}{% if post.required_plan %}Premium{% else %}Paid{% endif %} · {{ post.price }} {{ RAZORPAY_CURRENCY }}{% else %}Free{% endif %}</div>
+                {% if user.is_authenticated %}<button class="save-course wishlist-toggle course-cover-save" type="button" data-url="{% url 'blog:course_save' post.slug %}" data-saved="{{ post.is_saved|yesno:'true,false' }}" aria-label="{% if post.is_saved %}Remove saved course{% else %}Save course{% endif %}" aria-pressed="{{ post.is_saved|yesno:'true,false' }}"><i class="bi {% if post.is_saved %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i></button>{% endif %}
 
             </div>
 
@@ -649,7 +708,7 @@ Courses | {{ SITE_NAME }}
             <!-- BODY -->
             <div class="course-body">
 
-                <a href="{% url 'blog:post_detail' post.slug %}" class="course-title-link" aria-label="View course: {{ post.title }}">
+                <a href="{% url 'blog:course_detail' post.slug %}" class="course-title-link" aria-label="View course: {{ post.title }}">
                     {{ post.title }}
                     </a>
 
@@ -678,32 +737,44 @@ Courses | {{ SITE_NAME }}
                 <div class="course-meta">
 
                     <span>
-                        <i class="bi bi-bar-chart"></i>
-                        {{ post.difficulty }}
+                        <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                        {{ post.lesson_count|default:0 }} lessons
                     </span>
-
                     <span>
-                        <i class="bi bi-calendar3"></i>
-                        {{ post.created_at|date:"d M Y" }}
+                        <i class="bi bi-clock" aria-hidden="true"></i>
+                        {{ post.duration_minutes|default:0 }} min
                     </span>
+                    <span>
+                        <i class="bi bi-star-fill" aria-hidden="true"></i>
+                        {{ post.average_rating|default_if_none:"0.0"|floatformat:1 }} ({{ post.review_count|default:0 }})
+                    </span>
+                    <span><i class="bi bi-people" aria-hidden="true"></i> {{ post.enrollment_count|default:0 }} learners</span>
 
                 </div>
 
+                {% if post.user_enrollment %}<div class="catalog-progress"><div class="progress-copy"><span>Progress</span><strong>{{ post.user_enrollment.progress|default:0 }}%</strong></div><div class="path-progress"><span style="width:{{ post.user_enrollment.progress|default:0 }}%"></span></div></div>{% endif %}
 
                 <div class="course-footer">
 
                     <div class="instructor">
-                        By
+                        {% if post.author.profile_data.profile_picture %}<img src="{{ post.author.profile_data.profile_picture.url }}" alt="" class="instructor-avatar">{% else %}<span class="instructor-avatar instructor-avatar-fallback" aria-hidden="true">{{ post.author.username|first|upper }}</span>{% endif %}
+                        <span class="instructor-copy">By
                         <strong>
                             {{ post.author.profile_data.display_name|default:post.author.username }}
                             <small>@{{ post.author.username|lower }}</small>
                         </strong>
+                        </span>
                     </div>
 
-                    <a href="{% url 'blog:post_detail' post.slug %}" class="view-course">
-                        View Course
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                    <div class="catalog-actions">
+                    {% if post.user_enrollment %}
+                    <a href="{% url 'blog:course_detail' post.slug %}" class="view-course continue-course"><span class="progress-ring" style="--progress:{{ post.user_enrollment.progress|default:0 }}%"></span>Continue <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    {% elif user.is_authenticated %}
+                    <button type="button" class="view-course course-enroll-trigger" data-course-slug="{{ post.slug }}" data-course-url="{% url 'blog:course_detail' post.slug %}" data-course-title="{{ post.title }}" data-paid="{% if post.access == 'paid' %}true{% else %}false{% endif %}" data-advanced-count="{{ post.advanced_lesson_count|default:0 }}">Enroll</button>
+                    {% else %}
+                    <a class="view-course" href="{% url 'blog:login' %}">Login to enroll</a>
+                    {% endif %}
+                    </div>
 
                 </div>
 
@@ -723,48 +794,11 @@ Courses | {{ SITE_NAME }}
 
         <div class="pagination-links">
 
-            {% if posts.has_previous %}
-
-            <a href="?page={{ posts.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if category %}&category={{ category|urlencode }}{% endif %}"
-                class="page-btn">
-                <i class="bi bi-chevron-left"></i>
-            </a>
-
-            {% endif %}
-
-
-            {% for num in posts.paginator.page_range %}
-
-            {% if posts.number == num %}
-
-            <a href="?page={{ num }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if category %}&category={{ category|urlencode }}{% endif %}"
-                class="page-btn active">
-                {{ num }}
-            </a>
-
-            {% else %}
-
-            <a href="?page={{ num }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if category %}&category={{ category|urlencode }}{% endif %}"
-                class="page-btn">
-                {{ num }}
-            </a>
-
-            {% endif %}
-
-            {% endfor %}
-
-
-            {% if posts.has_next %}
-
-            <a href="?page={{ posts.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if category %}&category={{ category|urlencode }}{% endif %}"
-                class="page-btn">
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            {% endif %}
+            {% if posts.has_previous %}<a href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ posts.previous_page_number }}" class="page-btn">Prev</a>{% endif %}
+            {% for link in page_links %}{% if link.ellipsis %}<span class="page-ellipsis">{{ link.label }}</span>{% else %}<a href="{{ link.url }}" class="page-btn{% if link.current %} active{% endif %}"{% if link.current %} aria-current="page"{% endif %}>{{ link.label }}</a>{% endif %}{% endfor %}
+            {% if posts.has_next %}<a href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ posts.next_page_number }}" class="page-btn">Next</a>{% endif %}
 
         </div>
-
     </div>
 
     {% endif %}
@@ -779,16 +813,13 @@ Courses | {{ SITE_NAME }}
             <i class="bi bi-search"></i>
         </div>
 
-        <h3>
-            No courses found
-        </h3>
+        <h3>{% if active_filters %}No matching courses{% else %}Courses coming soon{% endif %}</h3>
 
         <p>
 
-            {% if search or category %}
+            {% if active_filters %}
 
-            No courses matched your search{% if search %} for "{{ search }}"{% endif %}{% if category %} in {{ category
-            }}{% endif %}.
+            No courses matched your search{% if search %} for "{{ search }}"{% endif %}{% if category %} in {{ category }}{% endif %}.
 
             {% else %}
 
@@ -798,16 +829,30 @@ Courses | {{ SITE_NAME }}
 
         </p>
 
+        {% if active_filters %}
         <a href="{% url 'blog:blogpage' %}" class="view-course">
             <i class="bi bi-arrow-clockwise"></i>
-            View All Courses
+            Clear filters
         </a>
+        {% else %}
+        <a href="{% url 'blog:practice' %}" class="view-course">
+            <i class="bi bi-lightning"></i>
+            Start practicing
+        </a>
+        {% endif %}
 
     </div>
 
     {% endif %}
 
+    {% if enrolled_source and course_recommendations %}<section class="course-path-section course-recommendation-section"><div class="catalog-section-heading"><div><h2>Recommended for you</h2><p>Because you enrolled in {{ enrolled_source.title }}</p></div></div><div class="start-here-row">{% for course in course_recommendations %}<a class="path-card" href="{% url 'blog:course_detail' course.slug %}"><strong>{{ course.title }}</strong><span>{{ course.get_difficulty_display }} · {{ course.duration_minutes }} min · {{ course.average_rating|default_if_none:'0.0'|floatformat:1 }} ★</span></a>{% endfor %}</div></section>{% endif %}
+    {% if recent_viewed %}<section class="course-path-section recently-viewed-section"><div class="catalog-section-heading"><div><h2>Recently viewed</h2></div></div><div class="start-here-row">{% for course in recent_viewed %}<a class="path-card" href="{% url 'blog:course_detail' course.slug %}"><strong>{{ course.title }}</strong><span>{{ course.category }} · {{ course.get_difficulty_display }}</span></a>{% endfor %}</div></section>{% endif %}
+    {% if start_here %}<section class="course-path-section start-here-section"><div class="catalog-section-heading"><div><h2>Start here</h2><p>Popular first steps for your learning journey</p></div><div class="catalog-scroll-controls"><button class="path-scroll-arrow" type="button" data-scroll-target="start-here-row" data-scroll-direction="-1" aria-label="Scroll featured courses left"><i class="bi bi-chevron-left" aria-hidden="true"></i></button><button class="path-scroll-arrow" type="button" data-scroll-target="start-here-row" data-scroll-direction="1" aria-label="Scroll featured courses right"><i class="bi bi-chevron-right" aria-hidden="true"></i></button></div></div><div class="start-here-row" id="start-here-row">{% for course in start_here %}<article class="featured-course-card" data-category="{{ course.category|slugify }}"><div class="featured-course-cover"><i class="bi bi-{% if 'python' in course.category|lower %}terminal{% elif 'django' in course.category|lower %}layers{% elif 'sql' in course.category|lower %}database{% elif 'javascript' in course.category|lower %}braces{% elif 'html' in course.category|lower %}filetype-html{% else %}code-square{% endif %}" aria-hidden="true"></i><span class="featured-level-chip">{{ course.get_difficulty_display }}</span></div><div class="featured-course-copy"><h3>{{ course.title }}</h3><p>{{ course.lessons.count }} lessons · {{ course.duration_minutes|default:0 }} min</p><a href="{% url 'blog:course_detail' course.slug %}" class="featured-start-button">Start <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div></article>{% endfor %}</div></section>{% endif %}
+    <section class="course-path-section learning-path-section"><div class="catalog-section-heading"><div><h2>Learning paths</h2><p>Follow a guided sequence from the fundamentals to your next milestone</p></div></div><div class="learning-path-grid" id="learning-path-row">{% for path in learning_paths %}<article class="learning-path-card"><div class="path-course-icons" aria-hidden="true"><i class="bi bi-code-slash"></i><i class="bi bi-arrow-right"></i><i class="bi bi-layers"></i></div><h3>{{ path.title }}</h3><p>{{ path.completed }} of {{ path.total }} courses completed</p><div class="path-progress"><span style="width:{{ path.progress }}%"></span></div><a href="{{ path.continue_url }}" class="path-continue-button">Continue path <i class="bi bi-arrow-right" aria-hidden="true"></i></a></article>{% endfor %}</div></section>
+
 </div>
+
+{% include "blog/includes/course_upgrade_modal.html" %}
 
 
 {% endblock %}

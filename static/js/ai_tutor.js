@@ -13,6 +13,14 @@
     const historySearch = document.getElementById("historySearch");
     const confirmModal = document.getElementById("historyConfirmModal");
     const csrfToken = form.querySelector("[name=csrfmiddlewaretoken]").value;
+    const chatSearch = document.getElementById("aiChatSearch");
+    const characterCount = document.getElementById("aiCharCount");
+    const slashMenu = document.getElementById("slashCommandMenu");
+    const sidebar = document.getElementById("aiSidebar");
+    const workspace = page.querySelector(".ai-workspace");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarClose = document.getElementById("aiSidebarClose");
+    const sidebarBackdrop = document.getElementById("aiSidebarBackdrop");
 
     let conversationId = messages.dataset.chatId || "";
     let historyPage = 1;
@@ -20,9 +28,43 @@
     let historySearchTimer;
     let pendingConfirmation;
     let historyPreviewObserver;
+    let activeStream;
+    let lastSentQuestion = "";
+    let slashItems = [];
+    let activeDraftKey = "";
+
+    function draftKey() {
+        return `ai-tutor-draft:${page.dataset.userId}:${conversationId || "new"}`;
+    }
+
+    function saveDraft() {
+        try {
+            window.localStorage.setItem(draftKey(), input.value);
+        } catch {
+            // Draft saving is best-effort when browser storage is unavailable.
+        }
+    }
+
+    function restoreDraft(preserveCurrent = false) {
+        try {
+            const savedDraft = window.localStorage.getItem(draftKey());
+            input.value = savedDraft !== null ? savedDraft : (preserveCurrent ? input.value : "");
+        } catch {
+            if (!preserveCurrent) input.value = "";
+        }
+        input.dispatchEvent(new Event("input"));
+    }
 
     function conversationUrl(id) {
         return page.dataset.conversationUrl.replace(/0\/$/, `${id}/`);
+    }
+
+    function setSidebarOpen(open) {
+        sidebar.classList.toggle("is-open", open);
+        workspace.classList.toggle("sidebar-open", open);
+        sidebarToggle.setAttribute("aria-expanded", String(open));
+        sidebarToggle.setAttribute("aria-label", open ? "Close conversation sidebar" : "Open conversation sidebar");
+        sidebarBackdrop.hidden = !open || window.innerWidth > 900;
     }
 
     async function requestJson(url, options = {}) {
@@ -67,11 +109,26 @@
                 copyButton.textContent = "Copy unavailable";
             }
         });
+        const normalizedLanguage = (language || "").toLowerCase();
+        if (["python", "py", "javascript", "js", "sql"].includes(normalizedLanguage)) {
+            const openButton = document.createElement("button");
+            openButton.type = "button";
+            openButton.className = "ai-code-copy";
+            openButton.textContent = "Open in Playground";
+            openButton.addEventListener("click", () => {
+                const target = new URL(page.dataset.playgroundUrl, window.location.origin);
+                target.searchParams.set("language", normalizedLanguage === "py" ? "python" : normalizedLanguage === "js" ? "javascript" : normalizedLanguage);
+                target.searchParams.set("code", source);
+                window.open(target.toString(), "_blank", "noopener");
+            });
+            header.append(languageLabel, copyButton, openButton);
+        } else {
+            header.append(languageLabel, copyButton);
+        }
         const pre = document.createElement("pre");
         const code = document.createElement("code");
         code.textContent = source;
         pre.appendChild(code);
-        header.append(languageLabel, copyButton);
         block.append(header, pre);
         return block;
     }
@@ -80,6 +137,25 @@
         if (!supportsCode) {
             container.textContent = content;
             return;
+        }
+        if (window.marked && window.DOMPurify) {
+            try {
+                const safeHtml = window.DOMPurify.sanitize(window.marked.parse(content, { breaks: true }));
+                const fragment = document.createElement("template");
+                fragment.innerHTML = safeHtml;
+                fragment.content.querySelectorAll("pre > code").forEach((code) => {
+                    const languageClass = [...code.classList].find((name) => name.startsWith("language-")) || "";
+                    const language = languageClass.slice("language-".length);
+                    const source = code.textContent;
+                    const block = createCodeBlock(language, source);
+                    code.closest("pre").replaceWith(block);
+                });
+                container.replaceChildren(fragment.content.cloneNode(true));
+                return;
+            } catch (error) {
+                console.error("AI Tutor Markdown rendering failed.", error);
+                container.replaceChildren();
+            }
         }
         const pattern = /```([a-zA-Z0-9_+#.-]*)[ \t]*\n([\s\S]*?)```/g;
         let lastIndex = 0;
@@ -110,6 +186,7 @@
         element.className = `message ${role === "user" ? "user-message" : "ai-message"}`;
         if (options.error) element.classList.add("error-message");
         element.dataset.role = role;
+        if (options.messageId) element.dataset.messageId = options.messageId;
         const label = document.createElement("span");
         label.className = "message-label";
         label.textContent = options.error ? "⚠ AI Tutor" : (role === "user" ? "👤 You" : "✦ AI Tutor");
@@ -118,21 +195,163 @@
         renderMessageContent(body, content, role === "assistant" && !options.error);
         element.append(label, body);
         messages.insertBefore(element, thinking);
+        if (options.messageId) appendAssistantActions(element, options.messageId);
+        if (role === "user") {
+            messages.querySelectorAll(".user-message .message-edit").forEach((button) => button.remove());
+            appendUserEditButton(element, content);
+        }
         return element;
+    }
+
+    function appendUserEditButton(element, content) {
+        if (!element.dataset.messageId) return;
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "message-edit";
+        edit.textContent = "Edit and resend";
+        edit.addEventListener("click", () => {
+            input.value = content;
+            document.getElementById("editMessageId").value = element.dataset.messageId;
+            input.focus();
+            input.dispatchEvent(new Event("input"));
+        });
+        element.appendChild(edit);
+    }
+
+    function enableLatestUserEdit() {
+        const lastUser = [...messages.querySelectorAll(".user-message")].pop();
+        if (lastUser) appendUserEditButton(lastUser, lastUser.querySelector(".message-content").textContent);
+    }
+
+    function appendAssistantActions(element, messageId) {
+        const actions = document.createElement("div");
+        actions.className = "message-actions";
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.textContent = "Copy";
+        copy.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(element.querySelector(".message-content").textContent);
+                copy.textContent = "Copied";
+                window.setTimeout(() => { copy.textContent = "Copy"; }, 1200);
+            } catch {
+                copy.textContent = "Copy unavailable";
+            }
+        });
+        actions.appendChild(copy);
+        const readAloud = document.createElement("button");
+        readAloud.type = "button";
+        readAloud.textContent = "Read aloud";
+        readAloud.addEventListener("click", () => {
+            if (!("speechSynthesis" in window)) {
+                readAloud.textContent = "Not supported";
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(
+                element.querySelector(".message-content").textContent
+            );
+            utterance.onend = () => { readAloud.textContent = "Read aloud"; };
+            utterance.onerror = () => { readAloud.textContent = "Read aloud"; };
+            window.speechSynthesis.speak(utterance);
+            readAloud.textContent = "Speaking…";
+        });
+        actions.appendChild(readAloud);
+        for (const [rating, label] of [[1, "Helpful"], [-1, "Not helpful"]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = label;
+            button.addEventListener("click", async () => {
+                const reason = rating < 0 ? window.prompt("What could be improved?") || "" : "";
+                const data = new FormData();
+                data.set("rating", String(rating));
+                data.set("reason", reason);
+                try {
+                    await requestJson(page.dataset.feedbackUrl.replace(/0\/$/, `${messageId}/`), {
+                        method: "POST",
+                        body: data,
+                        headers: { "X-CSRFToken": csrfToken },
+                    });
+                    button.textContent = "Thanks";
+                    button.disabled = true;
+                } catch (error) {
+                    button.textContent = error.message;
+                }
+            });
+            actions.appendChild(button);
+        }
+        element.appendChild(actions);
+    }
+
+    function appendContinueButton(element) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "message-edit";
+        button.textContent = "Continue generating";
+        button.addEventListener("click", () => {
+            input.value = "Continue your previous response from where it stopped.";
+            input.focus();
+        });
+        element.appendChild(button);
+    }
+
+    function appendFollowUps(element) {
+        const group = document.createElement("div");
+        group.className = "ai-follow-ups";
+        ["Show me an example", "Give me a practice question", "Explain that more simply"].forEach((suggestion) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = suggestion;
+            button.addEventListener("click", () => {
+                input.value = suggestion;
+                form.requestSubmit();
+            });
+            group.appendChild(button);
+        });
+        element.appendChild(group);
     }
 
     function setWelcomeMessage() {
         messages.replaceChildren();
-        const welcome = document.createElement("div");
-        welcome.className = "message ai-message";
-        welcome.id = "defaultMessage";
-        const label = document.createElement("span");
-        label.className = "message-label";
-        label.textContent = "✦ AI Tutor";
-        const text = document.createElement("span");
-        text.className = "message-content";
-        text.textContent = `👋 Hey! I'm your ${page.dataset.siteName} AI Tutor.\n\nAsk me anything about programming. I can explain concepts, debug your code, give examples and help you practice.`;
-        welcome.append(label, text);
+        const welcome = document.createElement("section");
+        welcome.className = "ai-empty-state";
+        welcome.id = "aiWelcome";
+        const mark = document.createElement("div");
+        mark.className = "ai-welcome-mark";
+        mark.innerHTML = '<i class="bi bi-stars" aria-hidden="true"></i>';
+        const eyebrow = document.createElement("p");
+        eyebrow.className = "ai-welcome-eyebrow";
+        eyebrow.textContent = "YOUR LEARNING COMPANION";
+        const title = document.createElement("h1");
+        title.textContent = `Hi ${page.dataset.firstName || "there"}, what shall we learn today?`;
+        const description = document.createElement("p");
+        description.textContent = "Ask a question, bring a tricky bug, or choose a starting point.";
+        const suggestions = document.createElement("div");
+        suggestions.className = "ai-suggestion-grid";
+        const prompts = [
+            ["Explain a concept", "Make a tricky topic clear", "Explain a programming concept to me with a simple example.", "bi-lightbulb"],
+            ["Debug my code", "Find the cause, then fix it", "Help me debug my code. I will share the code and error.", "bi-bug"],
+            ["Review my code", "Get thoughtful feedback", "Review my code for correctness, clarity, and maintainability.", "bi-code-square"],
+            ["Quiz me", "Practice as you learn", "Quiz me on a programming topic, one question at a time.", "bi-patch-question"],
+            ["Mock interview", "Build confidence answering", "Run a supportive mock technical interview with me.", "bi-person-video3"],
+            ["Build a roadmap", "Choose your next steps", "Build a practical learning roadmap based on my goal.", "bi-signpost-split"],
+        ];
+        prompts.forEach(([name, detail, prompt, icon]) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.dataset.prompt = prompt;
+            const symbol = document.createElement("i");
+            symbol.className = `bi ${icon}`;
+            const text = document.createElement("span");
+            const heading = document.createElement("strong");
+            heading.textContent = name;
+            const caption = document.createElement("small");
+            caption.textContent = detail;
+            text.append(heading, caption);
+            button.append(symbol, text);
+            suggestions.append(button);
+        });
+        welcome.append(mark, eyebrow, title, description, suggestions);
         messages.append(welcome, thinking);
     }
 
@@ -141,45 +360,217 @@
     }
 
     async function sendQuestion(question) {
+        if (page.dataset.aiReady !== "true") return;
+        lastSentQuestion = question;
+        activeDraftKey = draftKey();
         const data = new FormData(form);
         data.set("question", question);
+        data.set("stream", "1");
         if (conversationId) data.set("conversation_id", conversationId);
         else data.delete("conversation_id");
 
         thinking.classList.add("active");
         sendButton.disabled = true;
+        document.getElementById("stopButton").hidden = false;
+        activeStream = new AbortController();
+        const assistantElement = appendMessage("assistant", "");
+        const assistantBody = assistantElement.querySelector(".message-content");
         try {
-            const result = await requestJson(page.dataset.sendUrl, {
+            const response = await fetch(page.dataset.sendUrl, {
                 method: "POST",
                 body: data,
+                credentials: "same-origin",
+                signal: activeStream.signal,
+                headers: { "X-Requested-With": "XMLHttpRequest" },
             });
-            if (conversationId && String(result.conversation_id) !== conversationId) {
-                setWelcomeMessage();
-                appendMessage("user", question);
+            if (!response.ok) {
+                let failure = {};
+                try { failure = await response.json(); } catch { /* handled with a friendly fallback */ }
+                throw new Error(failure.error || "The request could not be completed.");
             }
-            conversationId = String(result.conversation_id);
-            messages.dataset.chatId = conversationId;
-            appendMessage("assistant", result.answer);
+            let buffer = "";
+            let streamed = "";
+            let completed = false;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            const handleEvent = (rawEvent) => {
+                const lines = rawEvent.split(/\r?\n/);
+                const eventName = (lines.find((line) => line.startsWith("event:")) || "").slice(6).trim();
+                const dataLine = lines.find((line) => line.startsWith("data:"));
+                if (!dataLine) return;
+                const payload = JSON.parse(dataLine.slice(5).trim());
+                if (eventName === "token") {
+                    streamed += payload.text || "";
+                    assistantBody.textContent = streamed;
+                    scrollToLatest();
+                } else if (eventName === "done") {
+                    completed = true;
+                    conversationId = String(payload.conversation_id);
+                    messages.dataset.chatId = conversationId;
+                    const latestUserMessage = [...messages.querySelectorAll(".user-message")].pop();
+                    if (latestUserMessage && payload.user_message_id) latestUserMessage.dataset.messageId = payload.user_message_id;
+                    enableLatestUserEdit();
+                    assistantBody.replaceChildren();
+                    renderMessageContent(assistantBody, streamed, true);
+                    if (payload.message_id) appendAssistantActions(assistantElement, payload.message_id);
+                    appendFollowUps(assistantElement);
+                    const usage = document.getElementById("aiUsageCount");
+                    const current = Number(usage.textContent.split("/")[0].trim()) || 0;
+                    usage.textContent = `${current + 1} / ${usage.textContent.split("/")[1].trim()}`;
+                    const progress = document.querySelector(".ai-usage progress");
+                    if (progress) progress.value = current + 1;
+                    try { window.localStorage.removeItem(activeDraftKey); } catch { /* Best effort. */ }
+                } else if (eventName === "error") {
+                    if (payload.conversation_id) {
+                        conversationId = String(payload.conversation_id);
+                        messages.dataset.chatId = conversationId;
+                    }
+                    const latestUserMessage = [...messages.querySelectorAll(".user-message")].pop();
+                    if (latestUserMessage && payload.user_message_id) {
+                        latestUserMessage.dataset.messageId = payload.user_message_id;
+                        enableLatestUserEdit();
+                    }
+                    assistantBody.textContent = streamed || payload.error;
+                    throw new Error(payload.error || "The AI response was interrupted.");
+                }
+            };
+            while (true) {
+                const chunk = await reader.read();
+                buffer += decoder.decode(chunk.value || new Uint8Array(), { stream: !chunk.done });
+                const events = buffer.split(/\r?\n\r?\n/);
+                buffer = events.pop() || "";
+                events.forEach(handleEvent);
+                if (chunk.done) break;
+            }
+            if (buffer.trim()) handleEvent(buffer);
+            if (!completed && streamed) {
+                assistantBody.replaceChildren();
+                renderMessageContent(assistantBody, streamed, true);
+                appendContinueButton(assistantElement);
+            } else if (!streamed && !completed) {
+                assistantElement.remove();
+            }
             scrollToLatest();
         } catch (error) {
-            appendMessage("assistant", error.message, { error: true });
+            if (error.name === "AbortError") {
+                assistantBody.textContent = assistantBody.textContent || "Generation stopped.";
+                appendContinueButton(assistantElement);
+            } else if (!assistantBody.textContent) {
+                assistantBody.textContent = error.message;
+                assistantElement.classList.add("error-message");
+            }
+            if (error.name !== "AbortError") {
+                const retryButton = document.createElement("button");
+                retryButton.type = "button";
+                retryButton.className = "message-edit";
+                retryButton.textContent = "Retry";
+                retryButton.addEventListener("click", () => sendQuestion(lastSentQuestion));
+                assistantElement.appendChild(retryButton);
+            }
             scrollToLatest();
         } finally {
+            activeStream = null;
             thinking.classList.remove("active");
             sendButton.disabled = false;
+            document.getElementById("stopButton").hidden = true;
             input.focus();
         }
     }
 
     form.addEventListener("submit", (event) => {
         event.preventDefault();
-        const question = input.value.trim();
+        let question = input.value.trim();
         if (!question || sendButton.disabled) return;
-        appendMessage("user", question);
+        const slashModes = { explain: "explain", debug: "debug", review: "review", quiz: "quiz", interview: "interview", roadmap: "roadmap", eli5: "eli5", summarize: "summarize", test: "quiz" };
+        const slash = question.match(/^\/([a-z]+)\s*/i);
+        if (slash && slashModes[slash[1].toLowerCase()]) {
+            document.getElementById("aiMode").value = slashModes[slash[1].toLowerCase()];
+            question = question.slice(slash[0].length).trim();
+            if (!question) return;
+        }
+        const editId = document.getElementById("editMessageId").value;
+        if (editId) {
+            const editTarget = [...messages.querySelectorAll(".user-message")].find((message) => message.dataset.messageId === editId);
+            if (editTarget) {
+                editTarget.querySelector(".message-content").textContent = question;
+                editTarget.querySelector(".message-edit")?.remove();
+                while (editTarget.nextElementSibling && editTarget.nextElementSibling !== thinking) {
+                    editTarget.nextElementSibling.remove();
+                }
+            } else {
+                appendMessage("user", question);
+            }
+        } else {
+            appendMessage("user", question);
+        }
         input.value = "";
+        document.getElementById("editMessageId").value = "";
         input.style.height = "auto";
         scrollToLatest();
         sendQuestion(question);
+    });
+    document.getElementById("stopButton").addEventListener("click", () => activeStream?.abort());
+    document.getElementById("sidebarNewChatButton").addEventListener("click", newChat);
+    sidebarToggle.addEventListener("click", () => {
+        setSidebarOpen(!sidebar.classList.contains("is-open"));
+    });
+    sidebarClose.addEventListener("click", () => setSidebarOpen(false));
+    sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+    sidebar.addEventListener("click", async (event) => {
+        const open = event.target.closest("[data-open-conversation]");
+        if (open) {
+            try {
+                await requestJson(conversationUrl(open.dataset.openConversation), {
+                    method: "POST",
+                    headers: { "X-CSRFToken": csrfToken },
+                });
+                window.location.reload();
+            } catch (error) {
+                appendMessage("assistant", error.message, { error: true });
+            }
+            return;
+        }
+        const remove = event.target.closest("[data-delete-conversation]");
+        if (remove) {
+            confirmAction("delete", remove.dataset.deleteConversation, remove.dataset.title);
+            return;
+        }
+        const actionButton = event.target.closest("[data-conversation-action]");
+        if (!actionButton) return;
+        const action = actionButton.dataset.conversationAction;
+        const endpoint = page.dataset.actionUrl.replace(/0\/$/, `${actionButton.dataset.id}/`);
+        const body = new FormData();
+        body.set("action", action);
+        if (action === "rename") {
+            const title = window.prompt("Conversation title", actionButton.closest(".ai-history-entry").querySelector(".ai-history-open").textContent.trim());
+            if (!title) return;
+            body.set("title", title);
+        }
+        try {
+            const result = await requestJson(endpoint, { method: "POST", body, headers: { "X-CSRFToken": csrfToken } });
+            if (action === "share" && result.url) {
+                await navigator.clipboard.writeText(result.url);
+                window.alert("Read-only share link copied.");
+            }
+            window.location.reload();
+        } catch (error) {
+            window.alert(error.message);
+        }
+    });
+    document.getElementById("voiceButton").addEventListener("click", () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            appendMessage("assistant", "Voice input is not available in this browser.", { error: true });
+            return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = document.documentElement.lang || "en-US";
+        recognition.onresult = (event) => {
+            input.value = `${input.value} ${event.results[0][0].transcript}`.trim();
+            input.dispatchEvent(new Event("input"));
+        };
+        recognition.onerror = () => appendMessage("assistant", "Voice input could not be started. Please type your message.", { error: true });
+        recognition.start();
     });
 
     input.addEventListener("keydown", (event) => {
@@ -194,14 +585,71 @@
 
     input.addEventListener("input", () => {
         input.style.height = "auto";
-        input.style.height = `${Math.min(input.scrollHeight, 160)}px`;
+        input.style.height = `${Math.min(input.scrollHeight, 200)}px`;
+        if (characterCount) characterCount.textContent = `${input.value.length.toLocaleString()} / 20,000`;
+        saveDraft();
+        if (slashMenu) {
+            const slash = input.value.match(/^\/([a-z]*)$/i);
+            slashMenu.hidden = !slash;
+            slashItems.forEach((button) => {
+                button.hidden = Boolean(slash && !button.dataset.command.slice(1).startsWith(slash[1].toLowerCase()));
+            });
+
+            document.getElementById("aiAttachment")?.addEventListener("change", (event) => {
+                const label = event.currentTarget.closest(".ai-attachment").querySelector("span");
+                const file = event.currentTarget.files[0];
+                label.textContent = file ? file.name : "Attach file";
+                label.title = file ? file.name : "";
+            });
+        }
     });
 
-    window.setPrompt = (prompt) => {
+    function setPrompt(prompt) {
         input.value = prompt;
         input.focus();
         input.dispatchEvent(new Event("input"));
-    };
+    }
+
+    window.setPrompt = setPrompt;
+
+    messages.addEventListener("click", (event) => {
+        const prompt = event.target.closest("[data-prompt]");
+        if (prompt) setPrompt(prompt.dataset.prompt);
+    });
+
+    chatSearch?.addEventListener("input", () => {
+        const query = chatSearch.value.trim().toLocaleLowerCase();
+        document.querySelectorAll(".ai-history-entry").forEach((entry) => {
+            entry.hidden = query && !entry.textContent.toLocaleLowerCase().includes(query);
+        });
+        document.querySelectorAll(".ai-history-groups section").forEach((group) => {
+            group.hidden = ![...group.querySelectorAll(".ai-history-entry")].some((entry) => !entry.hidden);
+        });
+    });
+
+    if (slashMenu) {
+        slashItems = [...slashMenu.querySelectorAll("[data-command]")];
+        slashMenu.addEventListener("click", (event) => {
+            const command = event.target.closest("[data-command]");
+            if (!command) return;
+            input.value = `${command.dataset.command} `;
+            input.focus();
+            input.dispatchEvent(new Event("input"));
+        });
+    }
+
+    document.getElementById("removeContextButton")?.addEventListener("click", async () => {
+        try {
+            await requestJson(page.dataset.clearContextUrl, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken },
+            });
+        } catch {
+            appendMessage("assistant", "We could not clear the saved context. Please refresh and try again.", { error: true });
+            return;
+        }
+        document.querySelector(".ai-context-chip")?.remove();
+    });
 
     async function newChat() {
         try {
@@ -215,6 +663,7 @@
             messages.dataset.beforeId = "";
             setWelcomeMessage();
             input.value = "";
+            input.dispatchEvent(new Event("input"));
             closeHistory();
             input.focus();
         } catch (error) {
@@ -379,6 +828,8 @@
             }
             messages.appendChild(thinking);
             data.messages.forEach((message) => appendLoadedMessage(message));
+            restoreDraft();
+            enableLatestUserEdit();
             messages.dataset.hasOlder = String(data.has_older_messages);
             messages.dataset.beforeId = data.before_id || "";
             closeHistory();
@@ -392,6 +843,7 @@
         const element = document.createElement("div");
         element.className = `message ${message.role === "user" ? "user-message" : "ai-message"}`;
         element.dataset.role = message.role;
+        element.dataset.messageId = message.id;
         const label = document.createElement("span");
         label.className = "message-label";
         label.textContent = message.role === "user" ? "👤 You" : "✦ AI Tutor";
@@ -399,6 +851,9 @@
         body.className = "message-content";
         renderMessageContent(body, message.content, message.role === "assistant");
         element.append(label, body);
+        if (message.role === "assistant" && message.id) {
+            appendAssistantActions(element, message.id);
+        }
         messages.insertBefore(element, beforeNode);
     }
 
@@ -483,18 +938,50 @@
         if (event.target.closest("#loadEarlierButton")) loadEarlierMessages();
     });
     document.getElementById("regenerateButton")?.addEventListener("click", () => {
-        const lastQuestion = messages.querySelector(".user-message .message-content");
-        if (lastQuestion) {
-            input.value = lastQuestion.textContent;
+        const lastUserMessage = [...messages.querySelectorAll(".user-message")].pop();
+        if (lastUserMessage) {
+            input.value = lastUserMessage.querySelector(".message-content").textContent;
+            document.getElementById("editMessageId").value = lastUserMessage.dataset.messageId || "";
             form.requestSubmit();
         }
     });
     document.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            newChat();
+        }
         if (event.key === "Escape") {
             confirmModal.hidden = true;
             closeHistory();
+            setSidebarOpen(false);
         }
     });
+
+    let touchStart = null;
+    document.addEventListener("touchstart", (event) => {
+        const target = event.target;
+        if (target.closest("input, textarea, select, [contenteditable=true]")) {
+            touchStart = null;
+            return;
+        }
+        touchStart = { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
+    }, { passive: true });
+    document.addEventListener("touchend", (event) => {
+        if (!touchStart) return;
+        const deltaX = event.changedTouches[0].clientX - touchStart.x;
+        const deltaY = event.changedTouches[0].clientY - touchStart.y;
+        if (touchStart.x < 32 && deltaX > 80 && Math.abs(deltaY) < 60 && window.innerWidth <= 850) {
+            setSidebarOpen(true);
+        }
+        touchStart = null;
+    }, { passive: true });
+    window.addEventListener("resize", () => {
+        if (sidebar.classList.contains("is-open")) {
+            setSidebarOpen(true);
+        }
+    });
+
+    restoreDraft(!conversationId);
 
     messages.querySelectorAll(".message-content").forEach((content) => {
         const message = content.closest(".message");
@@ -502,5 +989,9 @@
         const value = content.textContent;
         content.replaceChildren();
         renderMessageContent(content, value, role === "assistant");
+        if (role === "assistant" && message.dataset.messageId) {
+            appendAssistantActions(message, message.dataset.messageId);
+        }
     });
+    enableLatestUserEdit();
 })();

@@ -6,17 +6,16 @@ Profile | {{ SITE_NAME }}
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/photo_cropper.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="profile-page">
 <section class="profile-header">
-
-
-    <div class="profile-main">
-
-
+    {% if user_profile.profile_banner %}<img class="profile-banner-image" src="{{ user_profile.profile_banner.url }}" alt="">{% else %}<div class="profile-banner-image" aria-hidden="true"></div>{% endif %}
+    <div class="profile-header-content">
+        <div class="profile-main">
         <div class="profile-avatar-wrap">
             <div class="profile-photo-frame profile-photo-interactive">
                 {% if user_profile.profile_picture %}
@@ -33,7 +32,6 @@ Profile | {{ SITE_NAME }}
                 <button class="profile-picture-edit profile-picture-hover-action" type="button"
                     data-open-profile-picture aria-label="Change profile photo">
                     <i class="bi bi-camera" aria-hidden="true"></i>
-                    Change Photo
                 </button>
                 {% else %}
                 <button class="profile-photo-preview profile-photo-placeholder" type="button"
@@ -43,48 +41,93 @@ Profile | {{ SITE_NAME }}
                 {% endif %}
             </div>
         </div>
-
-
         <div class="profile-text">
-
-
-            <div class="eyebrow">
-
-                <i class="bi bi-person-badge"></i>
-
-                {{ SITE_NAME }} Profile
-
+            <h1>{{ display_name }}</h1>
+            <p class="profile-username">@{{ username|lower }}</p>
+            <p class="profile-headline">{{ user_profile.headline|default:"Your learning journey, goals and progress in one place." }}</p>
+            <div class="profile-meta">
+                {% if user_profile.location %}<span><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ user_profile.location }}</span>{% endif %}
+                {% if user_profile.goal %}<span class="profile-goal-chip"><i class="bi bi-bullseye" aria-hidden="true"></i>{{ user_profile.get_goal_display_label }}</span>{% endif %}
+                <span class="profile-role-chip"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i>Learner</span>
             </div>
-
-
-            <h1>
-                Welcome, {{ display_name }}
-            </h1>
-
-            <p>@{{ username|lower }}</p>
-
-            <p>
-                Your learning journey, goals and progress
-                in one place.
-            </p>
-
         </div>
-
-
+        </div>
+        <div class="profile-header-actions">
+            <a class="profile-header-button profile-edit-button" href="#profile-edit"><i class="bi bi-pencil" aria-hidden="true"></i> Edit profile</a>
+            <button class="profile-header-button profile-share-button" id="shareProfileButton" type="button" data-share-url="{% url 'blog:public_user_profile' username=username %}"><i class="bi bi-share" aria-hidden="true"></i> Share</button>
+        </div>
+        <div class="profile-stats" aria-label="Profile statistics">
+            <a href="?tab=projects#profile-contributions"><strong>{{ project_count }}</strong><span>Projects</span></a>
+            <a href="?tab=community#profile-contributions"><strong>{{ community_count }}</strong><span>Posts</span></a>
+            <a href="{% url 'blog:followers_list' username=username %}"><strong>{{ follower_count }}</strong><span>Followers</span></a>
+            <a href="{% url 'blog:following_list' username=username %}"><strong>{{ following_count }}</strong><span>Following</span></a>
+        </div>
+        <span class="profile-share-status" id="profileShareStatus" role="status" aria-live="polite"></span>
     </div>
+</section>
 
-
-    <div class="profile-badge">
-
-        <i class="bi bi-mortarboard-fill"></i>
-
-        <span>
-            Learner
-        </span>
-
+<section class="profile-details-card" id="profile-edit" aria-labelledby="profileDetailsTitle">
+    <div class="profile-section-heading"><div><h2 id="profileDetailsTitle">Edit profile</h2><p>Share a little more about yourself and what you are building.</p></div></div>
+    <form method="post" action="{% url 'blog:profile' %}" enctype="multipart/form-data" class="profile-details-form">
+        {% csrf_token %}<input type="hidden" name="profile_details" value="1">
+        {{ profile_form.non_field_errors }}
+        <div class="profile-form-section">
+            <h3>Basic info</h3>
+            <div class="profile-form-grid">
+                {% for field in profile_form %}
+                    {% if field.name == "display_name" or field.name == "headline" or field.name == "location" %}
+                    <div class="profile-field{% if field.errors %} has-error{% endif %}">
+                        <label for="{{ field.id_for_label }}">{% if field.name == "display_name" %}Display name{% elif field.name == "headline" %}Headline{% else %}Location{% endif %}</label>
+                        {{ field }}{{ field.errors }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="profile-form-section">
+            <h3>About</h3>
+            <div class="profile-field{% if profile_form.bio.errors %} has-error{% endif %}">
+                <label for="{{ profile_form.bio.id_for_label }}">Bio</label>
+                {{ profile_form.bio }}{{ profile_form.bio.errors }}
+                <span class="profile-bio-counter" id="profileBioCounter"></span>
+            </div>
+        </div>
+        <div class="profile-form-section">
+            <h3>Skills</h3>
+            <div class="profile-field{% if profile_form.skills.errors %} has-error{% endif %}">
+                <label for="{{ profile_form.skills.id_for_label }}">Skills</label>
+                {{ profile_form.skills }}{{ profile_form.skills.errors }}
+                <span class="profile-field-help">Separate skills with commas, such as Python, Django, SQL.</span>
+                {% if user_profile.skills %}<div class="profile-skill-chips">{% for skill in user_profile.skills %}<span>{{ skill }}</span>{% endfor %}</div>{% endif %}
+            </div>
+        </div>
+        <div class="profile-form-section">
+            <h3>Links</h3>
+            <div class="profile-form-grid">
+                {% for field in profile_form %}
+                    {% if field.name == "github_url" or field.name == "linkedin_url" or field.name == "portfolio_url" %}
+                    <div class="profile-field{% if field.errors %} has-error{% endif %}">
+                        <label for="{{ field.id_for_label }}">{% if field.name == "github_url" %}<i class="bi bi-github" aria-hidden="true"></i> Github URL{% elif field.name == "linkedin_url" %}<i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn URL{% else %}<i class="bi bi-globe" aria-hidden="true"></i> Portfolio URL{% endif %}</label>
+                        {{ field }}{{ field.errors }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="profile-form-section profile-banner-field">
+            <h3>Profile banner</h3>
+            <div class="profile-field{% if profile_form.profile_banner.errors %} has-error{% endif %}">
+                <label for="{{ profile_form.profile_banner.id_for_label }}">Upload a banner image</label>
+                {{ profile_form.profile_banner }}{{ profile_form.profile_banner.errors }}
+            </div>
+        </div>
+        <div class="profile-form-footer"><button type="submit" class="action-btn primary-btn">Save profile details</button></div>
+    </form>
+    <div class="profile-completeness">
+        <div class="profile-completeness-heading"><strong>Profile completeness</strong><span>{{ profile_completeness }}%</span></div>
+        <div class="profile-completeness-track"><span style="width: {{ profile_completeness }}%"></span></div>
+        <ul><li class="{% if user_profile.headline %}is-complete{% endif %}">Add a headline</li><li class="{% if user_profile.bio %}is-complete{% endif %}">Write a short bio</li><li class="{% if user_profile.skills %}is-complete{% endif %}">Add your skills</li><li class="{% if user_profile.github_url or user_profile.linkedin_url or user_profile.portfolio_url %}is-complete{% endif %}">Add a profile link</li></ul>
     </div>
-
-
 </section>
 
 <div class="picture-dialog-backdrop" id="profilePictureDialog" hidden>
@@ -175,10 +218,10 @@ Profile | {{ SITE_NAME }}
         gap: 8px;
         min-height: 40px;
         padding: 9px 14px;
-        border: 1px solid #514b83;
+        border: 1px solid var(--border);
         border-radius: 10px;
-        background: rgba(116, 91, 240, .16);
-        color: inherit;
+        background: var(--surface);
+        color: var(--text);
         font: inherit;
         font-size: 13px;
         font-weight: 700;
@@ -188,7 +231,9 @@ Profile | {{ SITE_NAME }}
     .profile-picture-edit:hover,
     .picture-choose-button:hover,
     .picture-save-button:hover {
-        filter: brightness(1.15);
+        border-color: var(--primary);
+        background: var(--primary-soft);
+        color: var(--primary-soft-text);
     }
 
     .picture-dialog-backdrop[hidden] {
@@ -202,18 +247,18 @@ Profile | {{ SITE_NAME }}
         display: grid;
         place-items: center;
         padding: 18px;
-        background: rgba(4, 8, 18, .76);
+        background: color-mix(in srgb, var(--text) 58%, transparent);
     }
 
     .picture-dialog {
         position: relative;
         width: min(100%, 470px);
         padding: 26px;
-        border: 1px solid var(--ui-border, #28364c);
+        border: 1px solid var(--border);
         border-radius: 18px;
-        background: var(--ui-surface, #111b2b);
-        color: var(--ui-text, #e7edf7);
-        box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: var(--shadow);
     }
 
     .picture-dialog h2 {
@@ -223,7 +268,7 @@ Profile | {{ SITE_NAME }}
 
     .picture-dialog-subtitle,
     .picture-help {
-        color: var(--ui-muted, #a8b5c8);
+        color: var(--muted);
         font-size: 13px;
     }
 
@@ -252,7 +297,7 @@ Profile | {{ SITE_NAME }}
     }
 
     .picture-preview-label {
-        color: var(--ui-muted, #a8b5c8);
+        color: var(--muted);
         font-size: 12px;
     }
 
@@ -262,10 +307,10 @@ Profile | {{ SITE_NAME }}
         height: 88px;
         place-items: center;
         overflow: hidden;
-        border: 2px solid rgba(137, 121, 255, .65);
+        border: 2px solid var(--primary);
         border-radius: 50%;
-        background: linear-gradient(135deg, #7657ff, #4d73ff);
-        color: #fff;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: var(--surface);
         font-size: 30px;
         object-fit: cover;
     }
@@ -287,7 +332,7 @@ Profile | {{ SITE_NAME }}
     }
 
     .picture-file-input:focus-visible + .picture-help {
-        outline: 2px solid #a991ff;
+        outline: 2px solid var(--primary);
     }
 
     .picture-help {
@@ -296,7 +341,7 @@ Profile | {{ SITE_NAME }}
 
     .picture-errors,
     .picture-upload-error {
-        color: #ff9aaa;
+        color: var(--danger-text);
         font-size: 13px;
     }
 
@@ -310,14 +355,14 @@ Profile | {{ SITE_NAME }}
 
     .picture-cancel-button,
     .picture-remove-button {
-        border-color: var(--ui-border, #28364c);
-        background: var(--ui-surface-soft, #172338);
+        border-color: var(--border);
+        background: var(--surface-2);
     }
 
     .picture-save-button {
-        border-color: transparent;
-        background: linear-gradient(135deg, #7657ff, #4d73ff);
-        color: white;
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--surface);
     }
 
     @media (max-width: 520px) {
@@ -640,7 +685,7 @@ Profile | {{ SITE_NAME }}
 
                 <strong>
 
-                    {{ request.user.profile_data.get_goal_display }}
+                    {{ request.user.profile_data.get_goal_display_label }}
 
                 </strong>
 
@@ -771,4 +816,39 @@ Profile | {{ SITE_NAME }}
         ====================================================== -->
 
 {% include "blog/includes/profile_contributions.html" %}
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const shareButton = document.getElementById("shareProfileButton");
+    const shareStatus = document.getElementById("profileShareStatus");
+    const bioInput = document.getElementById("{{ profile_form.bio.id_for_label }}");
+    const bioCounter = document.getElementById("profileBioCounter");
+    if (shareButton && shareStatus) {
+        shareButton.addEventListener("click", async function () {
+            const shareUrl = new URL(shareButton.dataset.shareUrl, window.location.origin).href;
+            if (navigator.share) {
+                navigator.share({ title: document.title, url: shareUrl }).catch(function (error) {
+                    if (error.name !== "AbortError") {
+                        shareStatus.textContent = "The profile could not be shared.";
+                    }
+                });
+                return;
+            }
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(shareUrl);
+                shareStatus.textContent = "Profile link copied.";
+            } else {
+                shareStatus.textContent = shareUrl;
+            }
+        });
+    }
+    if (bioInput && bioCounter) {
+        const updateBioCount = function () {
+            bioCounter.textContent = `${bioInput.value.length} / 2000`;
+        };
+        bioInput.addEventListener("input", updateBioCount);
+        updateBioCount();
+    }
+});
+</script>
 {% endblock %}

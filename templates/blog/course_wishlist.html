@@ -1,0 +1,35 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block title %}Wishlist | {{ SITE_NAME }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/course_catalog.css' %}">{% endblock %}
+{% block extra_js %}<script src="{% static 'js/course_wishlist.js' %}" defer></script><script src="{% static 'js/course_upgrades.js' %}" defer></script>{% endblock %}
+{% block content %}
+<main class="courses-page wishlist-page">
+    <header class="wishlist-page-header">
+        <div><span class="courses-eyebrow">YOUR LIBRARY</span><h1>Wishlist</h1><p>{{ wishlist_count }} saved course{% if wishlist_count != 1 %}s{% endif %}</p></div>
+        <a class="courses-wishlist-button" href="{% url 'blog:blogpage' %}"><span class="wishlist-mark" aria-hidden="true">v</span> Browse courses</a>
+    </header>
+    {% if saved_courses %}
+    <section class="courses-grid" aria-label="Saved courses">
+        {% for post in saved_courses %}
+        <article class="course-card">
+            <div class="course-image">
+                {% if post.image %}<img src="{{ post.image.url }}" alt="{{ post.title }}" loading="lazy">{% else %}<div class="no-image"><i class="bi bi-code-square" aria-hidden="true"></i></div>{% endif %}
+                <div class="image-overlay"></div><span class="category-badge">{{ post.category }}</span><span class="difficulty-badge">{{ post.get_difficulty_display }}</span>
+                <span class="course-price-chip">{% if post.access == 'paid' %}{% if post.required_plan %}Premium{% else %}Paid{% endif %} · {{ post.price }} {{ RAZORPAY_CURRENCY }}{% else %}Free{% endif %}</span>
+            </div>
+            <div class="course-body">
+                <a href="{% url 'blog:course_detail' post.slug %}" class="course-title-link">{{ post.title }}</a>
+                <p class="course-description">{{ post.description|truncatewords:20 }}</p>
+                <div class="course-meta"><span>{{ post.lesson_count }} lessons</span><span>{{ post.duration_minutes }} min</span><span><i class="bi bi-star-fill"></i> {{ post.average_rating|default_if_none:'0.0'|floatformat:1 }}</span></div>
+                <div class="course-footer"><span class="instructor">By <strong>{{ post.author.profile_data.display_name|default:post.author.username }}</strong></span><div class="catalog-actions"><button class="save-course wishlist-toggle" type="button" data-url="{% url 'blog:course_save' post.slug %}" data-saved="true" aria-label="Remove saved course" aria-pressed="true"><i class="bi bi-heart-fill"></i></button><button class="view-course course-enroll-trigger" type="button" data-course-slug="{{ post.slug }}" data-course-url="{% url 'blog:course_detail' post.slug %}" data-course-title="{{ post.title }}" data-paid="{% if post.access == 'paid' %}true{% else %}false{% endif %}" data-advanced-count="{{ post.advanced_lesson_count|default:0 }}">Enroll</button></div></div>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    {% else %}
+    <section class="wishlist-empty-state"><div class="courses-empty-icon"><i class="bi bi-heart" aria-hidden="true"></i></div><h2>Add your courses</h2><p>Save courses you want to return to and find them here.</p><a class="view-course" href="{% url 'blog:blogpage' %}#catalog-list">Browse courses</a></section>
+    {% endif %}
+</main>
+{% include "blog/includes/course_upgrade_modal.html" %}
+{% endblock %}

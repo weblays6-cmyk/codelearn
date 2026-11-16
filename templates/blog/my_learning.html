@@ -1,320 +1,299 @@
 {% extends "blog/base.html" %}
 {% load static %}
-
-{% block title %}
-    My Learning | {{ SITE_NAME }}
+{% block title %}My Learning | {{ SITE_NAME }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/my_learning.css' %}">{% endblock %}
+{% block extra_css_end %}
+<style>
+	.my-learning-page {
+		--learning-card: var(--surface);
+		--learning-card-soft: var(--surface-2);
+		--learning-ink: var(--text);
+		--learning-muted: var(--muted);
+		--learning-line: var(--border);
+	}
+	.my-learning-page .weekly-goal-card,
+	.my-learning-page .next-up-card,
+	.my-learning-page .streak-card,
+	.my-learning-page .learning-path-card,
+	.my-learning-page .learning-list-card {
+		border: 1px solid var(--learning-line) !important;
+		color: var(--learning-ink) !important;
+		background: var(--learning-card) !important;
+		box-shadow: var(--shadow);
+	}
+	.my-learning-page .weekly-goal-card h2,
+	.my-learning-page .next-up-card h2,
+	.my-learning-page .streak-card h2,
+	.my-learning-page .learning-path-card strong,
+	.my-learning-page .learning-list-card h2 { color: var(--learning-ink) !important; }
+	.my-learning-page .weekly-goal-card p,
+	.my-learning-page .next-up-card p,
+	.my-learning-page .streak-card p,
+	.my-learning-page .learning-path-card span,
+	.my-learning-page .learning-list-card p,
+	.my-learning-page .learning-list-card small { color: var(--learning-muted) !important; }
+	.my-learning-page .goal-ring { background: conic-gradient(var(--primary) var(--goal-progress), var(--learning-card-soft) 0); }
+	.my-learning-page .goal-ring span { color: var(--learning-ink); background: var(--learning-card); }
+	.my-learning-page .weekly-goal-card select,
+	.my-learning-page .learning-search input,
+	.my-learning-page .learning-search select {
+		min-height: 44px;
+		border: 1px solid var(--learning-line);
+		border-radius: 9px;
+		color: var(--learning-ink);
+		background: var(--learning-card);
+		color-scheme: light;
+		font-size: 14px;
+	}
+	.my-learning-page .weekly-goal-card button,
+	.my-learning-page .learning-search button {
+		min-height: 44px;
+		border: 1px solid var(--primary);
+		border-radius: 9px;
+		color: #fff;
+		background: var(--primary);
+		font-weight: 700;
+	}
+	.my-learning-page .learning-path-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	.my-learning-page .learning-path-card { min-width: 0; }
+	.my-learning-page .learning-tabs {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 6px;
+		overflow-x: auto;
+		padding: 2px 0 6px;
+		scrollbar-width: thin;
+	}
+	.my-learning-page .learning-tabs a {
+		flex: 0 0 auto;
+		min-height: 40px;
+		display: inline-flex;
+		align-items: center;
+		padding: 0 13px;
+		border: 1px solid var(--learning-line);
+		border-radius: 999px;
+		color: var(--learning-muted);
+		background: var(--learning-card);
+		white-space: nowrap;
+	}
+	.my-learning-page .learning-tabs a.active {
+		border-color: var(--primary);
+		color: var(--primary-soft-text);
+		background: var(--primary-soft);
+	}
+	.my-learning-page .learning-search {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(150px, 200px) 110px;
+		align-items: center;
+		gap: 9px;
+		padding: 12px;
+		border: 1px solid var(--learning-line);
+		border-radius: 12px;
+		background: var(--learning-card);
+	}
+	.my-learning-page .learning-search label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.my-learning-page .learning-search input { width: 100%; min-width: 0; padding: 0 12px; }
+	.my-learning-page .learning-search select { width: 100%; padding: 0 12px; }
+	.my-learning-page .learning-search button { cursor: pointer; }
+	.my-learning-page .learning-search button:hover,
+	.my-learning-page .weekly-goal-card button:hover { background: var(--primary-hover); }
+	.my-learning-page .learning-path-card .progress-bar { height: 6px; background: var(--learning-card-soft); }
+	.my-learning-page .learning-path-card .progress-fill { background: var(--gradient-primary); }
+	.my-learning-page .streak-card h2 i { color: var(--warning); }
+	.my-learning-page .learning-dashboard-grid.learning-insights {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		align-items: start;
+	}
+	.my-learning-page .learning-insights .learning-list-card {
+		align-content: start;
+		min-width: 0;
+		min-height: 190px;
+		padding: 18px;
+	}
+	.my-learning-page .learning-insights .learning-list-card > h2 {
+		margin: 0 0 12px;
+		font-size: 16px;
+		line-height: 1.35;
+	}
+	.my-learning-page .achievement-list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 7px;
+	}
+	.my-learning-page .achievement-chip {
+		display: flex;
+		min-width: 0;
+		min-height: 34px;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px;
+		border: 1px solid var(--success-soft);
+		border-radius: 9px;
+		color: var(--success-text);
+		background: var(--success-soft);
+		line-height: 1.3;
+	}
+	.my-learning-page .achievement-chip.is-locked {
+		border-color: var(--border);
+		color: var(--muted);
+		background: var(--surface-2);
+	}
+	.my-learning-page .study-time-chart {
+		height: 126px;
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		align-items: end;
+		gap: 8px;
+	}
+	.my-learning-page .study-time-track {
+		height: 88px;
+		align-items: end;
+		border: 1px solid var(--border);
+		background: var(--surface-2);
+	}
+	.my-learning-page .study-time-track span {
+		display: block;
+		flex: 0 0 auto;
+		min-height: 4px;
+		background: var(--gradient-primary);
+	}
+	.my-learning-page .study-time-day small { color: var(--muted); font-size: 11px; }
+	.my-learning-page .learning-dashboard-grid.learning-insights {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		align-items: stretch;
+		gap: 14px;
+	}
+	.my-learning-page .learning-insights .insight-card {
+		display: flex;
+		min-width: 0;
+		min-height: 330px;
+		flex-direction: column;
+		gap: 14px;
+		padding: 18px;
+		border-radius: 16px;
+	}
+	.my-learning-page .insight-card-header,
+	.my-learning-page .insight-heading { display: flex; min-width: 0; align-items: center; }
+	.my-learning-page .insight-card-header { justify-content: space-between; gap: 8px; }
+	.my-learning-page .insight-heading { gap: 10px; }
+	.my-learning-page .insight-icon {
+		display: grid;
+		width: 42px;
+		height: 42px;
+		flex: 0 0 42px;
+		place-items: center;
+		border-radius: 50%;
+		font-size: 17px;
+	}
+	.my-learning-page .insight-icon--gold { color: var(--warning-text); background: var(--warning-soft); }
+	.my-learning-page .insight-icon--blue { color: var(--primary-soft-text); background: var(--primary-soft); }
+	.my-learning-page .insight-icon--green { color: var(--success-text); background: var(--success-soft); }
+	.my-learning-page .insight-icon--purple { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+	.my-learning-page .insight-heading h2 { margin: 0; color: var(--text); font-size: 15px; line-height: 1.3; }
+	.my-learning-page .insight-heading p { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+	.my-learning-page .insight-view-link { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 9px; color: var(--primary); background: var(--surface); font-size: 10px; font-weight: 700; white-space: nowrap; }
+	.my-learning-page .achievement-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; }
+	.my-learning-page .achievement-row { display: flex; min-width: 0; min-height: 56px; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--success) 15%, var(--border)); border-radius: 12px; background: color-mix(in srgb, var(--success-soft) 30%, var(--surface)); }
+	.my-learning-page .achievement-row.is-locked { border-color: var(--border); background: var(--surface-2); }
+	.my-learning-page .achievement-icon { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 50%; font-size: 16px; }
+	.my-learning-page .achievement-icon--green { color: var(--success-text); background: var(--success-soft); }
+	.my-learning-page .achievement-icon--blue { color: var(--primary-soft-text); background: var(--primary-soft); }
+	.my-learning-page .achievement-icon--rose { color: var(--danger-text); background: var(--danger-soft); }
+	.my-learning-page .achievement-copy { display: grid; min-width: 0; gap: 2px; }
+	.my-learning-page .achievement-copy strong { color: var(--text); font-size: 12px; line-height: 1.3; }
+	.my-learning-page .achievement-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+	.my-learning-page .achievement-status { display: grid; width: 22px; height: 22px; flex: 0 0 22px; place-items: center; margin-left: auto; color: var(--success); font-size: 17px; }
+	.my-learning-page .achievement-row.is-locked .achievement-status { color: var(--muted); font-size: 13px; }
+	.my-learning-page .study-time-total { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border)); border-radius: 12px; background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); }
+	.my-learning-page .study-time-total > div { display: grid; gap: 2px; }
+	.my-learning-page .study-time-total strong { color: var(--text); font-size: 19px; line-height: 1.2; }
+	.my-learning-page .study-time-total small { color: var(--muted); font-size: 10px; }
+	.my-learning-page .study-time-chart { display: grid; flex: 1; min-height: 142px; height: auto; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: stretch; gap: 6px; padding: 5px 2px 0; }
+	.my-learning-page .study-time-day { display: grid; min-width: 0; height: 100%; grid-template-rows: minmax(0, 1fr) 15px; align-items: end; gap: 5px; }
+	.my-learning-page .study-time-track { display: flex; width: 100%; min-height: 112px; height: 100%; align-items: end; justify-content: center; border: 0; border-radius: 6px 6px 0 0; background: repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), var(--border) calc(25% - 1px) 25%); }
+	.my-learning-page .study-time-track span { display: block; width: 68%; min-height: 5px; flex: 0 0 auto; border-radius: 6px 6px 0 0; background: var(--gradient-primary); }
+	.my-learning-page .study-time-day small { color: var(--muted); font-size: 10px; text-align: center; }
+	.my-learning-page .insight-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px; text-align: center; }
+	.my-learning-page .insight-empty-illustration { display: grid; width: 62px; height: 62px; place-items: center; margin-bottom: 2px; border-radius: 50%; font-size: 27px; }
+	.my-learning-page .insight-illustration--green { color: var(--success-text); background: color-mix(in srgb, var(--success-soft) 70%, transparent); }
+	.my-learning-page .insight-illustration--purple { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+	.my-learning-page .insight-empty strong { color: var(--text); font-size: 14px; }
+	.my-learning-page .insight-empty p { max-width: 220px; margin: 0 0 5px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+	.my-learning-page .insight-action { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border-radius: 9px; color: #fff !important; font-size: 11px; font-weight: 700; }
+	.my-learning-page .insight-action--green { background: var(--success); }
+	.my-learning-page .insight-action--purple { background: var(--accent); }
+	.my-learning-page .learning-insights .quick-list-item { display: grid; gap: 3px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+	@media (max-width: 900px) {
+		.my-learning-page .learning-dashboard-grid.learning-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	}
+	@media (max-width: 760px) {
+		.my-learning-page .learning-path-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.my-learning-page .learning-search { grid-template-columns: minmax(0, 1fr); }
+		.my-learning-page .learning-search button { width: 100%; }
+	}
+	@media (max-width: 520px) {
+		.my-learning-page .learning-dashboard-grid.learning-insights { grid-template-columns: minmax(0, 1fr); }
+		.my-learning-page .learning-path-grid { grid-template-columns: minmax(0, 1fr); }
+	}
+</style>
 {% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/my_learning.css' %}">
-{% endblock %}
-
 {% block content %}
-
-
-
-        <section class="page-header">
-
-            <div class="eyebrow">
-                <i class="bi bi-mortarboard"></i>
-                Your Learning Journey
-            </div>
-
-
-            <h1>
-                My <span>Learning</span>
-            </h1>
-
-
-            <p>
-                Track your courses, continue your progress,
-                and keep building your skills.
-            </p>
-
-        </section>
-
-
-        <!-- ================= SUMMARY ================= -->
-
-        <section class="summary">
-
-
-            <!-- ENROLLED -->
-
-            <div class="summary-card">
-
-                <div class="summary-icon">
-                    <i class="bi bi-book"></i>
-                </div>
-
-                <div class="summary-number">
-                    {{ total_courses }}
-                </div>
-
-                <div class="summary-label">
-                    Enrolled Courses
-                </div>
-
-            </div>
-
-
-            <!-- IN PROGRESS -->
-
-            <div class="summary-card">
-
-                <div class="summary-icon">
-                    <i class="bi bi-play-circle"></i>
-                </div>
-
-                <div class="summary-number">
-                    {{ in_progress_courses }}
-                </div>
-
-                <div class="summary-label">
-                    Courses In Progress
-                </div>
-
-            </div>
-
-
-            <!-- COMPLETED -->
-
-            <div class="summary-card">
-
-                <div class="summary-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-
-                <div class="summary-number">
-                    {{ completed_courses }}
-                </div>
-
-                <div class="summary-label">
-                    Completed Courses
-                </div>
-
-            </div>
-
-
-            <!-- OVERALL -->
-
-            <div class="summary-card">
-
-                <div class="summary-icon">
-                    <i class="bi bi-trophy"></i>
-                </div>
-
-                <div class="summary-number">
-                    {{ average_progress }}%
-                </div>
-
-                <div class="summary-label">
-                    Overall Progress
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= COURSES ================= -->
-
-        <section>
-
-            <div class="section-heading">
-
-                <h2>
-                    Your Courses
-                </h2>
-
-                <span>
-                    {{ enrollments|length }}
-                    course{{ enrollments|length|pluralize }}
-                </span>
-
-            </div>
-
-
-            {% if enrollments %}
-
-
-                <div class="course-grid">
-
-
-                    {% for enrollment in enrollments %}
-
-
-                        <article class="course-card">
-
-
-                            <div class="course-top">
-
-
-                                <div class="course-icon">
-                                    <i class="bi bi-code-square"></i>
-                                </div>
-
-
-                                {% if enrollment.completed %}
-
-                                    <div class="status completed">
-                                        COMPLETED
-                                    </div>
-
-                                {% else %}
-
-                                    <div class="status">
-                                        LEARNING
-                                    </div>
-
-                                {% endif %}
-
-                            </div>
-
-
-                            <!-- TITLE -->
-
-                            <div class="course-title">
-
-                                {{ enrollment.course.title }}
-
-                            </div>
-
-
-                            <!-- DESCRIPTION -->
-
-                            <div class="course-description">
-
-                                {% if enrollment.course.content %}
-
-                                    {{ enrollment.course.content|striptags|truncatewords:24 }}
-
-                                {% else %}
-
-                                    Continue learning and improve
-                                    your coding skills with this course.
-
-                                {% endif %}
-
-                            </div>
-
-
-                            <!-- PROGRESS -->
-
-                            <div class="progress-info">
-
-                                <span>
-                                    Course Progress
-                                </span>
-
-                                <span>
-                                    {{ enrollment.progress }}%
-                                </span>
-
-                            </div>
-
-
-                            <div class="progress-bar">
-
-                                <div
-                                    class="progress-fill"
-                                    style="width: {{ enrollment.progress }}%;"
-                                ></div>
-
-                            </div>
-
-
-                            <!-- BOTTOM -->
-
-                            <div class="course-bottom">
-
-
-                                <div class="course-meta">
-
-                                    <i class="bi bi-calendar3"></i>
-
-                                    Joined
-                                    {{ enrollment.enrolled_at|date:"d M Y" }}
-
-                                </div>
-
-
-                                <a
-                                    href="{% url 'blog:post_detail' enrollment.course.slug %}"
-                                    class="continue-btn"
-                                >
-
-                                    {% if enrollment.completed %}
-
-                                        Review Course
-
-                                    {% else %}
-
-                                        Continue Learning
-
-                                    {% endif %}
-
-                                    <i class="bi bi-arrow-right"></i>
-
-                                </a>
-
-                            </div>
-
-
-                        </article>
-
-
-                    {% endfor %}
-
-
-                </div>
-
-
-            {% else %}
-
-
-                <!-- ================= EMPTY STATE ================= -->
-
-                <div class="empty">
-
-
-                    <div class="empty-icon">
-
-                        <i class="bi bi-mortarboard"></i>
-
-                    </div>
-
-
-                    <h3>
-                        No courses yet
-                    </h3>
-
-
-                    <p>
-                        You haven't enrolled in any courses yet.
-                        Explore our courses and start your learning journey.
-                    </p>
-
-
-                    <a
-                        href="{% url 'blog:blogpage' %}"
-                        class="browse-btn"
-                    >
-
-                        <i class="bi bi-compass"></i>
-
-                        Browse Courses
-
-                    </a>
-
-                </div>
-
-
-            {% endif %}
-
-
-        </section>
-
-
-    
+<main class="my-learning-page">
+	<header class="page-header"><div class="eyebrow"><i class="bi bi-mortarboard" aria-hidden="true"></i> Your learning journey</div><h1 class="page-title">My <span class="page-title-accent">Learning</span></h1><p>Track your courses, continue your progress, and keep building your skills.</p></header>
+	<section class="summary" aria-label="Learning summary">
+		<article class="summary-card"><div class="summary-icon"><i class="bi bi-book"></i></div><div class="summary-number">{{ total_courses|default:0 }}</div><div class="summary-label">Enrolled courses</div></article>
+		<article class="summary-card"><div class="summary-icon"><i class="bi bi-play-circle"></i></div><div class="summary-number">{{ in_progress_courses|default:0 }}</div><div class="summary-label">In progress</div></article>
+		<article class="summary-card"><div class="summary-icon"><i class="bi bi-check-circle"></i></div><div class="summary-number">{{ completed_courses|default:0 }}</div><div class="summary-label">Completed</div></article>
+		<article class="summary-card"><div class="summary-icon"><i class="bi bi-trophy"></i></div><div class="summary-number">{{ average_progress|default:0 }}%</div><div class="summary-label">Average progress</div></article>
+		<article class="summary-card"><div class="summary-icon"><i class="bi bi-clock-history"></i></div><div class="summary-number">{{ study_time_hours }}h {{ study_time_minutes_remainder }}m</div><div class="summary-label">Study time</div></article>
+	</section>
+
+	{% if continue_enrollment %}<section class="continue-learning-banner"><div><span>Pick up where you left off</span><h2>{{ continue_enrollment.course.title }}</h2><p>{{ continue_enrollment.progress|default:0 }}% complete · {% if continue_enrollment.last_accessed_at %}Last active {{ continue_enrollment.last_accessed_at|timesince }} ago{% else %}Not started{% endif %}</p></div><a class="continue-btn" href="{% if continue_enrollment.last_accessed_lesson %}{% url 'blog:lesson_detail' continue_enrollment.last_accessed_lesson.lesson.slug %}{% else %}{% url 'blog:course_detail' continue_enrollment.course.slug %}{% endif %}">Continue learning <i class="bi bi-arrow-right"></i></a></section>{% endif %}
+
+	<div class="learning-dashboard-grid">
+		<section class="weekly-goal-card"><div class="goal-ring" style="--goal-progress:{{ weekly_progress }}%"><span>{{ weekly_lessons|default:0 }}</span></div><h2>Lessons this week</h2><p>{{ weekly_lessons|default:0 }} lessons · goal {{ weekly_goal|default:0 }}</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="weekly_goal"><label for="weekly-goal">Weekly goal</label><select id="weekly-goal" name="weekly_goal"><option value="1" {% if weekly_goal == 1 %}selected{% endif %}>1 lesson</option><option value="3" {% if weekly_goal == 3 %}selected{% endif %}>3 lessons</option><option value="5" {% if weekly_goal == 5 %}selected{% endif %}>5 lessons</option></select><button type="submit">Update goal</button></form><div class="study-week-dots" aria-label="Last seven days activity">{% for active in study_week %}<span class="{% if active %}is-active{% endif %}"></span>{% endfor %}</div></section>
+		<section class="next-up-card"><h2>Next up</h2>{% if next_course %}<p>Recommended for your learning journey</p><a href="{% url 'blog:course_detail' next_course.slug %}">{{ next_course.title }} <i class="bi bi-arrow-right"></i></a>{% else %}<p>Explore the catalog for your next course.</p><a href="{% url 'blog:blogpage' %}">Browse courses</a>{% endif %}</section>
+		<section class="next-up-card streak-card"><h2><i class="bi bi-fire" aria-hidden="true"></i> {{ streak_days }} day streak</h2><p>Keep your learning streak alive with one completed lesson.</p><div class="study-week-dots">{% for active in study_week %}<span class="{% if active %}is-active{% endif %}"></span>{% endfor %}</div></section>
+	</div>
+
+	<section class="learning-paths"><h2>Learning paths</h2><div class="learning-path-grid">{% for path in learning_paths %}<article class="learning-path-card"><strong>{{ path.title }}</strong><span>{{ path.completed }} of {{ path.total }} courses completed</span><div class="progress-bar"><div class="progress-fill" style="width:{{ path.progress }}%"></div></div></article>{% endfor %}</div></section>
+
+	<div class="learning-dashboard-grid learning-insights">
+		<section class="learning-list-card insight-card achievements-card">
+			<header class="insight-card-header"><div class="insight-heading"><span class="insight-icon insight-icon--gold"><i class="bi bi-trophy-fill" aria-hidden="true"></i></span><div><h2>Achievements</h2><p>Keep learning and unlock more!</p></div></div><a class="insight-view-link" href="?tab=completed">View all <i class="bi bi-arrow-right" aria-hidden="true"></i></a></header>
+			<div class="achievement-list">{% for achievement in achievements %}<article class="achievement-row{% if not achievement.unlocked %} is-locked{% endif %}"><span class="achievement-icon{% if achievement.label == 'First course' %} achievement-icon--green{% elif achievement.label == 'Course complete' %} achievement-icon--blue{% else %} achievement-icon--rose{% endif %}"><i class="bi {% if achievement.label == 'First course' %}bi-mortarboard-fill{% elif achievement.label == 'Course complete' %}bi-journal-check{% else %}bi-fire{% endif %}" aria-hidden="true"></i></span><span class="achievement-copy"><strong>{{ achievement.label }}</strong><small>{% if achievement.label == 'First course' %}Started your learning journey{% elif achievement.label == 'Course complete' %}Completed a course{% else %}Learned for 7 days in a row{% endif %}</small></span><span class="achievement-status"><i class="bi {% if achievement.unlocked %}bi-check-circle-fill{% else %}bi-lock-fill{% endif %}" aria-hidden="true"></i></span></article>{% endfor %}</div>
+		</section>
+		<section class="learning-list-card insight-card study-time-card">
+			<header class="insight-card-header"><div class="insight-heading"><span class="insight-icon insight-icon--blue"><i class="bi bi-bar-chart-fill" aria-hidden="true"></i></span><div><h2>Study time · last 7 days</h2><p>Stay consistent with your learning</p></div></div><a class="insight-view-link" href="#your-learning">View details <i class="bi bi-arrow-right" aria-hidden="true"></i></a></header>
+			<div class="study-time-total"><span class="insight-icon insight-icon--blue"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div><strong>{{ study_time_hours }}h {{ study_time_minutes_remainder }}m</strong><small>Estimated total study time</small></div></div>
+			<div class="study-time-chart" aria-label="Estimated study activity for the last seven days">{% for day in study_time_chart %}<div class="study-time-day"><div class="study-time-track"><span style="height:{{ day.height }}%" title="{{ day.minutes }} minutes"></span></div><small>{{ day.label }}</small></div>{% endfor %}</div>
+		</section>
+		<section class="learning-list-card insight-card notes-card">
+			<header class="insight-card-header"><div class="insight-heading"><span class="insight-icon insight-icon--green"><i class="bi bi-file-earmark-text-fill" aria-hidden="true"></i></span><div><h2>My notes</h2><p>Quick access to your notes</p></div></div><a class="insight-view-link" href="?tab=notes">View all <i class="bi bi-arrow-right" aria-hidden="true"></i></a></header>
+			{% for note in notes|slice:":3" %}<a class="quick-list-item" href="{% url 'blog:lesson_detail' note.lesson.slug %}">{{ note.lesson.title }} <small>{{ note.lesson.course.title }}</small></a>{% empty %}<div class="insight-empty"><span class="insight-empty-illustration insight-illustration--green"><i class="bi bi-journal-text" aria-hidden="true"></i></span><strong>No notes yet.</strong><p>Start making notes while learning to keep important points here.</p><a class="insight-action insight-action--green" href="{% url 'blog:blogpage' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Browse courses</a></div>{% endfor %}
+		</section>
+		<section class="learning-list-card insight-card bookmarks-card">
+			<header class="insight-card-header"><div class="insight-heading"><span class="insight-icon insight-icon--purple"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span><div><h2>Bookmarks</h2><p>Save and access your favorite content</p></div></div></header>
+			{% for bookmark in bookmarks %}<a class="quick-list-item" href="{% url 'blog:lesson_detail' bookmark.lesson.slug %}">{{ bookmark.lesson.title }} <small>{{ bookmark.lesson.course.title }}</small></a>{% empty %}<div class="insight-empty"><span class="insight-empty-illustration insight-illustration--purple"><i class="bi bi-bookmark" aria-hidden="true"></i></span><strong>No bookmarks yet.</strong><p>Bookmark lessons to access them quickly later.</p><a class="insight-action insight-action--purple" href="{% url 'blog:blogpage' %}"><i class="bi bi-bookmark" aria-hidden="true"></i> Browse courses</a></div>{% endfor %}
+		</section>
+	</div>
+
+	<section class="my-learning-courses">
+		<div class="section-heading"><h2>Your learning</h2><span>{{ page_obj.paginator.count }} courses</span></div>
+		<nav class="learning-tabs" aria-label="Learning sections"><a class="{% if tab == 'all' %}active{% endif %}" href="?tab=all">All</a><a class="{% if tab == 'in-progress' %}active{% endif %}" href="?tab=in-progress">In progress</a><a class="{% if tab == 'completed' %}active{% endif %}" href="?tab=completed">Completed</a><a class="{% if tab == 'saved' %}active{% endif %}" href="?tab=saved">Saved</a><a class="{% if tab == 'notes' %}active{% endif %}" href="?tab=notes">Notes</a><a class="{% if tab == 'certificates' %}active{% endif %}" href="?tab=certificates">Certificates</a></nav>
+		<form class="learning-search" method="get"><input type="hidden" name="tab" value="{{ tab }}"><label for="learning-search">Search</label><input id="learning-search" type="search" name="search" value="{{ search }}" placeholder="Search courses"><label for="learning-sort">Sort</label><select id="learning-sort" name="sort"><option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recent</option><option value="progress" {% if sort == 'progress' %}selected{% endif %}>Progress</option><option value="az" {% if sort == 'az' %}selected{% endif %}>A-Z</option></select><button type="submit">Apply</button></form>
+		<div class="learning-view-toggle" role="group" aria-label="Course layout"><a class="{% if view_mode == 'grid' %}active{% endif %}" href="?tab={{ tab }}&search={{ search|urlencode }}&sort={{ sort }}&view=grid" aria-label="Grid view"><i class="bi bi-grid-3x3-gap"></i></a><a class="{% if view_mode == 'list' %}active{% endif %}" href="?tab={{ tab }}&search={{ search|urlencode }}&sort={{ sort }}&view=list" aria-label="List view"><i class="bi bi-list"></i></a></div>
+		{% if tab == 'notes' %}<div class="learning-list">{% for note in notes %}<article class="learning-list-card"><strong>{{ note.lesson.title }}</strong><span>{{ note.lesson.course.title }}</span><p>{{ note.content|truncatewords:35 }}</p><a href="{% url 'blog:lesson_detail' note.lesson.slug %}">Open note</a></article>{% empty %}<div class="empty"><h3>No notes yet</h3><p>Save a note from any lesson to find it here.</p><a class="browse-btn" href="{% url 'blog:blogpage' %}">Browse Courses</a></div>{% endfor %}</div>
+		{% elif tab == 'certificates' %}<div class="learning-list">{% for certificate in certificates %}<article class="learning-list-card"><strong>{{ certificate.enrollment.course.title }}</strong><span>Issued {{ certificate.issued_at|date:"M j, Y" }}</span><a href="{% url 'blog:course_certificate' certificate.verification_code %}">Print / save certificate</a></article>{% empty %}<div class="empty"><h3>No certificates yet</h3><p>Complete a course to earn a certificate.</p><a class="browse-btn" href="{% url 'blog:blogpage' %}">Browse Courses</a></div>{% endfor %}</div>
+		{% elif tab == 'saved' %}<div class="course-grid {% if view_mode == 'list' %}is-list{% endif %}">{% for course in saved_courses %}<article class="course-card"><h3>{{ course.title }}</h3><p>{{ course.description|truncatewords:20 }}</p><a class="continue-btn" href="{% url 'blog:course_detail' course.slug %}">View course</a></article>{% empty %}<div class="empty"><h3>No saved courses</h3><p>Save courses from the catalog to revisit them here.</p><a class="browse-btn" href="{% url 'blog:blogpage' %}">Browse Courses</a></div>{% endfor %}</div>
+		{% else %}<div class="course-grid {% if view_mode == 'list' %}is-list{% endif %}">{% for enrollment in enrollments %}<article class="course-card"><div class="course-top"><div class="course-icon"><i class="bi bi-code-square"></i></div><div class="status {% if enrollment.completed %}completed{% endif %}">{% if enrollment.completed %}Completed{% elif enrollment.progress %}In progress{% else %}Enrolled{% endif %}</div></div><h3 class="course-title">{{ enrollment.course.title }}</h3><p class="course-description">{{ enrollment.course.description|truncatewords:24 }}</p><div class="progress-info"><span>{{ enrollment.completed_lessons|default:0 }}/{{ enrollment.lesson_total|default:0 }} lessons</span><span>{{ enrollment.progress|default:0 }}%</span></div><div class="course-progress-ring" style="--course-progress:{{ enrollment.progress|default:0 }}%"><span>{{ enrollment.progress|default:0 }}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:{{ enrollment.progress|default:0 }}%"></div></div><div class="course-meta">{% if enrollment.last_accessed_lesson %}Last accessed {{ enrollment.last_accessed_lesson.last_accessed_at|timesince }} ago{% else %}Enrolled {{ enrollment.enrolled_at|date:"M j, Y" }}{% endif %}</div><a class="continue-btn" href="{% if enrollment.last_accessed_lesson %}{% url 'blog:lesson_detail' enrollment.last_accessed_lesson.lesson.slug %}{% else %}{% url 'blog:course_detail' enrollment.course.slug %}{% endif %}">{% if enrollment.completed %}Review course{% else %}Continue{% endif %} <i class="bi bi-arrow-right"></i></a></article>{% empty %}<div class="empty"><h3>No courses yet</h3><p>Explore courses and start your learning journey.</p><a class="browse-btn" href="{% url 'blog:blogpage' %}">Browse Courses</a></div>{% endfor %}</div>{% endif %}
+		{% if tab == 'saved' or tab == 'all' or tab == 'in-progress' or tab == 'completed' %}{% if page_obj.paginator.num_pages > 1 %}<nav class="learning-pagination" aria-label="Course pages">{% if page_obj.has_previous %}<a href="?tab={{ tab }}&search={{ search|urlencode }}&sort={{ sort }}&view={{ view_mode }}&page={{ page_obj.previous_page_number }}">Prev</a>{% endif %}{% for page_link in page_links %}{% if page_link.ellipsis %}<span>…</span>{% else %}<a class="{% if page_link.current %}active{% endif %}" href="{{ page_link.url }}">{{ page_link.label }}</a>{% endif %}{% endfor %}{% if page_obj.has_next %}<a href="?tab={{ tab }}&search={{ search|urlencode }}&sort={{ sort }}&view={{ view_mode }}&page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav><p class="pagination-summary">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</p>{% endif %}{% endif %}
+	</section>
+</main>
 {% endblock %}

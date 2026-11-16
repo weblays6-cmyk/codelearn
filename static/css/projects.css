@@ -31,7 +31,7 @@
     gap: 7px;
     margin-bottom: 10px;
     color: #a78bfa;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.2px;
     text-transform: uppercase;
@@ -46,6 +46,7 @@
 }
 
 .projects-header h1 span {
+    color: #a78bfa;
     background: linear-gradient(
         90deg,
         #a78bfa,
@@ -53,7 +54,13 @@
         #22d3ee
     );
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-text-fill-color: currentColor;
+}
+
+@supports (-webkit-background-clip: text) {
+    .projects-header h1 span {
+        -webkit-text-fill-color: transparent;
+    }
 }
 
 .projects-header p {
@@ -87,6 +94,42 @@
 
 .create-project-btn:hover {
     transform: translateY(-2px);
+}
+
+.projects-header .eyebrow,
+.projects-header h1 span {
+    color: var(--primary);
+}
+
+.projects-header h1 span {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    -webkit-text-fill-color: currentColor;
+}
+
+.projects-header p,
+.project-tab {
+    color: var(--muted);
+}
+
+.create-project-btn,
+.project-tab.active {
+    background: var(--primary);
+}
+
+.project-tab.active {
+    color: #fff;
+}
+
+.project-tabs {
+    border-color: var(--border);
+    background: var(--surface-2);
+}
+
+.project-tab:hover {
+    color: var(--primary);
+    background: var(--primary-soft);
 }
 
 
@@ -324,7 +367,7 @@
     background: rgba(0,0,0,.48);
     backdrop-filter: blur(8px);
     color: #fff;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: .4px;
 }
@@ -365,7 +408,7 @@
     gap: 6px;
     margin-bottom: 8px;
     color: #a78bfa;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .5px;
@@ -411,7 +454,7 @@
     border-radius: 6px;
     background: rgba(99,102,241,.10);
     color: #a5b4fc;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 650;
 }
 
@@ -464,7 +507,7 @@
 .owner-info span {
     margin-top: 2px;
     color: #64748b;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 
@@ -485,7 +528,7 @@
     align-items: center;
     gap: 11px;
     color: #64748b;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .project-stats span {
@@ -504,7 +547,7 @@
     border: 1px solid rgba(139,92,246,.16);
     color: #c4b5fd;
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     transition: .2s ease;
 }
@@ -624,7 +667,7 @@
     background: rgba(245,158,11,.10);
     color: #fbbf24;
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -641,6 +684,10 @@ body.light-theme .project-tabs {
 
 body.light-theme .project-tab {
     color: #64748b;
+}
+
+body.light-theme .project-tab.active {
+    color: #fff;
 }
 
 body.light-theme .project-tab:hover {

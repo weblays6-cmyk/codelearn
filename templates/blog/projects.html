@@ -7,6 +7,7 @@ Projects | {{ SITE_NAME }}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/projects.css' %}">
+<link rel="stylesheet" href="{% static 'css/project_form.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -123,6 +124,9 @@ Projects | {{ SITE_NAME }}
 
         </div>
 
+        <input type="search" name="category" value="{{ category }}" placeholder="Category" aria-label="Filter by category">
+        <input type="search" name="tech" value="{{ tech }}" placeholder="Technology" aria-label="Filter by technology">
+
 
         <div class="project-filter">
 
@@ -163,6 +167,13 @@ Projects | {{ SITE_NAME }}
             </select>
 
         </div>
+        <label>Sort
+            <select name="sort">
+                <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="trending" {% if sort == 'trending' %}selected{% endif %}>Trending</option>
+                <option value="most_liked" {% if sort == 'most_liked' %}selected{% endif %}>Most liked</option>
+            </select>
+        </label>
 
 
         <button
@@ -174,6 +185,43 @@ Projects | {{ SITE_NAME }}
         </button>
 
     </form>
+
+    {% if featured_projects and tab == 'discover' %}
+    <section class="featured-projects" aria-label="Featured projects">
+        <h2>Featured projects</h2>
+        <div class="featured-project-row">
+            {% for project in featured_projects %}
+            <a href="{% url 'blog:project_detail' project.pk %}">{{ project.title }} <span>by {{ project.owner.profile_data.display_name|default:project.owner.username }}</span></a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if tab == 'ideas' %}
+    <section class="project-ideas-board">
+        <h2>Project Ideas</h2>
+        <form method="post" action="{% url 'blog:project_ideas' %}" class="project-form project-idea-form">{% csrf_token %}
+            <section class="project-form-section">
+                <div class="project-form-field">
+                    <label for="projectIdeaTitle">Idea title</label>
+                    <input id="projectIdeaTitle" name="title" maxlength="180" required>
+                </div>
+                <div class="project-form-field">
+                    <label for="projectIdeaDescription">What would you build?</label>
+                    <textarea id="projectIdeaDescription" name="description" maxlength="3000" required></textarea>
+                </div>
+                <div class="project-form-actions">
+                    <button class="project-submit-btn" type="submit">Post idea</button>
+                </div>
+            </section>
+        </form>
+        {% for idea in ideas %}
+        <article><h3>{{ idea.title }}</h3><p>{{ idea.description }}</p><span>By {{ idea.author.profile_data.display_name|default:idea.author.username }} · {{ idea.vote_count }} votes</span>
+            <form method="post" action="{% url 'blog:project_ideas' %}">{% csrf_token %}<input type="hidden" name="vote_id" value="{{ idea.pk }}"><button type="submit">I'd build this · {{ idea.vote_count }}</button></form>
+        </article>
+        {% empty %}<p>No ideas yet. Add one for the community.</p>{% endfor %}
+    </section>
+    {% endif %}
 
 
     <!-- =====================================================
@@ -227,13 +275,12 @@ Projects | {{ SITE_NAME }}
                         class="project-image"
                     >
 
-                        {% with first_image=project.images.first %}
-
-                            {% if first_image %}
+                            {% if project.cover_image %}
 
                                 <img
-                                    src="{{ first_image.image.url }}"
+                                    src="{{ project.cover_image.image.url }}"
                                     alt="{{ project.title }}"
+                                    width="640" height="360" loading="lazy"
                                 >
 
                             {% else %}
@@ -246,7 +293,6 @@ Projects | {{ SITE_NAME }}
 
                             {% endif %}
 
-                        {% endwith %}
 
 
                         <span class="project-status status-{{ project.status }}">
@@ -316,6 +362,9 @@ Projects | {{ SITE_NAME }}
 
                         {% endif %}
 
+                        {% if project.github_url %}<a href="{{ project.github_url }}" rel="noopener noreferrer" target="_blank">GitHub</a>{% endif %}
+                        {% if project.live_demo_url %}<a href="{{ project.live_demo_url }}" rel="noopener noreferrer" target="_blank">Live demo</a>{% endif %}
+
 
                         <!-- OWNER -->
 
@@ -354,7 +403,7 @@ Projects | {{ SITE_NAME }}
 
                                     <i class="bi bi-heart"></i>
 
-                                    {{ project.likes.count }}
+                                    {{ project.likes_total|default:0 }}
 
                                 </span>
 
@@ -363,7 +412,7 @@ Projects | {{ SITE_NAME }}
 
                                     <i class="bi bi-chat"></i>
 
-                                    {{ project.comments.count }}
+                                    {{ project.comments_total|default:0 }}
 
                                 </span>
 
@@ -372,7 +421,7 @@ Projects | {{ SITE_NAME }}
 
                                     <i class="bi bi-bookmark"></i>
 
-                                    {{ project.saves.count }}
+                                    {{ project.saves_total|default:0 }}
 
                                 </span>
 
@@ -386,6 +435,7 @@ Projects | {{ SITE_NAME }}
                                 View
                                 <i class="bi bi-arrow-right"></i>
                             </a>
+                            {% if tab == 'my' %}<a href="{% url 'blog:edit_project' project.pk %}" class="view-project-btn">Edit</a>{% endif %}
 
                         </div>
 
@@ -396,6 +446,14 @@ Projects | {{ SITE_NAME }}
             {% endfor %}
 
         </section>
+
+        {% if project_page.has_other_pages %}
+        <nav class="project-pagination" aria-label="Project pages">
+            {% if project_page.has_previous %}<a href="?tab={{ tab }}&search={{ search|urlencode }}&category={{ category|urlencode }}&tech={{ tech|urlencode }}&status={{ status|urlencode }}&sort={{ sort }}&page={{ project_page.previous_page_number }}">Previous</a>{% endif %}
+            <span>Page {{ project_page.number }} of {{ project_page.paginator.num_pages }}</span>
+            {% if project_page.has_next %}<a href="?tab={{ tab }}&search={{ search|urlencode }}&category={{ category|urlencode }}&tech={{ tech|urlencode }}&status={{ status|urlencode }}&sort={{ sort }}&page={{ project_page.next_page_number }}">Next</a>{% endif %}
+        </nav>
+        {% endif %}
 
 
     {% else %}

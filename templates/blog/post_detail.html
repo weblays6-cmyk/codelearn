@@ -7,10 +7,14 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/course_catalog.css' %}">
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/course_comments.js' %}" defer></script>
+<script src="{% static 'js/course_upgrades.js' %}" defer></script>
+<script src="{% static 'js/course_wishlist.js' %}" defer></script>
+<script src="{% static 'js/course_share.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -71,158 +75,33 @@
                 {{ post.title }}
             </h1>
             <div class="course-meta">
-                <span>
-
-                    <i class="bi bi-person"></i>
-
-                    {{ post.author.profile_data.display_name|default:post.author.username }}
-                    <small>@{{ post.author.username|lower }}</small>
-
-                </span>
-
-
-                <span>
-
-                    <i class="bi bi-calendar3"></i>
-
-                    {{ post.created_at|date:"d M Y" }}
-
-                </span>
-
-
-                <span>
-
-                    <i class="bi bi-play-circle"></i>
-
-                    {{ lessons|length }} lessons
-
-                </span>
-
-
+                <span><i class="bi bi-person" aria-hidden="true"></i>{{ post.author.profile_data.display_name|default:post.author.username }} <small>@{{ post.author.username|lower }}</small></span>
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i>{{ post.created_at|date:"d M Y" }}</span>
+                <span><i class="bi bi-play-circle" aria-hidden="true"></i>{{ lessons|length }} lessons</span>
             </div>
-
-
         </div>
-
     </section>
 
-
-
-    <!-- =====================================================
-         ENROLLMENT ACTION
-    ===================================================== -->
-
-    <div class="action-bar">
-
-
-        <div class="enrollment-state">
-
-
+    <div class="action-bar course-action-row">
+        <div class="course-primary-actions">
             {% if user.is_authenticated %}
-
                 {% if enrollment %}
-
-                    <span style="color:#86efac;">
-                        <i class="bi bi-check-circle-fill"></i>
-                        You are enrolled in this course.
-                    </span>
-
+                <a href="#lessons" class="course-primary-action"><i class="bi bi-play-fill" aria-hidden="true"></i> Continue learning</a>
                 {% else %}
-
-                    <span>
-                        Start learning and track your progress.
-                    </span>
-
+                <button type="button" class="course-primary-action course-enroll-trigger" data-course-slug="{{ post.slug }}" data-course-url="{% url 'blog:course_detail' post.slug %}" data-course-title="{{ post.title }}" data-paid="{% if post.access == 'paid' %}true{% else %}false{% endif %}" data-advanced-count="{{ premium_lessons|length }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> Enroll Now</button>
                 {% endif %}
-
             {% else %}
-
-                <span>
-                    Login to start this course.
-                </span>
-
+            <a href="{% url 'blog:login' %}" class="course-primary-action"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login to Enroll</a>
             {% endif %}
-
-
         </div>
-
-
-
-        <div>
-
-
-            {% if user.is_authenticated %}
-
-
-                {% if enrollment %}
-
-                    <a
-                        href="#lessons"
-                        class="success-btn"
-                    >
-
-                        <i class="bi bi-play-fill"></i>
-
-                        Continue Learning
-
-                    </a>
-
-
-                {% else %}
-
-                    <form
-                        method="POST"
-                        style="margin:0;"
-                    >
-
-                        {% csrf_token %}
-
-                        <input
-                            type="hidden"
-                            name="action"
-                            value="enroll"
-                        >
-
-                        <button
-                            type="submit"
-                            class="primary-btn"
-                        >
-
-                            <i class="bi bi-plus-circle"></i>
-
-                            Enroll Now
-
-                        </button>
-
-                    </form>
-
-
-                {% endif %}
-
-
-            {% else %}
-
-
-                <a
-                    href="{% url 'blog:login' %}"
-                    class="primary-btn"
-                >
-
-                    <i class="bi bi-box-arrow-in-right"></i>
-
-                    Login to Enroll
-
-                </a>
-
-
-            {% endif %}
-
-
+        <div class="course-utility-actions">
+            {% if user.is_authenticated %}<button type="button" class="course-secondary-btn wishlist-toggle" data-url="{% url 'blog:course_save' post.slug %}" data-saved="{{ saved_course|yesno:'true,false' }}" aria-pressed="{{ saved_course|yesno:'true,false' }}"><i class="bi {% if saved_course %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i><span>{% if saved_course %}Saved to wishlist{% else %}Save to wishlist{% endif %}</span></button>{% endif %}
+            <button type="button" class="course-secondary-btn" data-share-course data-share-url="{{ request.build_absolute_uri }}" data-share-title="{{ post.title }}"><i class="bi bi-share" aria-hidden="true"></i> Share course</button>
+            <span class="course-price-pill{% if post.access != 'paid' %} is-free{% endif %}">{% if post.access == 'paid' %}{{ post.price }} {{ RAZORPAY_CURRENCY }}{% else %}Free course{% endif %}</span>
+            {% if certificate %}<a href="{% url 'blog:course_certificate' certificate.verification_code %}" class="course-secondary-btn">View certificate</a>{% endif %}
         </div>
-
     </div>
-
-
+    {% if enrollment %}<div class="course-secondary-management"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="unenroll"><button type="submit">Unenroll</button></form></div>{% endif %}
 
     <!-- =====================================================
          CONTENT
@@ -300,6 +179,7 @@
 
                 {% endif %}
 
+                <div class="course-prerequisites"><h3>Prerequisites</h3><p>{% if post.prerequisites %}{{ post.prerequisites|linebreaksbr }}{% else %}No prior experience required.{% endif %}</p></div>
 
             </section>
 
@@ -337,15 +217,12 @@
                     {% for lesson in lessons %}
 
 
-                    <a
-                        href="{% url 'blog:lesson_detail' lesson.slug %}"
-                        class="lesson-item"
-                    >
+                    {% if lesson.user_accessible %}<a href="{% url 'blog:lesson_detail' lesson.slug %}" class="lesson-item">{% elif lesson.user_locked_premium %}<button type="button" class="lesson-item lesson-locked" data-open-upgrade data-course-slug="{{ post.slug }}" data-course-url="{% url 'blog:course_detail' post.slug %}" data-course-title="{{ post.title }}" data-paid="{% if post.access == 'paid' %}true{% else %}false{% endif %}" data-advanced-count="{{ premium_lessons|length }}">{% else %}<div class="lesson-item lesson-locked">{% endif %}
 
 
                         <div class="lesson-number">
 
-                            {{ lesson.order }}
+                            {% if lesson.user_completed %}<i class="bi bi-check-circle-fill"></i>{% elif lesson.user_accessible %}{{ forloop.counter }}{% else %}<i class="bi bi-lock-fill"></i>{% endif %}
 
                         </div>
 
@@ -356,10 +233,11 @@
                             <h4>
                                 {{ lesson.title }}
                             </h4>
+                            <span class="lesson-level-badge lesson-level-{{ lesson.level }}">{{ lesson.get_level_display }}{% if lesson.user_locked_premium %} · Premium{% endif %}</span>
 
 
                             <p>
-                                Click to open lesson
+                                {% if lesson.module %}{{ lesson.module.title }} · {% endif %}{% if lesson.user_accessible %}Open lesson{% else %}Enroll or complete earlier lessons to unlock{% endif %}
                             </p>
 
 
@@ -368,14 +246,14 @@
 
                         <span class="lesson-start">
 
-                            Start
+                            {% if lesson.user_accessible %}Start{% else %}Locked{% endif %}
 
                             <i class="bi bi-arrow-right"></i>
 
                         </span>
 
 
-                    </a>
+                    {% if lesson.user_accessible %}</a>{% elif lesson.user_locked_premium %}</button>{% else %}</div>{% endif %}
 
 
                     {% endfor %}
@@ -392,7 +270,7 @@
                         padding:20px;
                         text-align:center;
                         color:#64748b;
-                        font-size:11px;
+                        font-size:12px;
                     "
                 >
 
@@ -405,6 +283,16 @@
 
 
             </section>
+
+            {% include "blog/includes/course_upgrade_modal.html" %}
+
+            {% if modules %}<section class="panel" style="margin-top:18px;"><div class="panel-title"><h2>Module quizzes</h2><span>Pass mark: 70%</span></div>{% for module in modules %}{% if module.quiz %}<div class="course-quiz-row"><strong>{{ module.title }}</strong>{% if enrollment %}<a href="{% url 'blog:module_quiz' module.quiz.pk %}" class="view-course">Take quiz</a>{% else %}<span><i class="bi bi-lock-fill"></i> Enroll to unlock</span>{% endif %}</div>{% endif %}{% endfor %}</section>{% endif %}
+
+            <section class="panel" style="margin-top:18px;" id="course-reviews"><div class="panel-title"><h2>Ratings and reviews</h2><span>{{ rating_average|floatformat:1 }} / 5 · {{ rating_count }} reviews</span></div><div class="rating-distribution">{% for bar in rating_bars %}<div>{{ bar.label }} stars <span>{{ bar.count }}</span></div>{% endfor %}</div>{% if enrollment %}<form method="post" class="course-review-form">{% csrf_token %}<input type="hidden" name="action" value="review"><label for="course-rating">Your rating</label><select id="course-rating" name="rating" required>{% for value,label in rating_choices %}<option value="{{ value }}" {% if user_review.rating == value %}selected{% endif %}>{{ label }} stars</option>{% endfor %}</select><label for="course-review">Review</label><textarea id="course-review" name="review" maxlength="2000">{{ user_review.review }}</textarea><button type="submit" class="primary-btn">Save review</button></form>{% else %}<p>Enroll to write a course review.</p>{% endif %}{% for review in reviews %}<article class="course-review"><strong>{{ review.user.profile_data.display_name|default:review.user.username }}</strong><span>{{ review.rating }} / 5</span><p>{{ review.review|linebreaksbr }}</p></article>{% empty %}<p>No reviews yet.</p>{% endfor %}</section>
+
+            <section class="panel" style="margin-top:18px;"><div class="panel-title"><h2>Frequently asked questions</h2></div><details><summary>How do I earn a certificate?</summary><p>Complete all course lessons to 100% progress. Your certificate will be issued automatically.</p></details><details><summary>Can I revisit lessons?</summary><p>Yes. Enrolled learners can revisit any unlocked lesson at any time.</p></details></section>
+
+            {% if similar_courses %}<section class="panel" style="margin-top:18px;"><div class="panel-title"><h2>Similar courses</h2></div>{% for similar in similar_courses %}<a class="lesson-item" href="{% url 'blog:course_detail' similar.slug %}"><div class="lesson-info"><h4>{{ similar.title }}</h4><p>{{ similar.get_difficulty_display }} · {{ similar.duration_minutes|default:0 }} min</p></div><span class="lesson-start">Explore</span></a>{% endfor %}</section>{% endif %}
 
 
             {% if enrollment and course_assignments %}
@@ -523,6 +411,7 @@
                     </button>
 
                 </form>
+                <div class="comment-counter"><span data-comment-length>0</span> / 2000</div>
                 <p class="comment-status" id="courseCommentStatus" role="status"
                     aria-live="polite"></p>
 
@@ -600,12 +489,9 @@
 
 
 
-                    {% if user == comment.author %}
-
-
                     <div class="comment-actions">
-
-
+                        <button type="button" class="reply-btn" data-reply-name="{{ comment.author.username }}">Reply</button>
+                        {% if user == comment.author %}
                         <a
                             href="{% url 'blog:update_comment' comment.pk %}"
                             class="edit-btn"
@@ -624,12 +510,8 @@
                             Delete
 
                         </a>
-
-
+                        {% endif %}
                     </div>
-
-
-                    {% endif %}
 
 
                 </div>
